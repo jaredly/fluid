@@ -142,16 +142,16 @@ function getDomNode(_tree) {
 function instantiateTree(el) {
   switch (el.tag | 0) {
     case 0 : 
-        return /* PString */Block.__(0, [el[0]]);
+        return /* IString */Block.__(0, [el[0]]);
     case 1 : 
-        return /* PBuiltin */Block.__(1, [
+        return /* IBuiltin */Block.__(1, [
                   el[0],
                   el[1],
                   Belt_List.map(el[2], instantiateTree)
                 ]);
     case 2 : 
         var custom = Curry._1(el[0][/* init */0], /* () */0);
-        return /* PCustom */Block.__(2, [
+        return /* ICustom */Block.__(2, [
                   custom,
                   instantiateTree(render(custom))
                 ]);
@@ -163,7 +163,7 @@ function inflateTree(el) {
   switch (el.tag | 0) {
     case 0 : 
         var contents = el[0];
-        return /* TString */Block.__(0, [
+        return /* MString */Block.__(0, [
                   contents,
                   document.createTextNode(contents)
                 ]);
@@ -176,7 +176,7 @@ function inflateTree(el) {
                 node.appendChild(getDomNode(child));
                 return /* () */0;
               }));
-        return /* TBuiltin */Block.__(1, [
+        return /* MBuiltin */Block.__(1, [
                   string,
                   domProps,
                   node,
@@ -194,7 +194,7 @@ function inflateTree(el) {
                 container[/* mountedTree */1] = reconcileTrees(container[/* mountedTree */1], render(custom));
                 return /* () */0;
               }));
-        return /* TCustom */Block.__(2, [container]);
+        return /* MCustom */Block.__(2, [container]);
     
   }
 }
@@ -211,7 +211,7 @@ function reconcileTrees(prev, next) {
                 return prev;
               } else {
                 node.textContent = b;
-                return /* TString */Block.__(0, [
+                return /* MString */Block.__(0, [
                           b,
                           node
                         ]);
@@ -231,7 +231,7 @@ function reconcileTrees(prev, next) {
               if (prev[0] === b$1) {
                 var bProps = next[1];
                 setDomProps(node$1, bProps);
-                return /* TBuiltin */Block.__(1, [
+                return /* MBuiltin */Block.__(1, [
                           b$1,
                           bProps,
                           node$1,
@@ -262,7 +262,7 @@ function reconcileTrees(prev, next) {
                 var tree = reconcileTrees(a[/* mountedTree */1], render(custom));
                 a[/* custom */0] = custom;
                 a[/* mountedTree */1] = tree;
-                return /* TCustom */Block.__(2, [a]);
+                return /* MCustom */Block.__(2, [a]);
               } else {
                 var tree$1 = inflateTree(instantiateTree(next));
                 getDomNode(prev).replaceWith(getDomNode(tree$1));

@@ -37,7 +37,7 @@ type custom = {
   clone: customWithState => option(customWithState),
 }
 and customContents('props, 'state) = {
-  identity: contentsSubset('props, 'state),
+  identity: customConfig('props, 'state),
   props: 'props,
   state: 'state,
   render: ('props, 'state) => el,
@@ -51,9 +51,9 @@ and el =
 | Custom(custom /* already contains its props & children */)
 
 and instanceTree =
-| PString(string)
-| PBuiltin(string, domProps('a), list(instanceTree)): instanceTree
-| PCustom(customWithState, instanceTree)
+| IString(string)
+| IBuiltin(string, domProps('a), list(instanceTree)): instanceTree
+| ICustom(customWithState, instanceTree)
 
 and container = {
   mutable custom: customWithState,
@@ -61,20 +61,18 @@ and container = {
 }
 
 and mountedTree =
-/* | Pending(pendingTree) */
-| TString(string, domNode)
-| TBuiltin(string, domProps('a), domNode, list(mountedTree)): mountedTree
-/* maybe all of the customs have their state? assume that it's created for every create */
-| TCustom(container)
+| MString(string, domNode)
+| MBuiltin(string, domProps('a), domNode, list(mountedTree)): mountedTree
+| MCustom(container)
 
-and contentsSubset('props, 'state) = {
+and customConfig('props, 'state) = {
   initialState: 'props => 'state,
   newStateForProps: ('props, 'state) => 'state,
   render: ('props, 'state, 'state => unit) => el,
 };
 
 module Maker = {
-  let makeComponent = (maker: contentsSubset('props, 'state), props: 'props) => {
+  let makeComponent = (maker: customConfig('props, 'state), props: 'props) => {
     {
       init: () => {
         let onChange = ref(_state => Js.log("SetState before render ignored"));
@@ -106,7 +104,7 @@ module Maker = {
     initialState: _props => (),
     newStateForProps: (_, state) => state,
     render: (props, (), _setState) => render(props)
-  })
+  });
 
   let statefulComponent = (~initialState, ~newStateForProps=?, ~render) => makeComponent({
     initialState,
@@ -123,9 +121,9 @@ let render = (WithState({render, props, state})) => render(props, state);
 let onChange = (WithState({onChange} as contents), handler) => onChange(state => handler(WithState({...contents, state})));
 
 let rec getDomNode = tree => switch tree {
-  | TString(_, node)
-  | TBuiltin(_, _, node, _) => node
-  | TCustom({mountedTree}) => getDomNode(mountedTree)
+  | MString(_, node)
+  | MBuiltin(_, _, node, _) => node
+  | MCustom({mountedTree}) => getDomNode(mountedTree)
 };
 
 /*
@@ -138,49 +136,49 @@ Phases of the algorithm:
  */
 
 let rec instantiateTree: el => instanceTree = el => switch el {
-  | String(contents) => PString(contents)
-  | Builtin(string, domProps, children) => PBuiltin(string, domProps, children->List.map(instantiateTree))
+  | String(contents) => IString(contents)
+  | Builtin(string, domProps, children) => IBuiltin(string, domProps, children->List.map(instantiateTree))
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
-    PCustom(custom, instantiateTree(custom->render))
+    ICustom(custom, instantiateTree(custom->render))
 };
 
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
-  | PString(contents) => TString(contents, createTextNode(contents))
-  | PBuiltin(string, domProps, children) =>
+  | IString(contents) => MString(contents, createTextNode(contents))
+  | IBuiltin(string, domProps, children) =>
     let node = createElement(string, domProps);
     let children = children->List.map(inflateTree);
     children->List.forEach(child => appendChild(node, getDomNode(child)));
-    TBuiltin(string, domProps, node, children);
-  | PCustom(custom, instanceTree) =>
+    MBuiltin(string, domProps, node, children);
+  | ICustom(custom, instanceTree) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
     custom->onChange(custom => {
       container.custom = custom;
       container.mountedTree = reconcileTrees(container.mountedTree, custom->render);
     })
-    TCustom(container)
+    MCustom(container)
 }
 
 and reconcileTrees: (mountedTree, el) => mountedTree = (prev, next) => switch (prev, next) {
-  | (TString(a, node), String(b)) =>
+  | (MString(a, node), String(b)) =>
     if (a == b) {
       prev
     } else {
       setTextContent(node, b);
-      TString(b, node)
+      MString(b, node)
     }
-  | (TBuiltin(a, aProps, node, aChildren), Builtin(b, bProps, bChildren)) when a == b =>
+  | (MBuiltin(a, aProps, node, aChildren), Builtin(b, bProps, bChildren)) when a == b =>
     updateDomProps(node, aProps, bProps);
-    TBuiltin(b, bProps, node, reconcileChildren(node, aChildren, bChildren));
-  | (TCustom(a), Custom(b)) =>
+    MBuiltin(b, bProps, node, reconcileChildren(node, aChildren, bChildren));
+  | (MCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
       | Some(custom) =>
         let tree = reconcileTrees(a.mountedTree, custom->render);
         a.custom = custom;
         a.mountedTree = tree;
-        TCustom(a)
+        MCustom(a)
       | None =>
         let tree = inflateTree(instantiateTree(next));
         /* unmount prev nodes */
