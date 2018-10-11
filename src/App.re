@@ -23,7 +23,56 @@ Awesome.make(Awesome.props(~a=2, ~b=3, ()));
 
 Awesome.make(Awesome.props(~a=2, ~b=3, ~children=[<div />, <input />, <Bomb />], ()))
 
+
+
+
+Ok, now what do I need to prototype?
+
+
  */
+
+let awesome = props =>
+  Maker.statefulComponent(
+    ~initialState= _props => "Folks",
+    ~render= ((v, toString), state, setState) =>
+      Builtin(
+        "div",
+        Js.Obj.empty(),
+        [
+          Builtin(
+            "div",
+            {"onclick": _evt => setState(state ++ "1")},
+            [String(toString(v))],
+          ),
+        ],
+      ),
+      props
+  );
+
+
+/** Yayy polymorphism and a normal props thing! */
+module Awesome = {
+  let props = (~value, ~toString) => (value, toString);
+  let maker = {
+    initialState: _props => "Folks",
+    render: ((v, toString), state, setState) =>
+      Builtin(
+        "div",
+        Js.Obj.empty(),
+        [
+          Builtin(
+            "div",
+            {"onclick": _evt => setState(state ++ "1")},
+            [String("Awesome " ++ toString(v))],
+          ),
+        ],
+      ),
+    newStateForProps: None
+  };
+  let make = props => Basic.Maker.makeComponent(maker, props);
+};
+
+
 
 let awesome =
   Maker.statefulComponent(
@@ -43,7 +92,7 @@ let awesome =
       ),
   );
 
-let recursive_ = Maker.statefulComponent(
+let recursive = Maker.recursiveComponent(Maker.statefulComponent(
     ~initialState= ((_loop, depth)) => ("Recursion!", depth),
     ~render= ((loop, parentNum), (text, depth), setState) => {
       let rec recur = num => num > 0 ? [Custom(loop(depth - 1)), ...recur(num - 1)] : [];
@@ -64,12 +113,13 @@ let recursive_ = Maker.statefulComponent(
           ),
         ],
       )
-    }
-  );
-let rec recursive = props => recursive_((recursive, props));
+    },
+  ));
 
 let first = Builtin("div", {"id": "awesome"}, [
   String("Hello"),
+  Custom(Awesome.make(Awesome.props(~value=3, ~toString=string_of_int))),
+  Custom(Awesome.make(Awesome.props(~value="Hi", ~toString=x => x))),
   Custom(awesome([
     String(">>"),
     Custom(awesome([]))

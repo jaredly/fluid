@@ -1,0 +1,11 @@
+####{BSB GENERATED: NO EDIT
+FLG -ppx /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bs-platform/lib/bsppx.exe
+S /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bs-platform/lib/ocaml
+B /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bs-platform/lib/ocaml
+FLG -nostdlib -no-alias-deps -color always
+FLG -w -30-40+6+7+27+32..39+44+45+101-6+7-26-27-32..40-28-44-45
+S tests
+B lib/bs/js/tests
+S src
+B lib/bs/js/src
+####BSB GENERATED: NO EDIT}
