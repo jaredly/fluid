@@ -25,6 +25,7 @@ let createElement = (typ, domProps) => {
   node;
 };
 [@bs.send] external appendChild: (domNode, domNode) => unit = "";
+[@bs.send] external removeChild: (domNode, domNode) => unit = "";
 let updateDomProps = (node, oldProps, newProps) => {
   setDomProps(node, opaqueProps(newProps));
 };
@@ -35,10 +36,14 @@ type custom = {
   init: unit => customWithState,
   clone: customWithState => option(customWithState),
 }
-and customWithState = {
-  render: unit => el,
-  onChange: (customWithState => unit) => unit,
+and customContents('id, 'props, 'state) = {
+  identity: 'id,
+  props: 'props,
+  state: 'state,
+  render: ('props, 'state) => el,
+  onChange: ('state => unit) => unit,
 }
+and customWithState = WithState(customContents('id, 'props, 'state)) : customWithState
 
 and el =
 | String(string)
@@ -62,6 +67,42 @@ and tree =
 /* maybe all of the customs have their state? assume that it's created for every create */
 | TCustom(container);
 
+module Maker = {
+  type contentsSubset('props, 'state) = {
+    initialState: 'state,
+    render: ('props, 'state, 'state => unit) => el,
+  };
+  let makeComponent = (maker, props) => {
+    {
+      init: () => {
+        let onChange = ref(_state => ());
+        let subset = maker(props);
+        WithState({
+          identity: maker,
+          onChange: handler => onChange := handler,
+          props,
+          state: subset.initialState,
+          render: (props, state) => subset.render(props, state, onChange^),
+        })
+      },
+      clone: (WithState({identity} as contents)) => {
+        if (Obj.magic(identity) === maker) {
+          Some(WithState({
+            ...Obj.magic(contents),
+            props
+          }))
+        } else {
+          None
+        }
+      }
+    }
+  };
+
+};
+
+let render = (WithState({render, props, state})) => render(props, state);
+let onChange = (WithState({onChange} as contents), handler) => onChange(state => handler(WithState({...contents, state})));
+
 let rec getDomNode = tree => switch tree {
   | TString(_, node)
   | TBuiltin(_, _, node, _) => node
@@ -74,7 +115,7 @@ let rec createTree: el => pendingTree = el => switch el {
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
-    PCustom(custom, createTree(custom.render()))
+    PCustom(custom, createTree(custom->render))
 };
 
 let rec inflateTree: pendingTree => tree = el => switch el {
@@ -87,9 +128,9 @@ let rec inflateTree: pendingTree => tree = el => switch el {
   | PCustom(custom, tree) =>
     let tree = inflateTree(tree)
     let container = {custom, tree};
-    custom.onChange(custom => {
+    custom->onChange(custom => {
       container.custom = custom;
-      container.tree = reconcileTrees(container.tree, custom.render());
+      container.tree = reconcileTrees(container.tree, custom->render);
     })
     TCustom(container)
 }
@@ -108,7 +149,7 @@ and reconcileTrees: (tree, el) => tree = (prev, next) => switch (prev, next) {
   | (TCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
       | Some(custom) =>
-        let tree = reconcileTrees(a.tree, custom.render());
+        let tree = reconcileTrees(a.tree, custom->render);
         a.custom = custom;
         a.tree = tree;
         TCustom(a)
@@ -123,8 +164,19 @@ and reconcileTrees: (tree, el) => tree = (prev, next) => switch (prev, next) {
     /* unmount prev nodes */
     replaceWith(getDomNode(prev), getDomNode(tree));
     tree
-} and reconcileChildren = (aChildren, bChildren) => {
-  assert(false)
+} and reconcileChildren = (parentNode, aChildren, bChildren) => {
+  switch (aChildren, bChildren) {
+    | ([], []) => []
+    | ([], more) =>
+      let more = bChildren->List.map(child => inflateTree(createTree(child)));
+      more->List.forEach(child => appendChild(parentNode, getDomNode(child)));
+      more
+    | (more, []) => 
+      more->List.forEach(child => removeChild(parentNode, getDomNode(child)));
+      []
+    | ([one, ...aRest], [two, ...bRest]) =>
+      [reconcileTrees(one, two), ...reconcileChildren(parentNode, aRest, bRest)]
+  }
 };
 
 let mount = (el, node) => {

@@ -2,8 +2,62 @@
 
 import * as Basic from "./Basic.js";
 import * as Block from "bs-platform/lib/es6/block.js";
+import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
+
+function awesome(children) {
+  return /* record */[
+          /* init */(function () {
+              var onChange = /* record */[/* contents */(function () {
+                    return /* () */0;
+                  })];
+              return /* WithState */[/* record */[
+                        /* identity */awesome,
+                        /* props */children,
+                        /* state */"Folks",
+                        /* render */(function (props, state) {
+                            return /* Builtin */Block.__(1, [
+                                      "div",
+                                      { },
+                                      /* :: */[
+                                        /* Builtin */Block.__(1, [
+                                            "div",
+                                            {
+                                              onclick: (function () {
+                                                  return Curry._1(onChange[0], state + "1");
+                                                })
+                                            },
+                                            /* :: */[
+                                              /* String */Block.__(0, [state]),
+                                              /* [] */0
+                                            ]
+                                          ]),
+                                        props
+                                      ]
+                                    ]);
+                          }),
+                        /* onChange */(function (handler) {
+                            onChange[0] = handler;
+                            return /* () */0;
+                          })
+                      ]];
+            }),
+          /* clone */(function (param) {
+              var contents = param[0];
+              if (contents[/* identity */0] === awesome) {
+                return /* WithState */[/* record */[
+                          /* identity */contents[/* identity */0],
+                          /* props */children,
+                          /* state */contents[/* state */2],
+                          /* render */contents[/* render */3],
+                          /* onChange */contents[/* onChange */4]
+                        ]];
+              }
+              
+            })
+        ];
+}
 
 var first_001 = {
   id: "awesome"
@@ -12,21 +66,30 @@ var first_001 = {
 var first_002 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
-    /* Builtin */Block.__(1, [
-        "div",
-        {
-          id: "Inner",
-          onclick: (function (evt) {
-              console.log("Clicked!", evt);
-              return /* () */0;
-            })
-        },
-        /* :: */[
-          /* String */Block.__(0, ["world"]),
-          /* [] */0
-        ]
-      ]),
-    /* [] */0
+    /* Custom */Block.__(2, [awesome(/* :: */[
+              /* String */Block.__(0, [">>"]),
+              /* :: */[
+                /* Custom */Block.__(2, [awesome(/* [] */0)]),
+                /* [] */0
+              ]
+            ])]),
+    /* :: */[
+      /* Builtin */Block.__(1, [
+          "div",
+          {
+            id: "Inner",
+            onclick: (function (evt) {
+                console.log("Clicked!", evt);
+                return /* () */0;
+              })
+          },
+          /* :: */[
+            /* String */Block.__(0, ["world"]),
+            /* [] */0
+          ]
+        ]),
+      /* [] */0
+    ]
   ]
 ];
 
@@ -45,14 +108,15 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          19,
+          52,
           12
         ]
       ];
 }
 
 export {
+  awesome ,
   first ,
   
 }
-/* match Not a pure module */
+/* first Not a pure module */

@@ -3,7 +3,6 @@
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Belt_List from "bs-platform/lib/es6/belt_List.js";
-import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
 var setDomProps = function (node,props){
   Object.keys(props).forEach(key => {
@@ -25,6 +24,62 @@ function createElement(typ, domProps) {
 
 function updateDomProps(node, _, newProps) {
   return setDomProps(node, newProps);
+}
+
+function makeComponent(maker, props) {
+  return /* record */[
+          /* init */(function () {
+              var onChange = /* record */[/* contents */(function () {
+                    return /* () */0;
+                  })];
+              var subset = Curry._1(maker, props);
+              return /* WithState */[/* record */[
+                        /* identity */maker,
+                        /* props */props,
+                        /* state */subset[/* initialState */0],
+                        /* render */(function (props, state) {
+                            return Curry._3(subset[/* render */1], props, state, onChange[0]);
+                          }),
+                        /* onChange */(function (handler) {
+                            onChange[0] = handler;
+                            return /* () */0;
+                          })
+                      ]];
+            }),
+          /* clone */(function (param) {
+              var contents = param[0];
+              if (contents[/* identity */0] === maker) {
+                return /* WithState */[/* record */[
+                          /* identity */contents[/* identity */0],
+                          /* props */props,
+                          /* state */contents[/* state */2],
+                          /* render */contents[/* render */3],
+                          /* onChange */contents[/* onChange */4]
+                        ]];
+              }
+              
+            })
+        ];
+}
+
+var Maker = /* module */[/* makeComponent */makeComponent];
+
+function render(param) {
+  var match = param[0];
+  return Curry._2(match[/* render */3], match[/* props */1], match[/* state */2]);
+}
+
+function onChange(param, handler) {
+  var contents = param[0];
+  return Curry._1(contents[/* onChange */4], (function (state) {
+                return Curry._1(handler, /* WithState */[/* record */[
+                              /* identity */contents[/* identity */0],
+                              /* props */contents[/* props */1],
+                              /* state */state,
+                              /* render */contents[/* render */3],
+                              /* onChange */contents[/* onChange */4]
+                            ]]);
+              }));
 }
 
 function getDomNode(_tree) {
@@ -57,7 +112,7 @@ function createTree(el) {
         var custom = Curry._1(el[0][/* init */0], /* () */0);
         return /* PCustom */Block.__(2, [
                   custom,
-                  createTree(Curry._1(custom[/* render */0], /* () */0))
+                  createTree(render(custom))
                 ]);
     
   }
@@ -93,9 +148,9 @@ function inflateTree(el) {
           /* custom */custom,
           /* tree */tree
         ];
-        Curry._1(custom[/* onChange */1], (function (custom) {
+        onChange(custom, (function (custom) {
                 container[/* custom */0] = custom;
-                container[/* tree */1] = reconcileTrees(container[/* tree */1], Curry._1(custom[/* render */0], /* () */0));
+                container[/* tree */1] = reconcileTrees(container[/* tree */1], render(custom));
                 return /* () */0;
               }));
         return /* TCustom */Block.__(2, [container]);
@@ -139,7 +194,7 @@ function reconcileTrees(prev, next) {
                           b$1,
                           bProps,
                           node$1,
-                          Curry._1(reconcileChildren(node$1, prev[3]), next[2])
+                          reconcileChildren(node$1, prev[3], next[2])
                         ]);
               } else {
                 exit = 1;
@@ -163,7 +218,7 @@ function reconcileTrees(prev, next) {
               var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
               if (match !== undefined) {
                 var custom = match;
-                var tree = reconcileTrees(a[/* tree */1], Curry._1(custom[/* render */0], /* () */0));
+                var tree = reconcileTrees(a[/* tree */1], render(custom));
                 a[/* custom */0] = custom;
                 a[/* tree */1] = tree;
                 return /* TCustom */Block.__(2, [a]);
@@ -185,15 +240,32 @@ function reconcileTrees(prev, next) {
   
 }
 
-function reconcileChildren(_, _$1) {
-  throw [
-        Caml_builtin_exceptions.assert_failure,
-        /* tuple */[
-          "Basic.re",
-          126,
-          52
-        ]
-      ];
+function reconcileChildren(parentNode, aChildren, bChildren) {
+  if (aChildren) {
+    if (bChildren) {
+      return /* :: */[
+              reconcileTrees(aChildren[0], bChildren[0]),
+              reconcileChildren(parentNode, aChildren[1], bChildren[1])
+            ];
+    } else {
+      Belt_List.forEach(aChildren, (function (child) {
+              parentNode.removeChild(getDomNode(child));
+              return /* () */0;
+            }));
+      return /* [] */0;
+    }
+  } else if (bChildren) {
+    var more = Belt_List.map(bChildren, (function (child) {
+            return inflateTree(createTree(child));
+          }));
+    Belt_List.forEach(more, (function (child) {
+            parentNode.appendChild(getDomNode(child));
+            return /* () */0;
+          }));
+    return more;
+  } else {
+    return /* [] */0;
+  }
 }
 
 function mount(el, node) {
@@ -206,6 +278,9 @@ export {
   setDomProps ,
   createElement ,
   updateDomProps ,
+  Maker ,
+  render ,
+  onChange ,
   getDomNode ,
   createTree ,
   inflateTree ,
