@@ -30,15 +30,18 @@ function makeComponent(maker, props) {
   return /* record */[
           /* init */(function () {
               var onChange = /* record */[/* contents */(function () {
+                    console.log("SetState before render ignored");
                     return /* () */0;
                   })];
-              var subset = Curry._1(maker, props);
+              console.log("Mount!", maker);
               return /* WithState */[/* record */[
                         /* identity */maker,
                         /* props */props,
-                        /* state */subset[/* initialState */0],
+                        /* state */Curry._1(maker[/* initialState */0], props),
                         /* render */(function (props, state) {
-                            return Curry._3(subset[/* render */1], props, state, onChange[0]);
+                            return Curry._3(maker[/* render */2], props, state, (function (state) {
+                                          return Curry._1(onChange[0], state);
+                                        }));
                           }),
                         /* onChange */(function (handler) {
                             onChange[0] = handler;
@@ -62,7 +65,45 @@ function makeComponent(maker, props) {
         ];
 }
 
-var Maker = /* module */[/* makeComponent */makeComponent];
+function component(render) {
+  var partial_arg_000 = function () {
+    return /* () */0;
+  };
+  var partial_arg_001 = function (_, state) {
+    return state;
+  };
+  var partial_arg_002 = function (props, _, _$1) {
+    return Curry._1(render, props);
+  };
+  var partial_arg = /* record */[
+    partial_arg_000,
+    partial_arg_001,
+    partial_arg_002
+  ];
+  return (function (param) {
+      return makeComponent(partial_arg, param);
+    });
+}
+
+function statefulComponent(initialState, newStateForProps, render) {
+  var partial_arg_001 = /* newStateForProps */newStateForProps !== undefined ? newStateForProps : (function (_, state) {
+        return state;
+      });
+  var partial_arg = /* record */[
+    /* initialState */initialState,
+    partial_arg_001,
+    /* render */render
+  ];
+  return (function (param) {
+      return makeComponent(partial_arg, param);
+    });
+}
+
+var Maker = /* module */[
+  /* makeComponent */makeComponent,
+  /* component */component,
+  /* statefulComponent */statefulComponent
+];
 
 function render(param) {
   var match = param[0];
@@ -91,14 +132,14 @@ function getDomNode(_tree) {
       case 1 : 
           return tree[2];
       case 2 : 
-          _tree = tree[0][/* tree */1];
+          _tree = tree[0][/* mountedTree */1];
           continue ;
       
     }
   };
 }
 
-function createTree(el) {
+function instantiateTree(el) {
   switch (el.tag | 0) {
     case 0 : 
         return /* PString */Block.__(0, [el[0]]);
@@ -106,13 +147,13 @@ function createTree(el) {
         return /* PBuiltin */Block.__(1, [
                   el[0],
                   el[1],
-                  Belt_List.map(el[2], createTree)
+                  Belt_List.map(el[2], instantiateTree)
                 ]);
     case 2 : 
         var custom = Curry._1(el[0][/* init */0], /* () */0);
         return /* PCustom */Block.__(2, [
                   custom,
-                  createTree(render(custom))
+                  instantiateTree(render(custom))
                 ]);
     
   }
@@ -143,14 +184,14 @@ function inflateTree(el) {
                 ]);
     case 2 : 
         var custom = el[0];
-        var tree = inflateTree(el[1]);
+        var mountedTree = inflateTree(el[1]);
         var container = /* record */[
           /* custom */custom,
-          /* tree */tree
+          /* mountedTree */mountedTree
         ];
         onChange(custom, (function (custom) {
                 container[/* custom */0] = custom;
-                container[/* tree */1] = reconcileTrees(container[/* tree */1], render(custom));
+                container[/* mountedTree */1] = reconcileTrees(container[/* mountedTree */1], render(custom));
                 return /* () */0;
               }));
         return /* TCustom */Block.__(2, [container]);
@@ -218,12 +259,12 @@ function reconcileTrees(prev, next) {
               var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
               if (match !== undefined) {
                 var custom = match;
-                var tree = reconcileTrees(a[/* tree */1], render(custom));
+                var tree = reconcileTrees(a[/* mountedTree */1], render(custom));
                 a[/* custom */0] = custom;
-                a[/* tree */1] = tree;
+                a[/* mountedTree */1] = tree;
                 return /* TCustom */Block.__(2, [a]);
               } else {
-                var tree$1 = inflateTree(createTree(next));
+                var tree$1 = inflateTree(instantiateTree(next));
                 getDomNode(prev).replaceWith(getDomNode(tree$1));
                 return tree$1;
               }
@@ -233,7 +274,7 @@ function reconcileTrees(prev, next) {
     
   }
   if (exit === 1) {
-    var tree$2 = inflateTree(createTree(next));
+    var tree$2 = inflateTree(instantiateTree(next));
     getDomNode(prev).replaceWith(getDomNode(tree$2));
     return tree$2;
   }
@@ -256,7 +297,7 @@ function reconcileChildren(parentNode, aChildren, bChildren) {
     }
   } else if (bChildren) {
     var more = Belt_List.map(bChildren, (function (child) {
-            return inflateTree(createTree(child));
+            return inflateTree(instantiateTree(child));
           }));
     Belt_List.forEach(more, (function (child) {
             parentNode.appendChild(getDomNode(child));
@@ -269,7 +310,7 @@ function reconcileChildren(parentNode, aChildren, bChildren) {
 }
 
 function mount(el, node) {
-  var tree = inflateTree(createTree(el));
+  var tree = inflateTree(instantiateTree(el));
   node.appendChild(getDomNode(tree));
   return /* () */0;
 }
@@ -282,7 +323,7 @@ export {
   render ,
   onChange ,
   getDomNode ,
-  createTree ,
+  instantiateTree ,
   inflateTree ,
   reconcileTrees ,
   reconcileChildren ,

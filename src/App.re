@@ -1,7 +1,51 @@
 
 open Basic;
 
-let rec awesome = children => {
+let awesome =
+  Maker.statefulComponent(
+    ~initialState= _props => "Folks",
+    ~render= (props, state, setState) =>
+      Builtin(
+        "div",
+        Js.Obj.empty(),
+        [
+          Builtin(
+            "div",
+            {"onclick": _evt => setState(state ++ "1")},
+            [String(state)],
+          ),
+          ...props,
+        ],
+      ),
+  );
+
+let recursive_ = Maker.statefulComponent(
+    ~initialState= ((_loop, depth)) => ("Recursion!", depth),
+    ~render= ((loop, parentNum), (text, depth), setState) => {
+      let rec recur = num => num > 0 ? [Custom(loop(depth - 1)), ...recur(num - 1)] : [];
+      Builtin(
+        "div",
+        Js.Obj.empty(),
+        [
+          String("[depth " ++ string_of_int(depth) ++ ":" ++ string_of_int(parentNum) ++ "]"),
+          Builtin(
+            "div",
+            {"onclick": _evt => setState((text ++ "1", depth - 1)), "style": "cursor: pointer"},
+            [String(text)],
+          ),
+          Builtin(
+            "div",
+            {"style": "padding-left: 20px; border-left: 2px solid #aaa"},
+            recur(depth)
+          ),
+        ],
+      )
+    }
+  );
+let rec recursive = props => recursive_((recursive, props));
+
+
+/* let awesomeLarge = children => {
   init: () => {
     /* let state = ref("Folks"); */
     let onChange = ref(_state => ());
@@ -28,7 +72,7 @@ let rec awesome = children => {
       None
     }
   }
-};
+}; */
 
 let first = Builtin("div", {"id": "awesome"}, [
   String("Hello"),
@@ -38,11 +82,9 @@ let first = Builtin("div", {"id": "awesome"}, [
   ])),
   Builtin("div", {
     "id": "Inner",
-    "onclick": (evt) => {
-      Js.log2("Clicked!", evt)
-    }
   }, [
-    String("world")
+    String("world"),
+    Custom(recursive(3))
   ])
 ]);
 

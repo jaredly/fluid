@@ -6,57 +6,108 @@ import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
-function awesome(children) {
-  return /* record */[
-          /* init */(function () {
-              var onChange = /* record */[/* contents */(function () {
-                    return /* () */0;
-                  })];
-              return /* WithState */[/* record */[
-                        /* identity */awesome,
-                        /* props */children,
-                        /* state */"Folks",
-                        /* render */(function (props, state) {
-                            return /* Builtin */Block.__(1, [
-                                      "div",
-                                      { },
-                                      /* :: */[
-                                        /* Builtin */Block.__(1, [
-                                            "div",
-                                            {
-                                              onclick: (function () {
-                                                  return Curry._1(onChange[0], state + "1");
-                                                })
-                                            },
-                                            /* :: */[
-                                              /* String */Block.__(0, [state]),
-                                              /* [] */0
-                                            ]
-                                          ]),
-                                        props
-                                      ]
+var partial_arg = Basic.Maker[/* statefulComponent */2];
+
+function arg(props, state, setState) {
+  return /* Builtin */Block.__(1, [
+            "div",
+            { },
+            /* :: */[
+              /* Builtin */Block.__(1, [
+                  "div",
+                  {
+                    onclick: (function () {
+                        return Curry._1(setState, state + "1");
+                      })
+                  },
+                  /* :: */[
+                    /* String */Block.__(0, [state]),
+                    /* [] */0
+                  ]
+                ]),
+              props
+            ]
+          ]);
+}
+
+function awesome(param) {
+  var param$1 = param;
+  var param$2 = arg;
+  return partial_arg((function () {
+                return "Folks";
+              }), param$1, param$2);
+}
+
+var partial_arg$1 = Basic.Maker[/* statefulComponent */2];
+
+function arg$1(param, param$1, setState) {
+  var depth = param$1[1];
+  var text = param$1[0];
+  var loop = param[0];
+  var recur = function (num) {
+    var match = num > 0;
+    if (match) {
+      return /* :: */[
+              /* Custom */Block.__(2, [Curry._1(loop, depth - 1 | 0)]),
+              recur(num - 1 | 0)
+            ];
+    } else {
+      return /* [] */0;
+    }
+  };
+  return /* Builtin */Block.__(1, [
+            "div",
+            { },
+            /* :: */[
+              /* String */Block.__(0, ["[depth " + (String(depth) + (":" + (String(param[1]) + "]")))]),
+              /* :: */[
+                /* Builtin */Block.__(1, [
+                    "div",
+                    {
+                      onclick: (function () {
+                          return Curry._1(setState, /* tuple */[
+                                      text + "1",
+                                      depth - 1 | 0
                                     ]);
-                          }),
-                        /* onChange */(function (handler) {
-                            onChange[0] = handler;
-                            return /* () */0;
-                          })
-                      ]];
-            }),
-          /* clone */(function (param) {
-              var contents = param[0];
-              if (contents[/* identity */0] === awesome) {
-                return /* WithState */[/* record */[
-                          /* identity */contents[/* identity */0],
-                          /* props */children,
-                          /* state */contents[/* state */2],
-                          /* render */contents[/* render */3],
-                          /* onChange */contents[/* onChange */4]
-                        ]];
-              }
-              
-            })
-        ];
+                        }),
+                      style: "cursor: pointer"
+                    },
+                    /* :: */[
+                      /* String */Block.__(0, [text]),
+                      /* [] */0
+                    ]
+                  ]),
+                /* :: */[
+                  /* Builtin */Block.__(1, [
+                      "div",
+                      {
+                        style: "padding-left: 20px; border-left: 2px solid #aaa"
+                      },
+                      recur(depth)
+                    ]),
+                  /* [] */0
+                ]
+              ]
+            ]
+          ]);
+}
+
+function recursive_(param) {
+  var param$1 = param;
+  var param$2 = arg$1;
+  return partial_arg$1((function (param) {
+                return /* tuple */[
+                        "Recursion!",
+                        param[1]
+                      ];
+              }), param$1, param$2);
+}
+
+function recursive(props) {
+  return Curry._1(recursive_(undefined), /* tuple */[
+              recursive,
+              props
+            ]);
 }
 
 var first_001 = {
@@ -66,10 +117,10 @@ var first_001 = {
 var first_002 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
-    /* Custom */Block.__(2, [awesome(/* :: */[
+    /* Custom */Block.__(2, [Curry._1(awesome(undefined), /* :: */[
               /* String */Block.__(0, [">>"]),
               /* :: */[
-                /* Custom */Block.__(2, [awesome(/* [] */0)]),
+                /* Custom */Block.__(2, [Curry._1(awesome(undefined), /* [] */0)]),
                 /* [] */0
               ]
             ])]),
@@ -77,15 +128,14 @@ var first_002 = /* :: */[
       /* Builtin */Block.__(1, [
           "div",
           {
-            id: "Inner",
-            onclick: (function (evt) {
-                console.log("Clicked!", evt);
-                return /* () */0;
-              })
+            id: "Inner"
           },
           /* :: */[
             /* String */Block.__(0, ["world"]),
-            /* [] */0
+            /* :: */[
+              /* Custom */Block.__(2, [recursive(3)]),
+              /* [] */0
+            ]
           ]
         ]),
       /* [] */0
@@ -108,7 +158,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          52,
+          94,
           12
         ]
       ];
@@ -116,6 +166,8 @@ if (match !== undefined) {
 
 export {
   awesome ,
+  recursive_ ,
+  recursive ,
   first ,
   
 }
