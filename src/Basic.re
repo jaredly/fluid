@@ -67,7 +67,7 @@ and mountedTree =
 
 and customConfig('props, 'state) = {
   initialState: 'props => 'state,
-  newStateForProps: ('props, 'state) => 'state,
+  newStateForProps: option(('props, 'state) => 'state),
   render: ('props, 'state, 'state => unit) => el,
 };
 
@@ -91,6 +91,10 @@ module Maker = {
           let contents: customContents('props, 'state) = Obj.magic(contents);
           Some(WithState({
             ...contents,
+            state: switch (maker.newStateForProps) {
+              | None => contents.state
+              | Some(fn) => fn(props, contents.state)
+            },
             props
           }))
         } else {
@@ -102,18 +106,17 @@ module Maker = {
 
   let component = (~render) => makeComponent({
     initialState: _props => (),
-    newStateForProps: (_, state) => state,
+    newStateForProps: None,
     render: (props, (), _setState) => render(props)
   });
 
   let statefulComponent = (~initialState, ~newStateForProps=?, ~render) => makeComponent({
     initialState,
-    newStateForProps: switch newStateForProps {
-      | Some(s) => s
-      | None => (_, state) => state
-    },
+    newStateForProps,
     render,
   });
+
+  let rec recursiveComponent = (inner, props) => inner((recursiveComponent(inner), props));
 
 };
 

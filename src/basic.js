@@ -52,10 +52,11 @@ function makeComponent(maker, props) {
           /* clone */(function (param) {
               var contents = param[0];
               if (contents[/* identity */0] === maker) {
+                var match = maker[/* newStateForProps */1];
                 return /* WithState */[/* record */[
                           /* identity */contents[/* identity */0],
                           /* props */props,
-                          /* state */contents[/* state */2],
+                          /* state */match !== undefined ? Curry._2(match, props, contents[/* state */2]) : contents[/* state */2],
                           /* render */contents[/* render */3],
                           /* onChange */contents[/* onChange */4]
                         ]];
@@ -69,15 +70,12 @@ function component(render) {
   var partial_arg_000 = function () {
     return /* () */0;
   };
-  var partial_arg_001 = function (_, state) {
-    return state;
-  };
   var partial_arg_002 = function (props, _, _$1) {
     return Curry._1(render, props);
   };
   var partial_arg = /* record */[
     partial_arg_000,
-    partial_arg_001,
+    /* newStateForProps */undefined,
     partial_arg_002
   ];
   return (function (param) {
@@ -86,12 +84,9 @@ function component(render) {
 }
 
 function statefulComponent(initialState, newStateForProps, render) {
-  var partial_arg_001 = /* newStateForProps */newStateForProps !== undefined ? newStateForProps : (function (_, state) {
-        return state;
-      });
   var partial_arg = /* record */[
     /* initialState */initialState,
-    partial_arg_001,
+    /* newStateForProps */newStateForProps,
     /* render */render
   ];
   return (function (param) {
@@ -99,10 +94,20 @@ function statefulComponent(initialState, newStateForProps, render) {
     });
 }
 
+function recursiveComponent(inner, props) {
+  return Curry._1(inner, /* tuple */[
+              (function (param) {
+                  return recursiveComponent(inner, param);
+                }),
+              props
+            ]);
+}
+
 var Maker = /* module */[
   /* makeComponent */makeComponent,
   /* component */component,
-  /* statefulComponent */statefulComponent
+  /* statefulComponent */statefulComponent,
+  /* recursiveComponent */recursiveComponent
 ];
 
 function render(param) {
