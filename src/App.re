@@ -1,6 +1,30 @@
 
 open Basic;
 
+/*
+Thoughts about props...
+
+seems like with bs.deriving abstract you could transform
+
+WARNING: I wouldn't be able to use the stock one, because it only adds the final
+unit argument if there's an optional argument, and I need to not care about whether
+there is one or not.
+
+<Awesome a=2 b=3 />
+
+/* Assuming there's a default on `children=[]` */
+Awesome.make(Awesome.props(~a=2, ~b=3, ()));
+
+<Awesome a=2 b=3>
+  <div />
+  <input />
+  <Bomb />
+</Awesome>
+
+Awesome.make(Awesome.props(~a=2, ~b=3, ~children=[<div />, <input />, <Bomb />], ()))
+
+ */
+
 let awesome =
   Maker.statefulComponent(
     ~initialState= _props => "Folks",
@@ -43,36 +67,6 @@ let recursive_ = Maker.statefulComponent(
     }
   );
 let rec recursive = props => recursive_((recursive, props));
-
-
-/* let awesomeLarge = children => {
-  init: () => {
-    /* let state = ref("Folks"); */
-    let onChange = ref(_state => ());
-    WithState({
-      identity: awesome,
-      state: "Folks",
-      props: children,
-      render: (props, state) => Builtin("div", Js.Obj.empty(), [
-        Builtin("div", {"onclick": evt => {
-        onChange^(state ++ "1")
-      }}, [String(state)]),
-        ...props
-      ]),
-      onChange: (handler) => onChange := handler
-    })
-  },
-  clone: (WithState({identity} as contents)) => {
-    if (Obj.magic(identity) === awesome) {
-      Some(WithState({
-        ...Obj.magic(contents),
-        props: children,
-      }))
-    } else {
-      None
-    }
-  }
-}; */
 
 let first = Builtin("div", {"id": "awesome"}, [
   String("Hello"),

@@ -40,14 +40,14 @@ and customContents('props, 'state) = {
   identity: customConfig('props, 'state),
   props: 'props,
   state: 'state,
-  render: ('props, 'state) => el,
+  render: ('props, 'state) => element,
   onChange: ('state => unit) => unit,
 }
 and customWithState = WithState(customContents('props, 'state)) : customWithState
 
-and el =
+and element =
 | String(string)
-| Builtin(string, domProps('a), list(el)): el
+| Builtin(string, domProps('a), list(element)): element
 | Custom(custom /* already contains its props & children */)
 
 and instanceTree =
@@ -68,7 +68,7 @@ and mountedTree =
 and customConfig('props, 'state) = {
   initialState: 'props => 'state,
   newStateForProps: option(('props, 'state) => 'state),
-  render: ('props, 'state, 'state => unit) => el,
+  render: ('props, 'state, 'state => unit) => element,
 };
 
 module Maker = {
@@ -138,7 +138,7 @@ Phases of the algorithm:
 
  */
 
-let rec instantiateTree: el => instanceTree = el => switch el {
+let rec instantiateTree: element => instanceTree = el => switch el {
   | String(contents) => IString(contents)
   | Builtin(string, domProps, children) => IBuiltin(string, domProps, children->List.map(instantiateTree))
   | Custom(custom) =>
@@ -164,7 +164,7 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
     MCustom(container)
 }
 
-and reconcileTrees: (mountedTree, el) => mountedTree = (prev, next) => switch (prev, next) {
+and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
   | (MString(a, node), String(b)) =>
     if (a == b) {
       prev
