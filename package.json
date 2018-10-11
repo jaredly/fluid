@@ -1,1 +1,10 @@
-{}
+{
+  "scripts": {
+    "start": "bsb -make-world -w",
+    "pack": "fpack watch --development ./src/App.js"
+  },
+  "dependencies": {
+    "bs-platform": "^4.0.6",
+    "fpack": "^0.6.6"
+  }
+}

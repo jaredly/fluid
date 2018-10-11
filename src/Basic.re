@@ -1,22 +1,54 @@
 
+type domProps('a) = Js.t({..} as 'a);
+type opaqueProps;
+type domNode;
+
+external opaqueProps: domProps('a) => opaqueProps = "%identity";
+[@bs.scope "document"][@bs.val] external createTextNode: string => domNode = "";
+[@bs.set] external setTextContent: (domNode, string) => unit = "textContent";
+[@bs.scope "document"][@bs.val] external _createElement: string => domNode = "createElement";
+let setDomProps: (domNode, opaqueProps) => unit = [%bs.raw (node, props) => {|
+  Object.keys(props).forEach(key => {
+    if (key === 'checked' || key === 'value') {
+      node[key] = props[key]
+    } else if (typeof props[key] === 'function') {
+      node[key] = props[key]
+    } else {
+      node.setAttribute(key, props[key])
+    }
+  })
+|}];
+let createElement = (typ, domProps) => {
+  let node = _createElement(typ);
+  setDomProps(node, opaqueProps(domProps));
+  /* TODO set props */
+  node;
+};
+[@bs.send] external appendChild: (domNode, domNode) => unit = "";
+let updateDomProps = (node, oldProps, newProps) => {
+  setDomProps(node, opaqueProps(newProps));
+};
+[@bs.send] external replaceWith: (domNode, domNode) => unit = "";
+
 /* also need a "compareTo" (other custom) */
 type custom = {
   init: unit => customWithState,
   clone: customWithState => option(customWithState),
 }
 and customWithState = {
-  render: unit => el
+  render: unit => el,
+  onChange: (customWithState => unit) => unit,
 }
 
 and el =
 | String(string)
-| Builtin(string, domProps, list(el))
+| Builtin(string, domProps('a), list(el)): el
 | Custom(custom /* already contains its props & children */)
 
 and pendingTree =
-| String(string)
-| Builtin(string, domProps, list(pendingTree))
-| Custom(custom, pendingTree)
+| PString(string)
+| PBuiltin(string, domProps('a), list(pendingTree)): pendingTree
+| PCustom(customWithState, pendingTree)
 
 and container = {
   mutable custom: customWithState,
@@ -25,61 +57,69 @@ and container = {
 
 and tree =
 /* | Pending(pendingTree) */
-| String(string, domNode)
-| Builtin(string, domProps, domNode, list(tree))
+| TString(string, domNode)
+| TBuiltin(string, domProps('a), domNode, list(tree)): tree
 /* maybe all of the customs have their state? assume that it's created for every create */
-| Custom(container);
+| TCustom(container);
+
+let rec getDomNode = tree => switch tree {
+  | TString(_, node)
+  | TBuiltin(_, _, node, _) => node
+  | TCustom({tree}) => getDomNode(tree)
+};
 
 let rec createTree: el => pendingTree = el => switch el {
-  | String(contents) => String(contents)
-  | Builtin(string, domProps, children) => Builtin(string, domProps, children->List.map(createTree))
+  | String(contents) => PString(contents)
+  | Builtin(string, domProps, children) => PBuiltin(string, domProps, children->List.map(createTree))
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
-    Custom(custom, createTree(custom.render()))
+    PCustom(custom, createTree(custom.render()))
 };
 
 let rec inflateTree: pendingTree => tree = el => switch el {
-  | String(contents) => String(contents, createTextNode(contents))
-  | Builtin(string, domProps, children) =>
+  | PString(contents) => TString(contents, createTextNode(contents))
+  | PBuiltin(string, domProps, children) =>
     let node = createElement(string, domProps);
     let children = children->List.map(inflateTree);
     children->List.forEach(child => appendChild(node, getDomNode(child)));
-  | Custom(custom, tree) =>
+    TBuiltin(string, domProps, node, children);
+  | PCustom(custom, tree) =>
     let tree = inflateTree(tree)
     let container = {custom, tree};
     custom.onChange(custom => {
       container.custom = custom;
       container.tree = reconcileTrees(container.tree, custom.render());
     })
-    Custom(container)
-};
+    TCustom(container)
+}
 
-let reconcileTrees: (tree, el) => tree = (prev, next) => switch (prev, next) {
-  | (String(a, node), String(b)) =>
+and reconcileTrees: (tree, el) => tree = (prev, next) => switch (prev, next) {
+  | (TString(a, node), String(b)) =>
     if (a == b) {
       prev
     } else {
       setTextContent(node, b);
-      String(b, node)
+      TString(b, node)
     }
-  | (Builtin(a, aProps, node, aChildren), Builtin(b, bProps, bChildren)) when a == b =>
+  | (TBuiltin(a, aProps, node, aChildren), Builtin(b, bProps, bChildren)) when a == b =>
     updateDomProps(node, aProps, bProps);
-    Builtin(b, bProps, node, reconcileChildren(node, aChildren, bChildren));
-  | (Custom(a), Custom(b)) =>
+    TBuiltin(b, bProps, node, reconcileChildren(node, aChildren, bChildren));
+  | (TCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
       | Some(custom) =>
         let tree = reconcileTrees(a.tree, custom.render());
         a.custom = custom;
         a.tree = tree;
-        Custom(a)
+        TCustom(a)
       | None =>
-        let tree = inflateTree(next);
+        let tree = inflateTree(createTree(next));
         /* unmount prev nodes */
         replaceWith(getDomNode(prev), getDomNode(tree));
+        tree
     }
   | _ =>
-    let tree = inflateTree(next);
+    let tree = inflateTree(createTree(next));
     /* unmount prev nodes */
     replaceWith(getDomNode(prev), getDomNode(tree));
     tree
@@ -87,7 +127,10 @@ let reconcileTrees: (tree, el) => tree = (prev, next) => switch (prev, next) {
   assert(false)
 };
 
-/* type  */
+let mount = (el, node) => {
+  let tree = inflateTree(createTree(el));
+  node->appendChild(getDomNode(tree))
+};
 
 /*
 

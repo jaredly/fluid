@@ -1,1 +1,9 @@
-{}
+{
+  "name": "fluid",
+  "sources": "src",
+  "bsc-flags": ["-open", "Belt"],
+  "package-specs": {
+    "module": "es6",
+    "in-source": true
+  }
+}
