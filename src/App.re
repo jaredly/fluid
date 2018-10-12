@@ -6,6 +6,7 @@ module Awesome = {
   let props = (~value, ~toString, ()) => (value, toString);
   let maker = {
     initialState: _props => "Folks",
+    reconcileTrees: None,
     render: ((v, toString), state, setState) =>
       <div>
         <div onclick={_evt => setState(state ++ "1")}>

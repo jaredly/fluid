@@ -17,7 +17,7 @@ function maker_000() {
   return "Folks";
 }
 
-function maker_002(param, state, setState) {
+function maker_003(param, state, setState) {
   return /* Builtin */Block.__(1, [
             "div",
             { },
@@ -42,7 +42,8 @@ function maker_002(param, state, setState) {
 var maker = /* record */[
   maker_000,
   /* newStateForProps */undefined,
-  maker_002
+  /* reconcileTrees */undefined,
+  maker_003
 ];
 
 function make(props) {
@@ -134,7 +135,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          38,
+          39,
           12
         ]
       ];

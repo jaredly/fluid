@@ -75,12 +75,14 @@ and mountedTree =
 and customConfig('props, 'state) = {
   initialState: 'props => 'state,
   newStateForProps: option(('props, 'state) => 'state),
+  reconcileTrees: option((mountedTree, element) => mountedTree),
   render: ('props, 'state, 'state => unit) => element,
 };
 
 let defaultConfig = {
   initialState: () => (),
   newStateForProps: None,
+  reconcileTrees: None,
   render: ((), (), _setState) => String("Hello")
 };
 
@@ -121,15 +123,17 @@ module Maker = {
     }
   };
 
-  let component = (~render) => makeComponent({
+  let component = (~reconcileTrees=?, ~render) => makeComponent({
     initialState: _props => (),
     newStateForProps: None,
+    reconcileTrees,
     render: (props, (), _setState) => render(props)
   });
 
-  let statefulComponent = (~initialState, ~newStateForProps=?, ~render) => makeComponent({
+  let statefulComponent = (~initialState, ~reconcileTrees=?, ~newStateForProps=?, ~render) => makeComponent({
     initialState,
     newStateForProps,
+    reconcileTrees,
     render,
   });
 
@@ -175,10 +179,20 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
     custom->onChange(custom => {
+      let oldCustom = container.custom;
       container.custom = custom;
-      container.mountedTree = reconcileTrees(container.mountedTree, custom->render);
-    })
+      container.mountedTree = custom->reconcileCustom(oldCustom, container.mountedTree, custom->render);
+    });
     MCustom(container)
+}
+
+and reconcileCustom = (
+  WithState(newCustom),
+  WithState(oldCustom),
+  oldMountedTree,
+  newElement
+) => {
+  reconcileTrees(oldMountedTree, newElement)
 }
 
 and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {

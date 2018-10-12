@@ -31,3 +31,51 @@ What counts as matching up? Mostly what you'd expect, with some important additi
 hrmmmm so I imagine what we really want is the layout algorithm's results for the oldMountedTree and the newElementTree.
 Can the layout algorithm's recalculation be incremental & aided by imperative instructions from `reconcileLayout` as well?
 
+
+
+hrmm how does layout fit in?
+maybe I do a ... in-memory reconcile ... I'm not sure what representation yoga wants.
+And how to apply the layout to DOM nodes.
+
+Ok yeah here goes.
+-> ermmm do a
+...
+
+ok so here are the things I want to make sure are doable:
+- "exiting" nodes gracefully - e.g. not just removing them, fading out or sth
+- moving a node from one place in the layout ~tree to another (instead of removing one place & creating a new one in the other)
+- umm maybe that's it. oh "entering gracefully"
+
+So first there's a "layout reconciliation"
+where I take the previous fully layout-ed (and thereby instantiated) tree
+and the new element tree
+and give imperative ways to update one to match the other based on the state transition.
+
+And then! we calculate the new layout.
+
+And then! there's a "layout application" where you get to decide how to apply the new layout things to the old layout tree.
+
+And then! we actually put that into effect in the DOM.
+
+#(reconcileTree)
+(oldMountedTree, oldState, newState, newElement)
+->
+(layoutTreeChanges) (including maybe "exit node animations" or some such)
+
+oldMountedTree + layoutTreeChanges => newTreeReadyForLayout
+
+newTreeReadyForLayout => (yoga) => newTreeWithLayout
+
+#(applyNewLayout)
+(oldMountedTree, oldState, newState, newTreeWithLayout)
+->
+(layoutApplications)
+
+Where layoutApplications might include
+"set the transform of this element to be an animation from the current position to the new position"
+
+
+And then we take
+oldMountedTree + layoutTreeChanges + layoutApplication
+
+and hopefully come up with a newMountedTree that matches the newTreeWithLayout
