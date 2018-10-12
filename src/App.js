@@ -58,24 +58,26 @@ var Awesome = /* module */[
 var partial_arg = Fluid.Maker[/* statefulComponent */2];
 
 function arg(props, state, setState) {
+  var children_000 = /* Builtin */Block.__(1, [
+      "div",
+      {
+        onclick: (function () {
+            return Curry._1(setState, state + "1");
+          })
+      },
+      /* :: */[
+        /* String */Block.__(0, [state]),
+        /* [] */0
+      ]
+    ]);
+  var children = /* :: */[
+    children_000,
+    props
+  ];
   return /* Builtin */Block.__(1, [
             "div",
             { },
-            /* :: */[
-              /* Builtin */Block.__(1, [
-                  "div",
-                  {
-                    onclick: (function () {
-                        return Curry._1(setState, state + "1");
-                      })
-                  },
-                  /* :: */[
-                    /* String */Block.__(0, [state]),
-                    /* [] */0
-                  ]
-                ]),
-              props
-            ]
+            children
           ]);
 }
 
@@ -113,6 +115,7 @@ function arg$1(param, param$1, setState) {
       return /* [] */0;
     }
   };
+  var children = recur(depth);
   return /* Builtin */Block.__(1, [
             "div",
             { },
@@ -141,7 +144,7 @@ function arg$1(param, param$1, setState) {
                       {
                         style: "padding-left: 20px; border-left: 2px solid #aaa"
                       },
-                      recur(depth)
+                      children
                     ]),
                   /* [] */0
                 ]
@@ -251,7 +254,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          138,
+          137,
           12
         ]
       ];
