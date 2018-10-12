@@ -6,6 +6,40 @@ import * as Fluid from "./Fluid.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
+var fadeOut = (function(node) {
+  const box = node.getBoundingClientRect();
+  node.style.position = 'absolute';
+  node.style.pointerEvents = 'none';
+  node.style.top = box.top + 'px';
+  node.style.left = box.left + 'px';
+  const max = 30;
+  let timer = max;
+  const loop = () => {
+    timer -= 1;
+    node.style.opacity = timer / max
+    if (timer > 0) {
+      requestAnimationFrame(loop)
+    } else {
+      node.parentNode.removeChild(node);
+    }
+  };
+  requestAnimationFrame(loop)
+});
+
+var fadeIn = (function(node) {
+  const max = 30;
+  let timer = max;
+  node.style.opacity = 0;
+  const loop = () => {
+    timer -= 1;
+    node.style.opacity = 1 - timer / max
+    if (timer > 0) {
+      requestAnimationFrame(loop)
+    }
+  };
+  requestAnimationFrame(loop)
+});
+
 function props(on, off, _) {
   return /* record */[
           /* on */on,
@@ -18,17 +52,28 @@ function maker_001() {
 }
 
 var maker_003 = /* reconcileTrees */(function (oldState, newState, mountedTree, newTree) {
+    var exit = 0;
     if (oldState) {
       if (newState) {
         return mountedTree;
       } else {
-        return Fluid.reconcileTrees(mountedTree, newTree);
+        exit = 1;
       }
     } else if (newState) {
-      return Fluid.reconcileTrees(mountedTree, newTree);
+      exit = 1;
     } else {
       return mountedTree;
     }
+    if (exit === 1) {
+      var domNode = Fluid.getDomNode(mountedTree);
+      var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
+      var newDomNode = Fluid.getDomNode(newTree$1);
+      Curry._1(fadeOut, domNode);
+      Curry._1(fadeIn, newDomNode);
+      domNode.parentNode.insertBefore(newDomNode, domNode);
+      return newTree$1;
+    }
+    
   });
 
 function maker_004(param, state, setState) {
@@ -112,21 +157,23 @@ var Awesome = /* module */[
   /* make */make$1
 ];
 
-function props$2(text, onClick, _) {
+function props$2(text, style, onClick, _) {
   return /* tuple */[
           text,
+          style,
           onClick
         ];
 }
 
 var make$2 = Fluid.Maker[/* component */1]("Button", undefined, (function (param) {
-        var onClick = param[1];
+        var onClick = param[2];
         return /* Builtin */Block.__(1, [
                   "button",
                   {
                     onclick: (function () {
                         return Curry._1(onClick, /* () */0);
-                      })
+                      }),
+                    style: param[1]
                   },
                   /* :: */[
                     /* String */Block.__(0, [param[0]]),
@@ -141,17 +188,39 @@ var Button = /* module */[
 ];
 
 function props_000(onClick) {
-  return /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
-                  "Turn Off",
-                  onClick
-                ])]);
+  return /* Builtin */Block.__(1, [
+            "div",
+            { },
+            /* :: */[
+              /* String */Block.__(0, ["Click this to"]),
+              /* :: */[
+                /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
+                          "Turn Off",
+                          "background-color: green",
+                          onClick
+                        ])]),
+                /* [] */0
+              ]
+            ]
+          ]);
 }
 
 function props_001(onClick) {
-  return /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
-                  "Turn On",
-                  onClick
-                ])]);
+  return /* Builtin */Block.__(1, [
+            "div",
+            { },
+            /* :: */[
+              /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
+                        "Turn On",
+                        "background-color: pink",
+                        onClick
+                      ])]),
+              /* :: */[
+                /* String */Block.__(0, ["if you want"]),
+                /* [] */0
+              ]
+            ]
+          ]);
 }
 
 var props$3 = /* record */[
@@ -241,17 +310,19 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          83,
+          128,
           12
         ]
       ];
 }
 
 export {
+  fadeOut ,
+  fadeIn ,
   Toggle ,
   Awesome ,
   Button ,
   first ,
   
 }
-/* make Not a pure module */
+/* fadeOut Not a pure module */

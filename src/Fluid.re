@@ -31,7 +31,9 @@ let createElement = (typ, domProps) => {
   /* TODO set props */
   node;
 };
+[@bs.get] external parentNode: domNode => domNode = "";
 [@bs.send] external appendChild: (domNode, domNode) => unit = "";
+[@bs.send] external insertBefore: (domNode, domNode, ~reference: domNode) => unit = "";
 [@bs.send] external removeChild: (domNode, domNode) => unit = "";
 let updateDomProps = (node, _oldProps, newProps) => {
   setDomProps(node, opaqueProps(newProps));
