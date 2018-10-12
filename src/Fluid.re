@@ -41,7 +41,7 @@ let updateDomProps = (node, _oldProps, newProps) => {
 /* also need a "compareTo" (other custom) */
 type custom = {
   init: unit => customWithState,
-  clone: customWithState => option(customWithState),
+  clone: customWithState => [`Different | `Same | `Compatible(customWithState)],
 }
 and customContents('props, 'state) = {
   identity: customConfig('props, 'state),
@@ -78,6 +78,12 @@ and customConfig('props, 'state) = {
   render: ('props, 'state, 'state => unit) => element,
 };
 
+let defaultConfig = {
+  initialState: () => (),
+  newStateForProps: None,
+  render: ((), (), _setState) => String("Hello")
+};
+
 module Maker = {
   let makeComponent = (maker: customConfig('props, 'state), props: 'props) => {
     {
@@ -96,16 +102,20 @@ module Maker = {
         /* If the `identity` is strictly equal, then we know that the types must be the same. */
         if (Obj.magic(identity) === maker) {
           let contents: customContents('props, 'state) = Obj.magic(contents);
-          Some(WithState({
-            ...contents,
-            state: switch (maker.newStateForProps) {
-              | None => contents.state
-              | Some(fn) => fn(props, contents.state)
-            },
-            props
-          }))
+          if (contents.props === props) {
+            `Same
+          } else {
+            `Compatible(WithState({
+              ...contents,
+              state: switch (maker.newStateForProps) {
+                | None => contents.state
+                | Some(fn) => fn(props, contents.state)
+              },
+              props
+            }))
+          }
         } else {
-          None
+          `Different
         }
       }
     }
@@ -184,12 +194,13 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
     MBuiltin(b, bProps, node, reconcileChildren(node, aChildren, bChildren));
   | (MCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
-      | Some(custom) =>
+      | `Same => MCustom(a)
+      | `Compatible(custom) =>
         let tree = reconcileTrees(a.mountedTree, custom->render);
         a.custom = custom;
         a.mountedTree = tree;
         MCustom(a)
-      | None =>
+      | `Different =>
         let tree = inflateTree(instantiateTree(next));
         /* unmount prev nodes */
         replaceWith(getDomNode(prev), getDomNode(tree));

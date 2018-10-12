@@ -26,6 +26,20 @@ function updateDomProps(node, _, newProps) {
   return setDomProps(node, newProps);
 }
 
+function defaultConfig_000() {
+  return /* () */0;
+}
+
+function defaultConfig_002(_, _$1, _$2) {
+  return /* String */Block.__(0, ["Hello"]);
+}
+
+var defaultConfig = /* record */[
+  defaultConfig_000,
+  /* newStateForProps */undefined,
+  defaultConfig_002
+];
+
 function makeComponent(maker, props) {
   return /* record */[
           /* init */(function () {
@@ -52,16 +66,24 @@ function makeComponent(maker, props) {
           /* clone */(function (param) {
               var contents = param[0];
               if (contents[/* identity */0] === maker) {
-                var match = maker[/* newStateForProps */1];
-                return /* WithState */[/* record */[
-                          /* identity */contents[/* identity */0],
-                          /* props */props,
-                          /* state */match !== undefined ? Curry._2(match, props, contents[/* state */2]) : contents[/* state */2],
-                          /* render */contents[/* render */3],
-                          /* onChange */contents[/* onChange */4]
-                        ]];
+                if (contents[/* props */1] === props) {
+                  return /* Same */925282182;
+                } else {
+                  var match = maker[/* newStateForProps */1];
+                  return /* `Compatible */[
+                          785637236,
+                          /* WithState */[/* record */[
+                              /* identity */contents[/* identity */0],
+                              /* props */props,
+                              /* state */match !== undefined ? Curry._2(match, props, contents[/* state */2]) : contents[/* state */2],
+                              /* render */contents[/* render */3],
+                              /* onChange */contents[/* onChange */4]
+                            ]]
+                        ];
+                }
+              } else {
+                return /* Different */-890978471;
               }
-              
             })
         ];
 }
@@ -262,16 +284,20 @@ function reconcileTrees(prev, next) {
               break;
           case 2 : 
               var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
-              if (match !== undefined) {
-                var custom = match;
-                var tree = reconcileTrees(a[/* mountedTree */1], render(custom));
-                a[/* custom */0] = custom;
-                a[/* mountedTree */1] = tree;
-                return /* MCustom */Block.__(2, [a]);
+              if (typeof match === "number") {
+                if (match >= 925282182) {
+                  return /* MCustom */Block.__(2, [a]);
+                } else {
+                  var tree = inflateTree(instantiateTree(next));
+                  getDomNode(prev).replaceWith(getDomNode(tree));
+                  return tree;
+                }
               } else {
-                var tree$1 = inflateTree(instantiateTree(next));
-                getDomNode(prev).replaceWith(getDomNode(tree$1));
-                return tree$1;
+                var custom = match[1];
+                var tree$1 = reconcileTrees(a[/* mountedTree */1], render(custom));
+                a[/* custom */0] = custom;
+                a[/* mountedTree */1] = tree$1;
+                return /* MCustom */Block.__(2, [a]);
               }
           
         }
@@ -324,6 +350,7 @@ export {
   setDomProps ,
   createElement ,
   updateDomProps ,
+  defaultConfig ,
   Maker ,
   render ,
   onChange ,
