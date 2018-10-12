@@ -6,18 +6,73 @@ import * as Fluid from "./Fluid.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
 
-function props(value, toString, _) {
+function props(on, off, _) {
+  return /* record */[
+          /* on */on,
+          /* off */off
+        ];
+}
+
+function maker_001() {
+  return false;
+}
+
+var maker_003 = /* reconcileTrees */(function (oldState, newState, mountedTree, newTree) {
+    if (oldState) {
+      if (newState) {
+        return mountedTree;
+      } else {
+        return Fluid.reconcileTrees(mountedTree, newTree);
+      }
+    } else if (newState) {
+      return Fluid.reconcileTrees(mountedTree, newTree);
+    } else {
+      return mountedTree;
+    }
+  });
+
+function maker_004(param, state, setState) {
+  if (state) {
+    return Curry._1(param[/* on */0], (function () {
+                  return Curry._1(setState, false);
+                }));
+  } else {
+    return Curry._1(param[/* off */1], (function () {
+                  return Curry._1(setState, true);
+                }));
+  }
+}
+
+var maker = /* record */[
+  /* name */"Toggle",
+  maker_001,
+  /* newStateForProps */undefined,
+  maker_003,
+  maker_004
+];
+
+function make(props) {
+  return Fluid.Maker[/* makeComponent */0](maker, props);
+}
+
+var Toggle = /* module */[
+  /* props */props,
+  /* maker */maker,
+  /* make */make
+];
+
+function props$1(value, toString, _) {
   return /* tuple */[
           value,
           toString
         ];
 }
 
-function maker_000() {
+function maker_001$1() {
   return "Folks";
 }
 
-function maker_003(param, state, setState) {
+function maker_004$1(param, state, setState) {
   return /* Builtin */Block.__(1, [
             "div",
             { },
@@ -30,7 +85,7 @@ function maker_003(param, state, setState) {
                       })
                   },
                   /* :: */[
-                    /* String */Block.__(0, ["Awesome " + Curry._1(param[1], param[0])]),
+                    /* String */Block.__(0, ["Awesome " + (Curry._1(param[1], param[0]) + (" " + state))]),
                     /* [] */0
                   ]
                 ]),
@@ -39,39 +94,87 @@ function maker_003(param, state, setState) {
           ]);
 }
 
-var maker = /* record */[
-  maker_000,
+var maker$1 = /* record */[
+  /* name */"Awesome",
+  maker_001$1,
   /* newStateForProps */undefined,
   /* reconcileTrees */undefined,
-  maker_003
+  maker_004$1
 ];
 
-function make(props) {
-  return Fluid.Maker[/* makeComponent */0](maker, props);
+function make$1(props) {
+  return Fluid.Maker[/* makeComponent */0](maker$1, props);
 }
 
 var Awesome = /* module */[
-  /* props */props,
-  /* maker */maker,
-  /* make */make
+  /* props */props$1,
+  /* maker */maker$1,
+  /* make */make$1
 ];
 
-function props_001(prim) {
-  return String(prim);
+function props$2(text, onClick, _) {
+  return /* tuple */[
+          text,
+          onClick
+        ];
 }
 
-var props$1 = /* tuple */[
-  5,
+var make$2 = Fluid.Maker[/* component */1]("Button", undefined, (function (param) {
+        var onClick = param[1];
+        return /* Builtin */Block.__(1, [
+                  "button",
+                  {
+                    onclick: (function () {
+                        return Curry._1(onClick, /* () */0);
+                      })
+                  },
+                  /* :: */[
+                    /* String */Block.__(0, [param[0]]),
+                    /* [] */0
+                  ]
+                ]);
+      }), /* () */0);
+
+var Button = /* module */[
+  /* props */props$2,
+  /* make */make$2
+];
+
+function props_000(onClick) {
+  return /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
+                  "Turn Off",
+                  onClick
+                ])]);
+}
+
+function props_001(onClick) {
+  return /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
+                  "Turn On",
+                  onClick
+                ])]);
+}
+
+var props$3 = /* record */[
+  props_000,
   props_001
 ];
 
-function props_001$1(x) {
+function props_001$1(prim) {
+  return String(prim);
+}
+
+var props$4 = /* tuple */[
+  5,
+  props_001$1
+];
+
+function props_001$2(x) {
   return x;
 }
 
-var props$2 = /* tuple */[
+var props$5 = /* tuple */[
   "Hi",
-  props_001$1
+  props_001$2
 ];
 
 var first_001 = {
@@ -99,21 +202,24 @@ var first_002 = /* :: */[
         ]
       ]),
     /* :: */[
-      /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker, props$1)]),
+      /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker, props$3)]),
       /* :: */[
-        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker, props$2)]),
+        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$4)]),
         /* :: */[
-          /* Builtin */Block.__(1, [
-              "div",
-              {
-                id: "Inner"
-              },
-              /* :: */[
-                /* String */Block.__(0, ["world"]),
-                /* [] */0
-              ]
-            ]),
-          /* [] */0
+          /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$5)]),
+          /* :: */[
+            /* Builtin */Block.__(1, [
+                "div",
+                {
+                  id: "Inner"
+                },
+                /* :: */[
+                  /* String */Block.__(0, ["world"]),
+                  /* [] */0
+                ]
+              ]),
+            /* [] */0
+          ]
         ]
       ]
     ]
@@ -135,15 +241,17 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          39,
+          83,
           12
         ]
       ];
 }
 
 export {
+  Toggle ,
   Awesome ,
+  Button ,
   first ,
   
 }
-/* first Not a pure module */
+/* make Not a pure module */

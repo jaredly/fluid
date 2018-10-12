@@ -73,13 +73,15 @@ and mountedTree =
 | MCustom(container)
 
 and customConfig('props, 'state) = {
+  name: string,
   initialState: 'props => 'state,
   newStateForProps: option(('props, 'state) => 'state),
-  reconcileTrees: option((mountedTree, element) => mountedTree),
+  reconcileTrees: option(('state, 'state, mountedTree, element) => mountedTree),
   render: ('props, 'state, 'state => unit) => element,
 };
 
 let defaultConfig = {
+  name: "Unnamed",
   initialState: () => (),
   newStateForProps: None,
   reconcileTrees: None,
@@ -123,14 +125,16 @@ module Maker = {
     }
   };
 
-  let component = (~reconcileTrees=?, ~render) => makeComponent({
+  let component = (~name, ~reconcileTrees=?, ~render, ()) => makeComponent({
+    name,
     initialState: _props => (),
     newStateForProps: None,
     reconcileTrees,
     render: (props, (), _setState) => render(props)
   });
 
-  let statefulComponent = (~initialState, ~reconcileTrees=?, ~newStateForProps=?, ~render) => makeComponent({
+  let statefulComponent = (~name, ~initialState, ~reconcileTrees=?, ~newStateForProps=?, ~render, ()) => makeComponent({
+    name,
     initialState,
     newStateForProps,
     reconcileTrees,
@@ -178,21 +182,23 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
   | ICustom(custom, instanceTree) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
-    custom->onChange(custom => {
-      let oldCustom = container.custom;
-      container.custom = custom;
-      container.mountedTree = custom->reconcileCustom(oldCustom, container.mountedTree, custom->render);
-    });
+    custom->listenForChanges(container);
     MCustom(container)
 }
 
-and reconcileCustom = (
-  WithState(newCustom),
-  WithState(oldCustom),
-  oldMountedTree,
-  newElement
-) => {
-  reconcileTrees(oldMountedTree, newElement)
+and listenForChanges = (WithState({onChange, state, identity} as contents), container) => {
+  let state = ref(state);
+  onChange(newState => {
+    let newCustom = WithState({...contents, state: newState});
+    let oldState = state^;
+    state := newState;
+    container.custom = newCustom;
+    let newElement = contents.render(contents.props, newState);
+    container.mountedTree = switch (identity.reconcileTrees) {
+      | None => reconcileTrees(container.mountedTree, newElement)
+      | Some(reconcile) => reconcile(oldState, newState, container.mountedTree, newElement)
+    }
+  })
 }
 
 and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
@@ -215,6 +221,7 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
         a.mountedTree = tree;
         MCustom(a)
       | `Different =>
+        /* Js.log3("different", a, b); */
         let tree = inflateTree(instantiateTree(next));
         /* unmount prev nodes */
         replaceWith(getDomNode(prev), getDomNode(tree));

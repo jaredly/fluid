@@ -26,19 +26,20 @@ function updateDomProps(node, _, newProps) {
   return setDomProps(node, newProps);
 }
 
-function defaultConfig_000() {
+function defaultConfig_001() {
   return /* () */0;
 }
 
-function defaultConfig_003(_, _$1, _$2) {
+function defaultConfig_004(_, _$1, _$2) {
   return /* String */Block.__(0, ["Hello"]);
 }
 
 var defaultConfig = /* record */[
-  defaultConfig_000,
+  /* name */"Unnamed",
+  defaultConfig_001,
   /* newStateForProps */undefined,
   /* reconcileTrees */undefined,
-  defaultConfig_003
+  defaultConfig_004
 ];
 
 function makeComponent(maker, props) {
@@ -52,9 +53,9 @@ function makeComponent(maker, props) {
               return /* WithState */[/* record */[
                         /* identity */maker,
                         /* props */props,
-                        /* state */Curry._1(maker[/* initialState */0], props),
+                        /* state */Curry._1(maker[/* initialState */1], props),
                         /* render */(function (props, state) {
-                            return Curry._3(maker[/* render */3], props, state, (function (state) {
+                            return Curry._3(maker[/* render */4], props, state, (function (state) {
                                           return Curry._1(onChange[0], state);
                                         }));
                           }),
@@ -70,7 +71,7 @@ function makeComponent(maker, props) {
                 if (contents[/* props */1] === props) {
                   return /* Same */925282182;
                 } else {
-                  var match = maker[/* newStateForProps */1];
+                  var match = maker[/* newStateForProps */2];
                   return /* `Compatible */[
                           785637236,
                           /* WithState */[/* record */[
@@ -89,26 +90,28 @@ function makeComponent(maker, props) {
         ];
 }
 
-function component(reconcileTrees, render) {
-  var partial_arg_000 = function () {
+function component(name, reconcileTrees, render, _) {
+  var partial_arg_001 = function () {
     return /* () */0;
   };
-  var partial_arg_003 = function (props, _, _$1) {
+  var partial_arg_004 = function (props, _, _$1) {
     return Curry._1(render, props);
   };
   var partial_arg = /* record */[
-    partial_arg_000,
+    /* name */name,
+    partial_arg_001,
     /* newStateForProps */undefined,
     /* reconcileTrees */reconcileTrees,
-    partial_arg_003
+    partial_arg_004
   ];
   return (function (param) {
       return makeComponent(partial_arg, param);
     });
 }
 
-function statefulComponent(initialState, reconcileTrees, newStateForProps, render) {
+function statefulComponent(name, initialState, reconcileTrees, newStateForProps, render, _) {
   var partial_arg = /* record */[
+    /* name */name,
     /* initialState */initialState,
     /* newStateForProps */newStateForProps,
     /* reconcileTrees */reconcileTrees,
@@ -219,19 +222,32 @@ function inflateTree(el) {
           /* custom */custom,
           /* mountedTree */mountedTree
         ];
-        onChange(custom, (function (custom) {
-                var oldCustom = container[/* custom */0];
-                container[/* custom */0] = custom;
-                container[/* mountedTree */1] = reconcileCustom(custom, oldCustom, container[/* mountedTree */1], render(custom));
-                return /* () */0;
-              }));
+        listenForChanges(custom, container);
         return /* MCustom */Block.__(2, [container]);
     
   }
 }
 
-function reconcileCustom(_, _$1, oldMountedTree, newElement) {
-  return reconcileTrees(oldMountedTree, newElement);
+function listenForChanges(param, container) {
+  var contents = param[0];
+  var identity = contents[/* identity */0];
+  var state = /* record */[/* contents */contents[/* state */2]];
+  return Curry._1(contents[/* onChange */4], (function (newState) {
+                var newCustom = /* WithState */[/* record */[
+                    /* identity */contents[/* identity */0],
+                    /* props */contents[/* props */1],
+                    /* state */newState,
+                    /* render */contents[/* render */3],
+                    /* onChange */contents[/* onChange */4]
+                  ]];
+                var oldState = state[0];
+                state[0] = newState;
+                container[/* custom */0] = newCustom;
+                var newElement = Curry._2(contents[/* render */3], contents[/* props */1], newState);
+                var match = identity[/* reconcileTrees */3];
+                container[/* mountedTree */1] = match !== undefined ? Curry._4(match, oldState, newState, container[/* mountedTree */1], newElement) : reconcileTrees(container[/* mountedTree */1], newElement);
+                return /* () */0;
+              }));
 }
 
 function reconcileTrees(prev, next) {
@@ -365,7 +381,7 @@ export {
   getDomNode ,
   instantiateTree ,
   inflateTree ,
-  reconcileCustom ,
+  listenForChanges ,
   reconcileTrees ,
   reconcileChildren ,
   mount ,
