@@ -5,6 +5,9 @@ type domNode;
 
 [@bs.obj] external domProps: (
   ~id:string=?,
+  ~_type:string=?,
+  ~onchange:Dom.event => unit=?,
+  ~oninput:Dom.event => unit=?,
   ~onclick:Dom.event => unit=?,
   ~style:string=?,
   unit

@@ -3,8 +3,23 @@
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Fluid from "./Fluid.js";
+import * as Spring from "./Spring.js";
+import * as Animate from "./Animate.js";
+import * as Pervasives from "bs-platform/lib/es6/pervasives.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
+
+var Style = /* module */[];
+
+function zoom(node) {
+  return Animate.spring(1, 1000, undefined, (function (amount) {
+                node.style.transform = "translateX(" + (Pervasives.string_of_float(amount * 100) + "px)");
+                return /* () */0;
+              }), (function () {
+                node.parentNode.removeChild(node);
+                return /* () */0;
+              }));
+}
 
 var fadeOut = (function(node) {
   const box = node.getBoundingClientRect();
@@ -68,7 +83,7 @@ var maker_003 = /* reconcileTrees */(function (oldState, newState, mountedTree, 
       var domNode = Fluid.getDomNode(mountedTree);
       var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
       var newDomNode = Fluid.getDomNode(newTree$1);
-      Curry._1(fadeOut, domNode);
+      zoom(domNode);
       Curry._1(fadeIn, newDomNode);
       domNode.parentNode.insertBefore(newDomNode, domNode);
       return newTree$1;
@@ -187,6 +202,32 @@ var Button = /* module */[
   /* make */make$2
 ];
 
+var canvas = Fluid.createElement("canvas", { });
+
+document.body.appendChild(canvas);
+
+var visualize = (
+  function (state, advance, isAtRest) {
+    canvas.width = 500
+    canvas.height = 500
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 500, 500);
+    ctx.strokeStyle = 'black'
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 350);
+    ctx.stroke()
+    for (var i=0; i<500; i++) {
+      if (isAtRest(state)) {
+        break
+      }
+      state = advance(1, state);
+      ctx.lineTo(i, 250 + state[2] * 100)
+    }
+    ctx.stroke();
+  }
+);
+
 function props_000(onClick) {
   return /* Builtin */Block.__(1, [
             "div",
@@ -196,7 +237,7 @@ function props_000(onClick) {
               /* :: */[
                 /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
                           "Turn Off",
-                          "background-color: green",
+                          "background-color: #88ff88",
                           onClick
                         ])]),
                 /* [] */0
@@ -212,7 +253,7 @@ function props_001(onClick) {
             /* :: */[
               /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
                         "Turn On",
-                        "background-color: pink",
+                        "background-color: #ffacf0",
                         onClick
                       ])]),
               /* :: */[
@@ -254,40 +295,62 @@ var first_002 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
     /* Builtin */Block.__(1, [
-        "div",
+        "input",
         {
-          id: "here"
+          type: "range",
+          oninput: (function (evt) {
+              var v = evt.target.value;
+              var stiffness = 10 * (v + 1);
+              var config_000 = /* damping */Spring.dampingFromStiffness(1, stiffness);
+              var config = /* record */[
+                config_000,
+                /* stiffness */stiffness,
+                /* restDisplacementThreshold */0.001,
+                /* restVelocityThreshold */0.001
+              ];
+              var state = Spring.init(0, config);
+              return Curry._3(visualize, state, Spring.advance, Spring.isAtRest);
+            })
         },
-        /* :: */[
-          /* Builtin */Block.__(1, [
-              "div",
-              { },
-              /* :: */[
-                /* String */Block.__(0, ["What"]),
-                /* [] */0
-              ]
-            ]),
-          /* [] */0
-        ]
+        /* [] */0
       ]),
     /* :: */[
-      /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker, props$3)]),
-      /* :: */[
-        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$4)]),
-        /* :: */[
-          /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$5)]),
+      /* Builtin */Block.__(1, [
+          "div",
+          {
+            id: "here"
+          },
           /* :: */[
             /* Builtin */Block.__(1, [
                 "div",
-                {
-                  id: "Inner"
-                },
+                { },
                 /* :: */[
-                  /* String */Block.__(0, ["world"]),
+                  /* String */Block.__(0, ["What"]),
                   /* [] */0
                 ]
               ]),
             /* [] */0
+          ]
+        ]),
+      /* :: */[
+        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker, props$3)]),
+        /* :: */[
+          /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$4)]),
+          /* :: */[
+            /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$5)]),
+            /* :: */[
+              /* Builtin */Block.__(1, [
+                  "div",
+                  {
+                    id: "Inner"
+                  },
+                  /* :: */[
+                    /* String */Block.__(0, ["world"]),
+                    /* [] */0
+                  ]
+                ]),
+              /* [] */0
+            ]
           ]
         ]
       ]
@@ -310,18 +373,22 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          128,
+          189,
           12
         ]
       ];
 }
 
 export {
+  Style ,
+  zoom ,
   fadeOut ,
   fadeIn ,
   Toggle ,
   Awesome ,
   Button ,
+  canvas ,
+  visualize ,
   first ,
   
 }
