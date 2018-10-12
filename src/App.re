@@ -1,5 +1,5 @@
 
-open Basic;
+open Fluid;
 
 /*
 Thoughts about props...
@@ -52,7 +52,7 @@ let awesome = props =>
 
 /** Yayy polymorphism and a normal props thing! */
 module Awesome = {
-  let props = (~value, ~toString) => (value, toString);
+  let props = (~value, ~toString, ()) => (value, toString);
   let maker = {
     initialState: _props => "Folks",
     render: ((v, toString), state, setState) =>
@@ -69,7 +69,7 @@ module Awesome = {
       ),
     newStateForProps: None
   };
-  let make = props => Basic.Maker.makeComponent(maker, props);
+  let make = props => Maker.makeComponent(maker, props);
 };
 
 
@@ -96,40 +96,40 @@ let recursive = Maker.recursiveComponent(Maker.statefulComponent(
     ~initialState= ((_loop, depth)) => ("Recursion!", depth),
     ~render= ((loop, parentNum), (text, depth), setState) => {
       let rec recur = num => num > 0 ? [Custom(loop(depth - 1)), ...recur(num - 1)] : [];
-      Builtin(
-        "div",
-        Js.Obj.empty(),
-        [
-          String("[depth " ++ string_of_int(depth) ++ ":" ++ string_of_int(parentNum) ++ "]"),
-          Builtin(
+      <div>
+          {String("[depth " ++ string_of_int(depth) ++ ":" ++ string_of_int(parentNum) ++ "]")}
+          {Builtin(
             "div",
             {"onclick": _evt => setState((text ++ "1", depth - 1)), "style": "cursor: pointer"},
             [String(text)],
-          ),
-          Builtin(
+          )}
+          {Builtin(
             "div",
             {"style": "padding-left: 20px; border-left: 2px solid #aaa"},
             recur(depth)
-          ),
-        ],
-      )
+          )}
+      </div>
     },
   ));
 
 let first = Builtin("div", {"id": "awesome"}, [
   String("Hello"),
-  Custom(Awesome.make(Awesome.props(~value=3, ~toString=string_of_int))),
-  Custom(Awesome.make(Awesome.props(~value="Hi", ~toString=x => x))),
+  <div id="here">
+    <div>{String("What")}</div>
+  </div>,
+  <Awesome value=5 toString=string_of_int />,
+  /* Custom(Awesome.make(Awesome.props(~value=3, ~toString=string_of_int))), */
+  <Awesome value="Hi"  toString=(x => x) />,
   Custom(awesome([
     String(">>"),
     Custom(awesome([]))
   ])),
-  Builtin("div", {
-    "id": "Inner",
-  }, [
-    String("world"),
-    Custom(recursive(3))
-  ])
+  <div
+    id="Inner"
+  >
+    {String("world")}
+    {Custom(recursive(3))}
+  </div>
 ]);
 
 [@bs.val][@bs.scope "document"] external getElementById: string => option(domNode) = "";

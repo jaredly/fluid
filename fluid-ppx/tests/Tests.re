@@ -8,6 +8,9 @@ module Awesome = {
 module Fluid = {
   let builtin = (name: string, domProps: unit, children: list(string)) => "Hello";
   let domProps = (~id=?, ~onclick=?, ()) => ();
+  type m =
+  | Custom(string)
+  | Builtin(string, unit, list(unit));
 };
 
 let x = <div>

@@ -3,6 +3,12 @@ type domProps('a) = Js.t({..} as 'a);
 type opaqueProps;
 type domNode;
 
+[@bs.obj] external domProps: (
+  ~id:string=?,
+  ~onclick:Dom.event => unit=?,
+  unit
+  ) => domProps({..}) = "";
+
 external opaqueProps: domProps('a) => opaqueProps = "%identity";
 [@bs.scope "document"][@bs.val] external createTextNode: string => domNode = "";
 [@bs.set] external setTextContent: (domNode, string) => unit = "textContent";

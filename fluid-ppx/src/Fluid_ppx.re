@@ -45,7 +45,6 @@ open Longident;
 let mapper = _argv =>
   Parsetree.{
     ...Ast_mapper.default_mapper,
-    /* TODO throw error on structure items */
     expr: (mapper, expr) => {
       switch expr {
         | {
@@ -62,17 +61,17 @@ let mapper = _argv =>
                   (children, [arg, ...args])
               };
               let (children, props) = loop(args);
-              Exp.apply(
-                Exp.ident(Location.mknoloc(Ldot(Lident("Fluid"), "builtin"))),
-                [
-                  ("", Exp.constant(Const_string(name, None))),
-                  ("", Ast_helper.Exp.apply(
+              Exp.construct(
+                Location.mknoloc(Ldot(Lident("Fluid"), "Builtin")),
+                Some(Exp.tuple([
+                  Exp.constant(Const_string(name, None)),
+                  Ast_helper.Exp.apply(
                     Exp.ident(Location.mknoloc(Ldot(Lident("Fluid"), "domProps"))),
                     props
-                  )),
+                  ),
                   /* TODO auto-up strings */
-                  ("", children)
-                ]
+                  children
+                ]))
               )
             | Pexp_ident({txt: Ldot(contents, "createElement")}) =>
               let rec loop = args => switch args {
@@ -87,60 +86,20 @@ let mapper = _argv =>
                 | None => props
                 | Some(arg) => props @ [("children", arg)]
               };
-              Exp.apply(
+              Exp.construct(
+                Location.mknoloc(Ldot(Lident("Fluid"), "Custom")),
+              Some(Exp.apply(
                 Exp.ident(Location.mknoloc(Ldot(contents, "make"))),
                 [("", Ast_helper.Exp.apply(
                   Exp.ident(Location.mknoloc(Ldot(contents, "props"))),
                   props
                 ))]
-              )
+              )))
             | _ => Ast_mapper.default_mapper.expr(mapper, expr)
           }
         }
         | _ => Ast_mapper.default_mapper.expr(mapper, expr)
       };
-
-      /* switch expr.pexp_desc {
-      | Pexp_extension(({txt, loc}, PStr([{pstr_desc: Pstr_eval({pexp_loc, pexp_desc: Pexp_try(value, handlers)}, attributes)}]))) => {
-        let ident = parseLongident(txt);
-        let last = Longident.last(ident);
-        if (last != String.capitalize(last)) {
-          Ast_mapper.default_mapper.expr(mapper, expr)
-        } else {
-          let handlerLocStart = List.hd(handlers).pc_lhs.ppat_loc;
-          let handlerLocEnd = List.nth(handlers, List.length(handlers) - 1).pc_rhs.pexp_loc;
-          let handlerLoc = {...handlerLocStart, loc_end: handlerLocEnd.loc_end};
-          let try_ = Ast_helper.Exp.ident(~loc=pexp_loc, Location.mkloc(Longident.Ldot(ident, "try_"), loc));
-          Ast_helper.Exp.apply(
-            ~loc,
-            try_,
-            [
-              ("", mapper.expr(mapper, value)),
-              ("", Ast_helper.Exp.function_(~loc=handlerLoc, handlers))
-            ]
-          )
-        }
-      }
-      | Pexp_extension(({txt, loc}, PStr([{pstr_desc: Pstr_eval({pexp_desc: Pexp_let(Nonrecursive, bindings, continuation)}, attributes)}]))) => {
-        let ident = parseLongident(txt);
-        let last = Longident.last(ident);
-        if (last != String.capitalize(last)) {
-          Ast_mapper.default_mapper.expr(mapper, expr)
-        } else {
-          let (pat, expr) = process_bindings(bindings, ident);
-          let let_ = Ast_helper.Exp.ident(~loc, Location.mkloc(Longident.Ldot(ident, "let_"), loc));
-          Ast_helper.Exp.apply(
-            ~loc,
-            let_,
-            [
-              ("", mapper.expr(mapper, expr)),
-              ("", Ast_helper.Exp.fun_(~loc, "", None, pat, mapper.expr(mapper, continuation)))
-            ]
-          )
-        }
-      }
-      | _ => Ast_mapper.default_mapper.expr(mapper, expr)
-      } */
     }
   };
 

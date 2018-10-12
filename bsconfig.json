@@ -5,5 +5,6 @@
   "package-specs": {
     "module": "es6",
     "in-source": true
-  }
+  },
+  "ppx-flags": ["./fluid-ppx/lib/bs/native/fluid_ppx.native"]
 }
