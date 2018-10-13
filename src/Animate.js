@@ -3,16 +3,9 @@
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Spring from "./Spring.js";
 
-function spring(dampingRatio, frequencyResponseMs, $staropt$star, update, finish) {
+function spring(_, _$1, $staropt$star, update, finish) {
   var initialVelocity = $staropt$star !== undefined ? $staropt$star : 0;
-  Spring.niceConfig(dampingRatio, frequencyResponseMs / 1000);
-  var config_000 = /* damping */Spring.dampingFromStiffness(1, 1000);
-  var config = /* record */[
-    config_000,
-    /* stiffness */1000,
-    /* restDisplacementThreshold */0.001,
-    /* restVelocityThreshold */0.001
-  ];
+  var config = Spring.niceConfig(0.8, 0.5);
   var state = /* record */[/* contents */Spring.init(initialVelocity, config)];
   var lastTime = /* record */[/* contents */Date.now()];
   var startTime = Date.now();

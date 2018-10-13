@@ -2,14 +2,19 @@
 [@bs.val] external requestAnimationFrame: (unit => unit) => unit = "";
 
 let spring = (~dampingRatio, ~frequencyResponseMs, ~initialVelocity=0., update, finish) => {
-  let config = Spring.niceConfig(~dampingRatio, ~frequencyResponse=frequencyResponseMs /. 1000.);
-  let stiffness = 1000.;
+  let config =
+    Spring.niceConfig(
+      ~dampingRatio=0.8,
+      ~frequencyResponse=0.5,
+    );
+  /* let stiffness = 1000.;
   let config = {
     Spring.damping: Spring.dampingFromStiffness(1., stiffness),
     stiffness: stiffness,
     restDisplacementThreshold: 0.001,
     restVelocityThreshold: 0.001,
-  };
+  }; */
+  /* Js.log2(config2, config); */
   let state = ref(Spring.init(~initialVelocity, config));
   let lastTime = ref(Js.Date.now());
   let startTime = Js.Date.now();

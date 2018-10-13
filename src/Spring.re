@@ -22,14 +22,33 @@ type config = {
   restVelocityThreshold: float,
 };
 
+/**
+
+w = rotations / second
+
+freqResponse = ms / rotation
+1 /. 
+
+ */
+
 let niceConfig = (~dampingRatio, ~frequencyResponse) => {
+  let w = 1. /. frequencyResponse;
+  let dampingFactor = sqrt(2.)/. 2. *. dampingRatio;
+  let denom = (1. -. 2. *. dampingFactor *. dampingFactor);
+  let stiffness = w *. w /. denom;
+  let damping = dampingFactor *. 2. *. sqrt(stiffness);
+  Js.log4(dampingFactor, denom, stiffness, damping);
+  {stiffness, damping, restDisplacementThreshold: 0.0001, restVelocityThreshold: 0.0001}
+};
+
+/* let niceConfig = (~dampingRatio, ~frequencyResponse) => {
   let stiffness = frequencyResponse *. frequencyResponse /. (1. -. 2. *. dampingRatio);
   let damping = (dampingRatio *. 2. *. sqrt(abs_float(stiffness)));
   Js.log2(stiffness, damping);
   {stiffness, damping, restDisplacementThreshold: 0.0001, restVelocityThreshold: 0.0001}
-};
+}; */
 
-let dampingFromStiffness = (ratio, stiffness) => ratio *. 2. *. sqrt(stiffness);
+let dampingFromStiffness = (ratio, stiffness) => ratio *. sqrt(2.) /. 2. *. 2. *. sqrt(stiffness);
 
 type state = {
   config,

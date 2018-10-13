@@ -2,9 +2,12 @@
 
 
 function niceConfig(dampingRatio, frequencyResponse) {
-  var stiffness = frequencyResponse * frequencyResponse / (1 - 2 * dampingRatio);
-  var damping = dampingRatio * 2 * Math.sqrt(Math.abs(stiffness));
-  console.log(stiffness, damping);
+  var w = 1 / frequencyResponse;
+  var dampingFactor = Math.sqrt(2) / 2 * dampingRatio;
+  var denom = 1 - 2 * dampingFactor * dampingFactor;
+  var stiffness = w * w / denom;
+  var damping = dampingFactor * 2 * Math.sqrt(stiffness);
+  console.log(dampingFactor, denom, stiffness, damping);
   return /* record */[
           /* damping */damping,
           /* stiffness */stiffness,
@@ -14,7 +17,7 @@ function niceConfig(dampingRatio, frequencyResponse) {
 }
 
 function dampingFromStiffness(ratio, stiffness) {
-  return ratio * 2 * Math.sqrt(stiffness);
+  return ratio * Math.sqrt(2) / 2 * 2 * Math.sqrt(stiffness);
 }
 
 function init($staropt$star, config) {

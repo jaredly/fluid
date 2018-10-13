@@ -3,8 +3,10 @@
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Fluid from "./Fluid.js";
+import * as Printf from "bs-platform/lib/es6/printf.js";
 import * as Spring from "./Spring.js";
 import * as Animate from "./Animate.js";
+import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Pervasives from "bs-platform/lib/es6/pervasives.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
@@ -12,7 +14,7 @@ import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_excep
 var Style = /* module */[];
 
 function zoom(node) {
-  return Animate.spring(1, 1000, undefined, (function (amount) {
+  return Animate.spring(1, 10, undefined, (function (amount) {
                 node.style.transform = "translateX(" + (Pervasives.string_of_float(amount * 100) + "px)");
                 return /* () */0;
               }), (function () {
@@ -202,12 +204,34 @@ var Button = /* module */[
   /* make */make$2
 ];
 
-var canvas = Fluid.createElement("canvas", { });
+var canvas = Fluid.createElement("canvas", {
+      width: 500,
+      height: 200
+    });
 
 document.body.appendChild(canvas);
 
+var canvas2 = Fluid.createElement("canvas", {
+      width: 500,
+      height: 500
+    });
+
+document.body.appendChild(canvas2);
+
+var log = Fluid.createElement("div", { });
+
+document.body.appendChild(log);
+
+var plot = (
+function (x, y, scale, color) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color
+  ctx.fillRect(x, y, scale, scale)
+}
+);
+
 var visualize = (
-  function (state, advance, isAtRest) {
+  function (canvas, state, advance, isAtRest) {
     canvas.width = 500
     canvas.height = 500
     const ctx = canvas.getContext('2d');
@@ -221,12 +245,165 @@ var visualize = (
       if (isAtRest(state)) {
         break
       }
-      state = advance(1, state);
+      state = advance(16, state);
       ctx.lineTo(i, 250 + state[2] * 100)
     }
     ctx.stroke();
   }
 );
+
+function howLong(stiffness, damping) {
+  var config = /* record */[
+    /* damping */damping,
+    /* stiffness */stiffness,
+    /* restDisplacementThreshold */0.001,
+    /* restVelocityThreshold */0.001
+  ];
+  var state = Spring.init(0, config);
+  var _didOvershoot = false;
+  var _state = state;
+  var _t = 0;
+  while(true) {
+    var t = _t;
+    var state$1 = _state;
+    var didOvershoot = _didOvershoot;
+    if (t > 1500) {
+      return /* tuple */[
+              undefined,
+              0
+            ];
+    } else if (Spring.isAtRest(state$1)) {
+      return /* tuple */[
+              didOvershoot,
+              t
+            ];
+    } else {
+      _t = t + 1 | 0;
+      _state = Spring.advance(16, state$1);
+      _didOvershoot = didOvershoot || state$1[/* currentValue */2] < 0;
+      continue ;
+    }
+  };
+}
+
+function showPlot(stiffness, damping) {
+  var config = /* record */[
+    /* damping */damping,
+    /* stiffness */stiffness,
+    /* restDisplacementThreshold */0.001,
+    /* restVelocityThreshold */0.001
+  ];
+  var state = Spring.init(0, config);
+  return Curry._4(visualize, canvas2, state, Spring.advance, Spring.isAtRest);
+}
+
+var changes = /* array */[];
+
+document.body.awesome = changes;
+
+function sd(x, y) {
+  return /* tuple */[
+          x / 2 / 0.1,
+          1 + y / 5 / 0.1
+        ];
+}
+
+function showLine(x) {
+  var last = true;
+  for(var y = 0; y <= 100; ++y){
+    var x$1 = (x << 1);
+    var y$1 = (y << 1);
+    var match = sd(x$1, y$1);
+    var damping = match[1];
+    var stiffness = match[0];
+    var match$1 = howLong(stiffness, damping);
+    var t = match$1[1];
+    var overshoot = match$1[0];
+    if (Caml_obj.caml_equal(overshoot, false) && Caml_obj.caml_equal(last, true)) {
+      console.log("Change!", /* tuple */[
+            overshoot,
+            last
+          ], stiffness, damping);
+      changes.push(/* tuple */[
+            stiffness,
+            damping
+          ]);
+    }
+    last = overshoot;
+    Curry._4(plot, x$1, y$1, 2, overshoot !== undefined ? (
+            overshoot ? "rgba(255, 0, 0, " + (Pervasives.string_of_float(t / 2000 + 0.5) + ")") : "rgba(0, 255, 0, " + (Pervasives.string_of_float(t / 2000 + 0.5) + ")")
+          ) : "black");
+  }
+  return /* () */0;
+}
+
+function loop(x) {
+  showLine(x);
+  if (x < 250) {
+    requestAnimationFrame((function () {
+            return loop(x + 1 | 0);
+          }));
+    return /* () */0;
+  } else {
+    return 0;
+  }
+}
+
+loop(0);
+
+Curry._1((
+  function(){
+    const ctx = canvas.getContext('2d')
+    ctx.beginPath()
+    ctx.moveTo(0,0)
+    for (let x = 0; x < 500; x++) {
+      ctx.lineTo(x, Math.sqrt(2) * Math.sqrt(x / 2) * 5)
+    }
+    ctx.strokeStyle = 'black'
+    ctx.lineWidth = 1
+    ctx.stroke()
+  }
+), /* () */0);
+
+canvas.addEventListener("mousemove", (function (evt) {
+        var box = evt.target.getBoundingClientRect();
+        var x = evt.clientX - box.left;
+        var y = evt.clientY - box.top;
+        var match = sd(x, y);
+        var damping = match[1];
+        var stiffness = match[0];
+        showPlot(stiffness, damping);
+        var match$1 = howLong(stiffness, damping);
+        log.textContent = Curry._3(Printf.sprintf(/* Format */[
+                  /* Float */Block.__(8, [
+                      /* Float_f */0,
+                      /* No_padding */0,
+                      /* No_precision */0,
+                      /* String_literal */Block.__(11, [
+                          " stiffness ",
+                          /* Float */Block.__(8, [
+                              /* Float_f */0,
+                              /* No_padding */0,
+                              /* No_precision */0,
+                              /* String_literal */Block.__(11, [
+                                  " damping; ",
+                                  /* Int */Block.__(4, [
+                                      /* Int_d */0,
+                                      /* No_padding */0,
+                                      /* No_precision */0,
+                                      /* String_literal */Block.__(11, [
+                                          " steps",
+                                          /* End_of_format */0
+                                        ])
+                                    ])
+                                ])
+                            ])
+                        ])
+                    ]),
+                  "%f stiffness %f damping; %d steps"
+                ]), x / 2, y / 5, match$1[1]);
+        return /* () */0;
+      }));
 
 function props_000(onClick) {
   return /* Builtin */Block.__(1, [
@@ -300,16 +477,15 @@ var first_002 = /* :: */[
           type: "range",
           oninput: (function (evt) {
               var v = evt.target.value;
-              var stiffness = 10 * (v + 1);
-              var config_000 = /* damping */Spring.dampingFromStiffness(1, stiffness);
+              console.log(v);
               var config = /* record */[
-                config_000,
-                /* stiffness */stiffness,
+                /* damping */v,
+                /* stiffness */100,
                 /* restDisplacementThreshold */0.001,
                 /* restVelocityThreshold */0.001
               ];
               var state = Spring.init(0, config);
-              return Curry._3(visualize, state, Spring.advance, Spring.isAtRest);
+              return Curry._4(visualize, canvas2, state, Spring.advance, Spring.isAtRest);
             })
         },
         /* [] */0
@@ -373,22 +549,36 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          189,
+          315,
           12
         ]
       ];
 }
 
+var scale = 2;
+
+var zoom$1 = 0.1;
+
 export {
   Style ,
-  zoom ,
   fadeOut ,
   fadeIn ,
   Toggle ,
   Awesome ,
   Button ,
   canvas ,
+  canvas2 ,
+  log ,
+  plot ,
   visualize ,
+  howLong ,
+  showPlot ,
+  scale ,
+  zoom$1 as zoom,
+  changes ,
+  sd ,
+  showLine ,
+  loop ,
   first ,
   
 }
