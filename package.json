@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "bsb -make-world -w",
+    "start": "http-server -p 4090 -c-1",
     "pack": "fpack watch --development ./src/App.js"
   },
   "dependencies": {
