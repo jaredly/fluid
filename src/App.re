@@ -5,54 +5,51 @@ module Style = {
   type style;
   [@bs.get] external style: domNode => style = "";
   [@bs.set] external transform: (style, string) => unit = "";
+  [@bs.set] external opacity: (style, float) => unit = "";
 };
 
-let zoom = node => {
+let translate = (node, dx, offset) => {
   Animate.spring(
     ~dampingRatio=1.,
     ~frequencyResponseMs=10.,
     (amount) => {
-      node->Style.style->Style.transform("translateX(" ++ string_of_float(amount *. 100.) ++ "px)");
+      node->Style.style->Style.transform("translateX(" ++ string_of_float((1. -. amount) *. dx +. offset) ++ "px)");
     },
     () => {
-      node->parentNode->removeChild(node)
+      ()
+      /* node->parentNode->removeChild(node) */
     }
   )
 };
 
-let fadeOut: domNode => unit = [%bs.raw {|function(node) {
+let abs: domNode => unit = [%bs.raw {|
+function(node) {
   const box = node.getBoundingClientRect();
   node.style.position = 'absolute';
   node.style.pointerEvents = 'none';
   node.style.top = box.top + 'px';
   node.style.left = box.left + 'px';
-  const max = 30;
-  let timer = max;
-  const loop = () => {
-    timer -= 1;
-    node.style.opacity = timer / max
-    if (timer > 0) {
-      requestAnimationFrame(loop)
-    } else {
-      node.parentNode.removeChild(node);
-    }
-  };
-  requestAnimationFrame(loop)
-}|}];
+}
+|}]
 
-let fadeIn: domNode => unit = [%bs.raw {|function(node) {
-  const max = 30;
-  let timer = max;
-  node.style.opacity = 0;
-  const loop = () => {
-    timer -= 1;
-    node.style.opacity = 1 - timer / max
-    if (timer > 0) {
-      requestAnimationFrame(loop)
-    }
+let fade = (node, ~out) => {
+  if (out) {
+    abs(node);
   };
-  requestAnimationFrame(loop)
-}|}];
+  Animate.spring(
+    ~dampingRatio=1.,
+    ~frequencyResponseMs=10.,
+    (amount) => {
+      node->Style.style->Style.opacity(out ? amount :  1. -. amount);
+    },
+    () => {
+      if (out) {
+
+      node->parentNode->removeChild(node)
+      }
+    }
+  )
+};
 
 module Toggle = {
   type props = {on: (unit => unit) => element, off: (unit => unit) => element};
@@ -67,10 +64,16 @@ module Toggle = {
           let domNode = getDomNode(mountedTree);
           let newTree = inflateTree(instantiateTree(newTree));
           let newDomNode = getDomNode(newTree);
-          zoom(domNode);
-          /* fadeOut(domNode); */
-          fadeIn(newDomNode);
+
+          let dist = 30.;
+
+          domNode->translate(newState ? -. dist : dist, 0.);
+          domNode->fade(~out=true);
+          newDomNode->translate(newState ? -. dist : dist, newState ? dist : -. dist);
+          newDomNode->fade(~out=false);
+
           domNode->parentNode->insertBefore(newDomNode, ~reference=domNode);
+
           newTree
         | _ => mountedTree
       }
@@ -193,8 +196,8 @@ let showPlot = (stiffness, damping) => {
   visualize(canvas2, state, (. delta, state) => Spring.advance(delta, state), (. state) => Spring.isAtRest(state));
 };
 
-let scale = 2;
-let zoom = 0.1;
+let scale = 1;
+let zoom = 1.;
 
 /*
 237, 25.6; 95, 16.4; 12.5, 5.8; 3.5, 3; 2, 2.2; 246, 25.8
@@ -205,7 +208,7 @@ let changes = [||];
 
 body->awesome(changes);
 
-let sd = (x, y) => (x /. 2. /. zoom, 1. +. y /. 5. /. zoom);
+let sd = (x, y) => (x /. 2. /. zoom, 1. +. sqrt(y) /. 2. /. zoom);
 
 let showLine = x => {
   let last = ref(Some(true));
@@ -236,7 +239,7 @@ let rec loop = x => {
     Animate.requestAnimationFrame(() => loop(x + 1))
   }
 };
-loop(0);
+/* loop(0); */
 
 [%bs.raw {|
   function(){
@@ -264,7 +267,7 @@ canvas->addEventListener("mousemove", evt => {
   log->textContent(Printf.sprintf("%f stiffness %f damping; %d steps", x /. 2., y /. 5., t))
 });
 
-let first = <div id="awesome">
+let first = <div id="awesome" style="padding: 20px">
   {String("Hello")}
   <input _type="range" oninput={evt => {
     let v = evt->target->value;

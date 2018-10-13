@@ -2,16 +2,27 @@
 damping ratio
 frequency response
 
-let project = (initialVelocity, decelrationRate) => {
-  (initialVelocity / 1000.) * decelerationRate / (1. -. decelerationRate)
+
+TODO TODO TODO implement
+
+https://gist.github.com/atnan/6473706eb041d499599dfffaac9fa10c
+
+function convertDampingRatioResponseToStiffnessDamping(dampingRatio, response) {
+  let mass = 1
+  let angularFrequency = (2 * Math.PI) / response
+  let stiffness = Math.pow(angularFrequency, 2) * mass
+  let damping = dampingRatio * (2 * Math.sqrt(stiffness * mass))
+
+  return { mass: mass, stiffness: stiffness, damping: damping }
 }
 
+function convertMassStiffnessDampingToDampingRatioResponse(mass, stiffness, damping) {
+  let dampingRatio = damping / (2 * Math.sqrt(stiffness * mass))
+  let angularFrequency = Math.sqrt(stiffness / mass)
+  let response = (2 * Math.PI) / angularFrequency
 
-critical_damping = 2*sqrt(k * m)
-
-actual_damping / critial_damping == the ratio
-
-natural frequency = sqrt(k/m)
+  return { dampingRatio: dampingRatio, response: response }
+}
 
  */
 
@@ -48,7 +59,9 @@ let niceConfig = (~dampingRatio, ~frequencyResponse) => {
   {stiffness, damping, restDisplacementThreshold: 0.0001, restVelocityThreshold: 0.0001}
 }; */
 
-let dampingFromStiffness = (ratio, stiffness) => ratio *. sqrt(2.) /. 2. *. 2. *. sqrt(stiffness);
+/* let dampingFromStiffness = (ratio, stiffness) => ratio *. sqrt(2.) /. 2. *. 2. *. sqrt(stiffness); */
+let perfectDamp = (stiffness) => sqrt(stiffness /. 2.);
+let perfectDamp = (stiffness) => sqrt(stiffness *. 2.);
 
 type state = {
   config,
@@ -70,7 +83,7 @@ let isAtRest = ({config: {restDisplacementThreshold, restVelocityThreshold}, vel
 
 let advance = (timeDelta, {config: {damping, stiffness}, currentValue, velocity} as state) => {
   let timeDelta = timeDelta /. 1000.;
-  let acc = -. stiffness *. currentValue +. -. damping *. velocity
+  let acc = -. stiffness *. currentValue +. -. damping *. velocity *. timeDelta
 
   let velocity = velocity +. acc *. timeDelta;
   let currentValue = currentValue +. velocity *. timeDelta;

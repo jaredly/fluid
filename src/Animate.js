@@ -5,10 +5,16 @@ import * as Spring from "./Spring.js";
 
 function spring(_, _$1, $staropt$star, update, finish) {
   var initialVelocity = $staropt$star !== undefined ? $staropt$star : 0;
-  var config = Spring.niceConfig(0.8, 0.5);
+  var config_000 = /* damping */Spring.perfectDamp(500);
+  var config = /* record */[
+    config_000,
+    /* stiffness */500,
+    /* restDisplacementThreshold */0.001,
+    /* restVelocityThreshold */0.001
+  ];
   var state = /* record */[/* contents */Spring.init(initialVelocity, config)];
   var lastTime = /* record */[/* contents */Date.now()];
-  var startTime = Date.now();
+  Date.now();
   var loop = function () {
     Curry._1(update, state[0][/* currentValue */2]);
     var now = Date.now();
@@ -16,7 +22,6 @@ function spring(_, _$1, $staropt$star, update, finish) {
     state[0] = Spring.advance(timeDelta, state[0]);
     lastTime[0] = now;
     if (Spring.isAtRest(state[0])) {
-      console.log(Date.now() - startTime);
       return Curry._1(finish, /* () */0);
     } else {
       requestAnimationFrame(loop);

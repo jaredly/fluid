@@ -13,49 +13,41 @@ import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_excep
 
 var Style = /* module */[];
 
-function zoom(node) {
+function translate(node, dx, offset) {
   return Animate.spring(1, 10, undefined, (function (amount) {
-                node.style.transform = "translateX(" + (Pervasives.string_of_float(amount * 100) + "px)");
+                node.style.transform = "translateX(" + (Pervasives.string_of_float((1 - amount) * dx + offset) + "px)");
                 return /* () */0;
               }), (function () {
-                node.parentNode.removeChild(node);
                 return /* () */0;
               }));
 }
 
-var fadeOut = (function(node) {
+var abs = (
+function(node) {
   const box = node.getBoundingClientRect();
   node.style.position = 'absolute';
   node.style.pointerEvents = 'none';
   node.style.top = box.top + 'px';
   node.style.left = box.left + 'px';
-  const max = 30;
-  let timer = max;
-  const loop = () => {
-    timer -= 1;
-    node.style.opacity = timer / max
-    if (timer > 0) {
-      requestAnimationFrame(loop)
-    } else {
-      node.parentNode.removeChild(node);
-    }
-  };
-  requestAnimationFrame(loop)
-});
+}
+);
 
-var fadeIn = (function(node) {
-  const max = 30;
-  let timer = max;
-  node.style.opacity = 0;
-  const loop = () => {
-    timer -= 1;
-    node.style.opacity = 1 - timer / max
-    if (timer > 0) {
-      requestAnimationFrame(loop)
-    }
-  };
-  requestAnimationFrame(loop)
-});
+function fade(node, out) {
+  if (out) {
+    Curry._1(abs, node);
+  }
+  return Animate.spring(1, 10, undefined, (function (amount) {
+                node.style.opacity = out ? amount : 1 - amount;
+                return /* () */0;
+              }), (function () {
+                if (out) {
+                  node.parentNode.removeChild(node);
+                  return /* () */0;
+                } else {
+                  return 0;
+                }
+              }));
+}
 
 function props(on, off, _) {
   return /* record */[
@@ -85,8 +77,10 @@ var maker_003 = /* reconcileTrees */(function (oldState, newState, mountedTree, 
       var domNode = Fluid.getDomNode(mountedTree);
       var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
       var newDomNode = Fluid.getDomNode(newTree$1);
-      zoom(domNode);
-      Curry._1(fadeIn, newDomNode);
+      translate(domNode, newState ? -30 : 30, 0);
+      fade(domNode, true);
+      translate(newDomNode, newState ? -30 : 30, newState ? 30 : -30);
+      fade(newDomNode, false);
       domNode.parentNode.insertBefore(newDomNode, domNode);
       return newTree$1;
     }
@@ -303,16 +297,16 @@ document.body.awesome = changes;
 
 function sd(x, y) {
   return /* tuple */[
-          x / 2 / 0.1,
-          1 + y / 5 / 0.1
+          x / 2 / 1,
+          1 + Math.sqrt(y) / 2 / 1
         ];
 }
 
 function showLine(x) {
   var last = true;
-  for(var y = 0; y <= 100; ++y){
-    var x$1 = (x << 1);
-    var y$1 = (y << 1);
+  for(var y = 0; y <= 200; ++y){
+    var x$1 = (x << 0);
+    var y$1 = (y << 0);
     var match = sd(x$1, y$1);
     var damping = match[1];
     var stiffness = match[0];
@@ -330,7 +324,7 @@ function showLine(x) {
           ]);
     }
     last = overshoot;
-    Curry._4(plot, x$1, y$1, 2, overshoot !== undefined ? (
+    Curry._4(plot, x$1, y$1, 1, overshoot !== undefined ? (
             overshoot ? "rgba(255, 0, 0, " + (Pervasives.string_of_float(t / 2000 + 0.5) + ")") : "rgba(0, 255, 0, " + (Pervasives.string_of_float(t / 2000 + 0.5) + ")")
           ) : "black");
   }
@@ -339,7 +333,7 @@ function showLine(x) {
 
 function loop(x) {
   showLine(x);
-  if (x < 250) {
+  if (x < 500) {
     requestAnimationFrame((function () {
             return loop(x + 1 | 0);
           }));
@@ -348,8 +342,6 @@ function loop(x) {
     return 0;
   }
 }
-
-loop(0);
 
 Curry._1((
   function(){
@@ -465,7 +457,8 @@ var props$5 = /* tuple */[
 ];
 
 var first_001 = {
-  id: "awesome"
+  id: "awesome",
+  style: "padding: 20px"
 };
 
 var first_002 = /* :: */[
@@ -549,20 +542,21 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          315,
+          318,
           12
         ]
       ];
 }
 
-var scale = 2;
+var scale = 1;
 
-var zoom$1 = 0.1;
+var zoom = 1;
 
 export {
   Style ,
-  fadeOut ,
-  fadeIn ,
+  translate ,
+  abs ,
+  fade ,
   Toggle ,
   Awesome ,
   Button ,
@@ -574,7 +568,7 @@ export {
   howLong ,
   showPlot ,
   scale ,
-  zoom$1 as zoom,
+  zoom ,
   changes ,
   sd ,
   showLine ,
@@ -582,4 +576,4 @@ export {
   first ,
   
 }
-/* fadeOut Not a pure module */
+/* abs Not a pure module */

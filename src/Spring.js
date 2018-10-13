@@ -16,8 +16,8 @@ function niceConfig(dampingRatio, frequencyResponse) {
         ];
 }
 
-function dampingFromStiffness(ratio, stiffness) {
-  return ratio * Math.sqrt(2) / 2 * 2 * Math.sqrt(stiffness);
+function perfectDamp(stiffness) {
+  return Math.sqrt(stiffness * 2);
 }
 
 function init($staropt$star, config) {
@@ -44,7 +44,7 @@ function advance(timeDelta, state) {
   var velocity = state[/* velocity */1];
   var match = state[/* config */0];
   var timeDelta$1 = timeDelta / 1000;
-  var acc = -match[/* stiffness */1] * currentValue + -match[/* damping */0] * velocity;
+  var acc = -match[/* stiffness */1] * currentValue + -match[/* damping */0] * velocity * timeDelta$1;
   var velocity$1 = velocity + acc * timeDelta$1;
   var currentValue$1 = currentValue + velocity$1 * timeDelta$1;
   return /* record */[
@@ -57,7 +57,7 @@ function advance(timeDelta, state) {
 
 export {
   niceConfig ,
-  dampingFromStiffness ,
+  perfectDamp ,
   init ,
   isAtRest ,
   advance ,
