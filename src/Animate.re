@@ -9,6 +9,7 @@ let spring = (~dampingRatio, ~frequencyResponseMs, ~initialVelocity=0., update, 
     ); */
   let stiffness = 1000.;
   let stiffness = 500.;
+  /* let stiffness = 200.; */
   let config = {
     Spring.damping: Spring.perfectDamp(stiffness),
     stiffness: stiffness,

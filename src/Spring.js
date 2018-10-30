@@ -17,7 +17,7 @@ function niceConfig(dampingRatio, frequencyResponse) {
 }
 
 function perfectDamp(stiffness) {
-  return Math.sqrt(stiffness * 2);
+  return stiffness * 4;
 }
 
 function init($staropt$star, config) {

@@ -61,7 +61,9 @@ let niceConfig = (~dampingRatio, ~frequencyResponse) => {
 
 /* let dampingFromStiffness = (ratio, stiffness) => ratio *. sqrt(2.) /. 2. *. 2. *. sqrt(stiffness); */
 let perfectDamp = (stiffness) => sqrt(stiffness /. 2.);
-let perfectDamp = (stiffness) => sqrt(stiffness *. 2.);
+/* let perfectDamp = (stiffness) => sqrt(stiffness *. 2.); */
+/* let perfectDamp = (stiffness) => stiffness; */
+let perfectDamp = (stiffness) => stiffness *. 4.;
 
 type state = {
   config,
