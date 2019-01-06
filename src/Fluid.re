@@ -45,19 +45,42 @@ let updateDomProps = (node, _oldProps, newProps) => {
 };
 [@bs.send] external replaceWith: (domNode, domNode) => unit = "";
 
+type effect = {
+  cleanup: option(unit => unit),
+  fn: (unit, unit) => unit,
+  setCleanup: (unit => unit) => unit,
+};
+
+
 /* also need a "compareTo" (other custom) */
 type custom = {
   init: unit => customWithState,
   clone: customWithState => [`Different | `Same | `Compatible(customWithState)],
 }
-and customContents('props, 'state) = {
-  identity: customConfig('props, 'state),
-  props: 'props,
-  state: 'state,
-  render: ('props, 'state) => element,
-  onChange: ('state => unit) => unit,
+and customContents('identity, 'hooks, 'reconcileData) = {
+  identity: 'identity,
+  render: context('hooks, 'reconcileData) => element,
+  mutable hooks: option('hooks),
+  mutable invalidated: bool,
+  mutable reconciler: option((option('reconcileData), 'reconcileData, reconcilerFunction('reconcileData))),
+  mutable onChange: unit => unit,
 }
-and customWithState = WithState(customContents('props, 'state)) : customWithState
+
+and hooksContainer('hooks, 'reconcileData) = {
+  invalidate: unit => unit,
+  setReconciler: ('reconcileData, reconcilerFunction('reconcileData)) => unit,
+  triggerEffect:
+    (
+      ~cleanup: option(unit => unit),
+      ~fn: (unit, unit) => unit,
+      ~setCleanup: (unit => unit) => unit
+    ) =>
+    unit,
+  current: option('hooks),
+}
+
+and reconcilerFunction('data) = (option('data), 'data, mountedTree, element) => mountedTree
+and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData)) : customWithState
 
 and element =
 | String(string)
@@ -67,7 +90,7 @@ and element =
 and instanceTree =
 | IString(string)
 | IBuiltin(string, domProps('a), list(instanceTree)): instanceTree
-| ICustom(customWithState, instanceTree)
+| ICustom(customWithState, instanceTree, list(effect))
 
 and container = {
   mutable custom: customWithState,
@@ -79,50 +102,45 @@ and mountedTree =
 | MBuiltin(string, domProps('a), domNode, list(mountedTree)): mountedTree
 | MCustom(container)
 
-and customConfig('props, 'state) = {
-  name: string,
-  initialState: 'props => 'state,
-  newStateForProps: option(('props, 'state) => 'state),
-  reconcileTrees: option(('state, 'state, mountedTree, element) => mountedTree),
-  render: ('props, 'state, 'state => unit) => element,
-};
+and context('initial, 'reconcile) = {
+  hooks: hooksContainer('initial, 'reconcile),
+  finish: hooksContainer('initial, 'reconcile) => unit
+}
 
-let defaultConfig = {
+;
+
+/* let defaultConfig = {
   name: "Unnamed",
   initialState: () => (),
+  queuedEffects: [],
   newStateForProps: None,
   reconcileTrees: None,
   render: ((), (), _setState) => String("Hello")
-};
+}; */
 
 module Maker = {
-  let makeComponent = (maker: customConfig('props, 'state), props: 'props) => {
+  let makeComponent = (identity: 'identity, render: context('state, 'reconcile) => element) => {
     {
       init: () => {
-        let onChange = ref(_state => Js.log("SetState before render ignored"));
-        Js.log2("Mount!", maker);
         WithState({
-          identity: maker,
-          onChange: handler => onChange := handler,
-          props,
-          state: maker.initialState(props),
-          render: (props, state) => maker.render(props, state, state => onChange^(state)),
+          identity,
+          invalidated: false,
+          onChange: () => (),
+          reconciler: None,
+          hooks: None,
+          render,
         })
       },
-      clone: (WithState({identity} as contents)) => {
+      clone: (WithState(contents)) => {
         /* If the `identity` is strictly equal, then we know that the types must be the same. */
-        if (Obj.magic(identity) === maker) {
-          let contents: customContents('props, 'state) = Obj.magic(contents);
-          if (contents.props === props) {
+        if (Obj.magic(contents.identity) === identity) {
+          let contents: customContents('props, 'state, 'reconcileData) = Obj.magic(contents);
+          if (contents.render === render) {
             `Same
           } else {
             `Compatible(WithState({
               ...contents,
-              state: switch (maker.newStateForProps) {
-                | None => contents.state
-                | Some(fn) => fn(props, contents.state)
-              },
-              props
+              render
             }))
           }
         } else {
@@ -132,7 +150,7 @@ module Maker = {
     }
   };
 
-  let component = (~name, ~reconcileTrees=?, ~render, ()) => makeComponent({
+  /* let component = (~name, ~reconcileTrees=?, ~render, ()) => makeComponent({
     name,
     initialState: _props => (),
     newStateForProps: None,
@@ -148,12 +166,38 @@ module Maker = {
     render,
   });
 
-  let rec recursiveComponent = (inner, props) => inner((recursiveComponent(inner), props));
+  let rec recursiveComponent = (inner, props) => inner((recursiveComponent(inner), props)); */
 
 };
 
-let render = (WithState({render, props, state})) => render(props, state);
-let onChange = (WithState({onChange} as contents), handler) => onChange(state => handler(WithState({...contents, state})));
+let render = (WithState(component)) => {
+  let effects = ref([]);
+  let context = {
+    hooks: {
+      invalidate: () => {
+        component.invalidated = true;
+        component.onChange();
+        /* TODO actually trigger a rerender here */
+      },
+      setReconciler: (data, reconcile) => component.reconciler = Some((
+        switch (component.reconciler) {
+          | None => None
+          | Some((a, b, c)) => Some(b)
+        },
+        data,
+        reconcile
+      )),
+      triggerEffect: (~cleanup, ~fn, ~setCleanup) => {
+        effects.contents = [{cleanup, fn, setCleanup}, ...effects.contents];
+      },
+      current: component.hooks,
+    },
+    finish: v => component.hooks = v.current
+  };
+  component.invalidated = false;
+  let tree = component.render(context);
+  (tree, effects^);
+};
 
 let rec getDomNode = tree => switch tree {
   | MString(_, node)
@@ -176,7 +220,16 @@ let rec instantiateTree: element => instanceTree = el => switch el {
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
-    ICustom(custom, instantiateTree(custom->render))
+    let (tree, effects) = custom->render;
+    ICustom(custom, instantiateTree(tree), effects)
+};
+
+let runEffect = ({cleanup, setCleanup, fn}) => {
+  switch (cleanup) {
+  | Some(m) => m()
+  | None => ()
+  };
+  setCleanup(fn());
 };
 
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
@@ -186,26 +239,23 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
     let children = children->List.map(inflateTree);
     children->List.forEach(child => appendChild(node, getDomNode(child)));
     MBuiltin(string, domProps, node, children);
-  | ICustom(custom, instanceTree) =>
+  | ICustom(custom, instanceTree, effects) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
     custom->listenForChanges(container);
+    effects->List.forEach(runEffect);
     MCustom(container)
 }
 
-and listenForChanges = (WithState({onChange, state, identity} as contents), container) => {
-  let state = ref(state);
-  onChange(newState => {
-    let newCustom = WithState({...contents, state: newState});
-    let oldState = state^;
-    state := newState;
-    container.custom = newCustom;
-    let newElement = contents.render(contents.props, newState);
-    container.mountedTree = switch (identity.reconcileTrees) {
+and listenForChanges = (WithState(contents) as component, container) => {
+  contents.onChange = () => {
+    let (newElement, effects) = component->render;
+    container.mountedTree = switch (contents.reconciler) {
       | None => reconcileTrees(container.mountedTree, newElement)
-      | Some(reconcile) => reconcile(oldState, newState, container.mountedTree, newElement)
-    }
-  })
+      | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
+    };
+    effects->List.forEach(runEffect);
+  }
 }
 
 and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
@@ -223,9 +273,11 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
     switch (b.clone(a.custom)) {
       | `Same => MCustom(a)
       | `Compatible(custom) =>
-        let tree = reconcileTrees(a.mountedTree, custom->render);
+        let (newElement, effects) = custom->render;
+        let tree = reconcileTrees(a.mountedTree, newElement);
         a.custom = custom;
         a.mountedTree = tree;
+        effects->List.forEach(runEffect);
         MCustom(a)
       | `Different =>
         /* Js.log3("different", a, b); */

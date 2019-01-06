@@ -18,27 +18,12 @@ that and 'ref's. well we don't actually need refs. or do we?
 I guess for things that you won't want to trigger a re-render.
  */
 
-type context('initial) = {
-  hooks: 'initial,
-  finish: 'initial => unit
-};
-
 type state('t) = {
   mutable prev: option('t),
   mutable current: 't,
 };
 
-type hooks('current) = {
-  invalidate: unit => unit,
-  triggerEffect:
-    (
-      ~cleanup: option(unit => unit),
-      ~fn: (unit, unit) => unit,
-      ~setCleanup: (unit => unit) => unit
-    ) =>
-    unit,
-  current: option('current),
-};
+open Fluid;
 
 let useRef = (initial, hooks, fin) => {
   let (r, hooks) = switch (hooks.current) {
@@ -53,10 +38,10 @@ let useRef = (initial, hooks, fin) => {
 let useState =
     (
       initial: 'a,
-      hooks: hooks((option('next), state('a))),
-      fin: (('a, 'a => unit), hooks('next)) => ('res, hooks('next)),
+      hooks: hooksContainer((option('next), state('a)), 'z),
+      fin: (('a, 'a => unit), hooksContainer('next, 'z)) => ('res, hooksContainer('next, 'z)),
     )
-    : ('res, hooks((option('next), state('a)))) => {
+    : ('res, hooksContainer((option('next), state('a)), 'z)) => {
   let (state, hooks) =
     switch (hooks.current) {
     | None =>
@@ -93,14 +78,13 @@ let useReducer = (initial, reducer, hooks, fin) => {
 
 type effect('args) = {
   args: 'args,
-  prevArgs: option('args),
   cleanup: ref(option(unit => unit)),
   fn: unit => (unit => unit),
 };
 
-let newEffect = (fn, args) => {fn, args, prevArgs: None, cleanup: ref(None)};
+let newEffect = (fn, args) => {fn, args, cleanup: ref(None)};
 
-let useEffect = (fn, args, hooks: hooks((option('next), effect('args))), fin) => {
+let useEffect = (fn, args, hooks: hooksContainer((option('next), effect('args)), 'z), fin) => {
   switch (hooks.current) {
     | None =>
       let effect = newEffect(fn, args);
@@ -110,18 +94,19 @@ let useEffect = (fn, args, hooks: hooks((option('next), effect('args))), fin) =>
       let (res, hooks) = fin((), {...hooks, current: None});
       (res, {...hooks, current: Some((hooks.current, effect))})
     | Some((next, effect)) =>
-      if (effect.args != args) {
+      let effect = if (effect.args != args) {
         hooks.triggerEffect(~cleanup=effect.cleanup.contents, ~fn, ~setCleanup=v => {
           effect.cleanup.contents = Some(v)
-        })
+        });
+        {
+          ...effect,
+          fn,
+          args,
+        };
+      } else {
+        effect
       };
 
-      let effect = {
-        ...effect,
-        fn,
-        args,
-        prevArgs: Some(effect.args)
-      };
       let (res, hooks) = fin((), {...hooks, current: next});
       (res, {...hooks, current: Some((hooks.current, effect))})
   };
@@ -160,7 +145,7 @@ let useCallback = (fn, args, hooks, fin) => {
 }; */
 
 
-let myComponent = (~some, ~prop, {hooks, finish}) => {
+let myComponent = (props, {hooks, finish}) => {
   Js.log("Here");
   let (res, hooks) = useState(10, hooks, ((count, setCount), hooks) => {
     useState("name", hooks, ((name, setName), hooks) => {

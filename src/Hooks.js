@@ -5,7 +5,7 @@ import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 
 function useRef(initial, hooks, fin) {
-  var match = hooks[/* current */2];
+  var match = hooks[/* current */3];
   var match$1;
   if (match !== undefined) {
     var match$2 = match;
@@ -13,7 +13,8 @@ function useRef(initial, hooks, fin) {
       match$2[1],
       /* record */[
         /* invalidate */hooks[/* invalidate */0],
-        /* triggerEffect */hooks[/* triggerEffect */1],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
         /* current */match$2[0]
       ]
     ];
@@ -22,7 +23,8 @@ function useRef(initial, hooks, fin) {
       /* record */[/* contents */initial],
       /* record */[
         /* invalidate */hooks[/* invalidate */0],
-        /* triggerEffect */hooks[/* triggerEffect */1],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
         /* current */undefined
       ]
     ];
@@ -34,9 +36,10 @@ function useRef(initial, hooks, fin) {
           match$3[0],
           /* record */[
             /* invalidate */hooks$1[/* invalidate */0],
-            /* triggerEffect */hooks$1[/* triggerEffect */1],
+            /* setReconciler */hooks$1[/* setReconciler */1],
+            /* triggerEffect */hooks$1[/* triggerEffect */2],
             /* current *//* tuple */[
-              hooks$1[/* current */2],
+              hooks$1[/* current */3],
               r
             ]
           ]
@@ -44,7 +47,7 @@ function useRef(initial, hooks, fin) {
 }
 
 function useState(initial, hooks, fin) {
-  var match = hooks[/* current */2];
+  var match = hooks[/* current */3];
   var match$1;
   if (match !== undefined) {
     var match$2 = match;
@@ -52,7 +55,8 @@ function useState(initial, hooks, fin) {
       match$2[1],
       /* record */[
         /* invalidate */hooks[/* invalidate */0],
-        /* triggerEffect */hooks[/* triggerEffect */1],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
         /* current */match$2[0]
       ]
     ];
@@ -65,7 +69,8 @@ function useState(initial, hooks, fin) {
       st,
       /* record */[
         /* invalidate */hooks[/* invalidate */0],
-        /* triggerEffect */hooks[/* triggerEffect */1],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
         /* current */undefined
       ]
     ];
@@ -85,9 +90,10 @@ function useState(initial, hooks, fin) {
           match$3[0],
           /* record */[
             /* invalidate */hooks$2[/* invalidate */0],
-            /* triggerEffect */hooks$2[/* triggerEffect */1],
+            /* setReconciler */hooks$2[/* setReconciler */1],
+            /* triggerEffect */hooks$2[/* triggerEffect */2],
             /* current *//* tuple */[
-              hooks$2[/* current */2],
+              hooks$2[/* current */3],
               state
             ]
           ]
@@ -110,34 +116,28 @@ function useReducer(initial, reducer, hooks, fin) {
 function newEffect(fn, args) {
   return /* record */[
           /* args */args,
-          /* prevArgs */undefined,
           /* cleanup : record */[/* contents */undefined],
           /* fn */fn
         ];
 }
 
 function useEffect(fn, args, hooks, fin) {
-  var match = hooks[/* current */2];
+  var match = hooks[/* current */3];
   if (match !== undefined) {
     var match$1 = match;
     var effect = match$1[1];
-    if (Caml_obj.caml_notequal(effect[/* args */0], args)) {
-      Curry._3(hooks[/* triggerEffect */1], effect[/* cleanup */2][/* contents */0], fn, (function (v) {
-              effect[/* cleanup */2][/* contents */0] = v;
-              return /* () */0;
-            }));
-    }
-    var effect_001 = /* prevArgs */Js_primitive.some(effect[/* args */0]);
-    var effect_002 = /* cleanup */effect[/* cleanup */2];
-    var effect$1 = /* record */[
-      /* args */args,
-      effect_001,
-      effect_002,
-      /* fn */fn
-    ];
+    var effect$1 = Caml_obj.caml_notequal(effect[/* args */0], args) ? (Curry._3(hooks[/* triggerEffect */2], effect[/* cleanup */1][/* contents */0], fn, (function (v) {
+                effect[/* cleanup */1][/* contents */0] = v;
+                return /* () */0;
+              })), /* record */[
+          /* args */args,
+          /* cleanup */effect[/* cleanup */1],
+          /* fn */fn
+        ]) : effect;
     var match$2 = Curry._2(fin, /* () */0, /* record */[
           /* invalidate */hooks[/* invalidate */0],
-          /* triggerEffect */hooks[/* triggerEffect */1],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
           /* current */match$1[0]
         ]);
     var hooks$1 = match$2[1];
@@ -145,22 +145,24 @@ function useEffect(fn, args, hooks, fin) {
             match$2[0],
             /* record */[
               /* invalidate */hooks$1[/* invalidate */0],
-              /* triggerEffect */hooks$1[/* triggerEffect */1],
+              /* setReconciler */hooks$1[/* setReconciler */1],
+              /* triggerEffect */hooks$1[/* triggerEffect */2],
               /* current *//* tuple */[
-                hooks$1[/* current */2],
+                hooks$1[/* current */3],
                 effect$1
               ]
             ]
           ];
   } else {
     var effect$2 = newEffect(fn, args);
-    Curry._3(hooks[/* triggerEffect */1], effect$2[/* cleanup */2][/* contents */0], fn, (function (v) {
-            effect$2[/* cleanup */2][/* contents */0] = v;
+    Curry._3(hooks[/* triggerEffect */2], effect$2[/* cleanup */1][/* contents */0], fn, (function (v) {
+            effect$2[/* cleanup */1][/* contents */0] = v;
             return /* () */0;
           }));
     var match$3 = Curry._2(fin, /* () */0, /* record */[
           /* invalidate */hooks[/* invalidate */0],
-          /* triggerEffect */hooks[/* triggerEffect */1],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
           /* current */undefined
         ]);
     var hooks$2 = match$3[1];
@@ -168,9 +170,10 @@ function useEffect(fn, args, hooks, fin) {
             match$3[0],
             /* record */[
               /* invalidate */hooks$2[/* invalidate */0],
-              /* triggerEffect */hooks$2[/* triggerEffect */1],
+              /* setReconciler */hooks$2[/* setReconciler */1],
+              /* triggerEffect */hooks$2[/* triggerEffect */2],
               /* current *//* tuple */[
-                hooks$2[/* current */2],
+                hooks$2[/* current */3],
                 effect$2
               ]
             ]
@@ -179,7 +182,7 @@ function useEffect(fn, args, hooks, fin) {
 }
 
 function useMemo(fn, args, hooks, fin) {
-  var match = hooks[/* current */2];
+  var match = hooks[/* current */3];
   var match$1;
   if (match !== undefined) {
     var match$2 = match;
@@ -199,7 +202,8 @@ function useMemo(fn, args, hooks, fin) {
   var value$1 = match$1[0];
   var match$5 = Curry._2(fin, value$1, /* record */[
         /* invalidate */hooks[/* invalidate */0],
-        /* triggerEffect */hooks[/* triggerEffect */1],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
         /* current */match$1[1]
       ]);
   var hooks$1 = match$5[1];
@@ -207,9 +211,10 @@ function useMemo(fn, args, hooks, fin) {
           match$5[0],
           /* record */[
             /* invalidate */hooks$1[/* invalidate */0],
-            /* triggerEffect */hooks$1[/* triggerEffect */1],
+            /* setReconciler */hooks$1[/* setReconciler */1],
+            /* triggerEffect */hooks$1[/* triggerEffect */2],
             /* current *//* tuple */[
-              hooks$1[/* current */2],
+              hooks$1[/* current */3],
               /* tuple */[
                 value$1,
                 args
@@ -225,7 +230,7 @@ function useCallback(fn, args, hooks, fin) {
               }), args, hooks, fin);
 }
 
-function myComponent(_, _$1, param) {
+function myComponent(_, param) {
   console.log("Here");
   var match = useState(10, param[/* hooks */0], (function (_, hooks) {
           return useState("name", hooks, (function (_, hooks) {

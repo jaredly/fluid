@@ -3,6 +3,7 @@
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Belt_List from "bs-platform/lib/es6/belt_List.js";
+import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 
 var setDomProps = function (node,props){
   Object.keys(props).forEach(key => {
@@ -26,60 +27,35 @@ function updateDomProps(node, _, newProps) {
   return setDomProps(node, newProps);
 }
 
-function defaultConfig_001() {
-  return /* () */0;
-}
-
-function defaultConfig_004(_, _$1, _$2) {
-  return /* String */Block.__(0, ["Hello"]);
-}
-
-var defaultConfig = /* record */[
-  /* name */"Unnamed",
-  defaultConfig_001,
-  /* newStateForProps */undefined,
-  /* reconcileTrees */undefined,
-  defaultConfig_004
-];
-
-function makeComponent(maker, props) {
+function makeComponent(identity, render) {
   return /* record */[
           /* init */(function () {
-              var onChange = /* record */[/* contents */(function () {
-                    console.log("SetState before render ignored");
-                    return /* () */0;
-                  })];
-              console.log("Mount!", maker);
               return /* WithState */[/* record */[
-                        /* identity */maker,
-                        /* props */props,
-                        /* state */Curry._1(maker[/* initialState */1], props),
-                        /* render */(function (props, state) {
-                            return Curry._3(maker[/* render */4], props, state, (function (state) {
-                                          return Curry._1(onChange[0], state);
-                                        }));
-                          }),
-                        /* onChange */(function (handler) {
-                            onChange[0] = handler;
+                        /* identity */identity,
+                        /* render */render,
+                        /* hooks */undefined,
+                        /* invalidated */false,
+                        /* reconciler */undefined,
+                        /* onChange */(function () {
                             return /* () */0;
                           })
                       ]];
             }),
           /* clone */(function (param) {
               var contents = param[0];
-              if (contents[/* identity */0] === maker) {
-                if (contents[/* props */1] === props) {
+              if (contents[/* identity */0] === identity) {
+                if (contents[/* render */1] === render) {
                   return /* Same */925282182;
                 } else {
-                  var match = maker[/* newStateForProps */2];
                   return /* `Compatible */[
                           785637236,
                           /* WithState */[/* record */[
                               /* identity */contents[/* identity */0],
-                              /* props */props,
-                              /* state */match !== undefined ? Curry._2(match, props, contents[/* state */2]) : contents[/* state */2],
-                              /* render */contents[/* render */3],
-                              /* onChange */contents[/* onChange */4]
+                              /* render */render,
+                              /* hooks */contents[/* hooks */2],
+                              /* invalidated */contents[/* invalidated */3],
+                              /* reconciler */contents[/* reconciler */4],
+                              /* onChange */contents[/* onChange */5]
                             ]]
                         ];
                 }
@@ -90,70 +66,52 @@ function makeComponent(maker, props) {
         ];
 }
 
-function component(name, reconcileTrees, render, _) {
-  var partial_arg_001 = function () {
-    return /* () */0;
-  };
-  var partial_arg_004 = function (props, _, _$1) {
-    return Curry._1(render, props);
-  };
-  var partial_arg = /* record */[
-    /* name */name,
-    partial_arg_001,
-    /* newStateForProps */undefined,
-    /* reconcileTrees */reconcileTrees,
-    partial_arg_004
-  ];
-  return (function (param) {
-      return makeComponent(partial_arg, param);
-    });
-}
-
-function statefulComponent(name, initialState, reconcileTrees, newStateForProps, render, _) {
-  var partial_arg = /* record */[
-    /* name */name,
-    /* initialState */initialState,
-    /* newStateForProps */newStateForProps,
-    /* reconcileTrees */reconcileTrees,
-    /* render */render
-  ];
-  return (function (param) {
-      return makeComponent(partial_arg, param);
-    });
-}
-
-function recursiveComponent(inner, props) {
-  return Curry._1(inner, /* tuple */[
-              (function (param) {
-                  return recursiveComponent(inner, param);
-                }),
-              props
-            ]);
-}
-
-var Maker = /* module */[
-  /* makeComponent */makeComponent,
-  /* component */component,
-  /* statefulComponent */statefulComponent,
-  /* recursiveComponent */recursiveComponent
-];
+var Maker = /* module */[/* makeComponent */makeComponent];
 
 function render(param) {
-  var match = param[0];
-  return Curry._2(match[/* render */3], match[/* props */1], match[/* state */2]);
-}
-
-function onChange(param, handler) {
-  var contents = param[0];
-  return Curry._1(contents[/* onChange */4], (function (state) {
-                return Curry._1(handler, /* WithState */[/* record */[
-                              /* identity */contents[/* identity */0],
-                              /* props */contents[/* props */1],
-                              /* state */state,
-                              /* render */contents[/* render */3],
-                              /* onChange */contents[/* onChange */4]
-                            ]]);
-              }));
+  var component = param[0];
+  var effects = /* record */[/* contents : [] */0];
+  var context_000 = /* hooks : record */[
+    /* invalidate */(function () {
+        component[/* invalidated */3] = true;
+        return Curry._1(component[/* onChange */5], /* () */0);
+      }),
+    /* setReconciler */(function (data, reconcile) {
+        var match = component[/* reconciler */4];
+        component[/* reconciler */4] = /* tuple */[
+          match !== undefined ? Js_primitive.some(match[1]) : undefined,
+          data,
+          reconcile
+        ];
+        return /* () */0;
+      }),
+    /* triggerEffect */(function (cleanup, fn, setCleanup) {
+        effects[/* contents */0] = /* :: */[
+          /* record */[
+            /* cleanup */cleanup,
+            /* fn */fn,
+            /* setCleanup */setCleanup
+          ],
+          effects[/* contents */0]
+        ];
+        return /* () */0;
+      }),
+    /* current */component[/* hooks */2]
+  ];
+  var context_001 = function (v) {
+    component[/* hooks */2] = v[/* current */3];
+    return /* () */0;
+  };
+  var context = /* record */[
+    context_000,
+    context_001
+  ];
+  component[/* invalidated */3] = false;
+  var tree = Curry._1(component[/* render */1], context);
+  return /* tuple */[
+          tree,
+          effects[0]
+        ];
 }
 
 function getDomNode(_tree) {
@@ -184,12 +142,22 @@ function instantiateTree(el) {
                 ]);
     case 2 : 
         var custom = Curry._1(el[0][/* init */0], /* () */0);
+        var match = render(custom);
         return /* ICustom */Block.__(2, [
                   custom,
-                  instantiateTree(render(custom))
+                  instantiateTree(match[0]),
+                  match[1]
                 ]);
     
   }
+}
+
+function runEffect(param) {
+  var cleanup = param[/* cleanup */0];
+  if (cleanup !== undefined) {
+    Curry._1(cleanup, /* () */0);
+  }
+  return Curry._1(param[/* setCleanup */2], Curry._1(param[/* fn */1], /* () */0));
 }
 
 function inflateTree(el) {
@@ -223,31 +191,29 @@ function inflateTree(el) {
           /* mountedTree */mountedTree
         ];
         listenForChanges(custom, container);
+        Belt_List.forEach(el[2], runEffect);
         return /* MCustom */Block.__(2, [container]);
     
   }
 }
 
-function listenForChanges(param, container) {
-  var contents = param[0];
-  var identity = contents[/* identity */0];
-  var state = /* record */[/* contents */contents[/* state */2]];
-  return Curry._1(contents[/* onChange */4], (function (newState) {
-                var newCustom = /* WithState */[/* record */[
-                    /* identity */contents[/* identity */0],
-                    /* props */contents[/* props */1],
-                    /* state */newState,
-                    /* render */contents[/* render */3],
-                    /* onChange */contents[/* onChange */4]
-                  ]];
-                var oldState = state[0];
-                state[0] = newState;
-                container[/* custom */0] = newCustom;
-                var newElement = Curry._2(contents[/* render */3], contents[/* props */1], newState);
-                var match = identity[/* reconcileTrees */3];
-                container[/* mountedTree */1] = match !== undefined ? Curry._4(match, oldState, newState, container[/* mountedTree */1], newElement) : reconcileTrees(container[/* mountedTree */1], newElement);
-                return /* () */0;
-              }));
+function listenForChanges(component, container) {
+  var contents = component[0];
+  contents[/* onChange */5] = (function () {
+      var match = render(component);
+      var newElement = match[0];
+      var match$1 = contents[/* reconciler */4];
+      var tmp;
+      if (match$1 !== undefined) {
+        var match$2 = match$1;
+        tmp = Curry._4(match$2[2], match$2[0], match$2[1], container[/* mountedTree */1], newElement);
+      } else {
+        tmp = reconcileTrees(container[/* mountedTree */1], newElement);
+      }
+      container[/* mountedTree */1] = tmp;
+      return Belt_List.forEach(match[1], runEffect);
+    });
+  return /* () */0;
 }
 
 function reconcileTrees(prev, next) {
@@ -318,9 +284,11 @@ function reconcileTrees(prev, next) {
                 }
               } else {
                 var custom = match[1];
-                var tree$1 = reconcileTrees(a[/* mountedTree */1], render(custom));
+                var match$1 = render(custom);
+                var tree$1 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
                 a[/* custom */0] = custom;
                 a[/* mountedTree */1] = tree$1;
+                Belt_List.forEach(match$1[1], runEffect);
                 return /* MCustom */Block.__(2, [a]);
               }
           
@@ -374,12 +342,11 @@ export {
   setDomProps ,
   createElement ,
   updateDomProps ,
-  defaultConfig ,
   Maker ,
   render ,
-  onChange ,
   getDomNode ,
   instantiateTree ,
+  runEffect ,
   inflateTree ,
   listenForChanges ,
   reconcileTrees ,
