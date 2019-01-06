@@ -3,6 +3,7 @@
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Fluid from "./Fluid.js";
+import * as Hooks from "./Hooks.js";
 import * as Printf from "bs-platform/lib/es6/printf.js";
 import * as Spring from "./Spring.js";
 import * as Animate from "./Animate.js";
@@ -49,154 +50,97 @@ function fade(node, out) {
               }));
 }
 
-function props(on, off, _) {
-  return /* record */[
-          /* on */on,
-          /* off */off
-        ];
-}
-
-function maker_001() {
-  return false;
-}
-
-var maker_003 = /* reconcileTrees */(function (oldState, newState, mountedTree, newTree) {
-    var exit = 0;
-    if (oldState) {
-      if (newState) {
-        return mountedTree;
-      } else {
-        exit = 1;
-      }
-    } else if (newState) {
-      exit = 1;
-    } else {
-      return mountedTree;
-    }
-    if (exit === 1) {
-      var domNode = Fluid.getDomNode(mountedTree);
-      var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
-      var newDomNode = Fluid.getDomNode(newTree$1);
-      translate(domNode, newState ? -30 : 30, 0);
-      fade(domNode, true);
-      translate(newDomNode, newState ? -30 : 30, newState ? 30 : -30);
-      fade(newDomNode, false);
-      domNode.parentNode.insertBefore(newDomNode, domNode);
-      return newTree$1;
-    }
-    
-  });
-
-function maker_004(param, state, setState) {
-  if (state) {
-    return Curry._1(param[/* on */0], (function () {
-                  return Curry._1(setState, false);
+function toggle(on, off, ctx) {
+  var match = Hooks.useState(false, ctx[/* hooks */0], (function (param, hooks) {
+          var setOn = param[1];
+          var isOn = param[0];
+          Curry._2(hooks[/* setReconciler */1], isOn, (function (oldState, newState, mountedTree, newTree) {
+                  console.log("reconciling I guess", oldState, newState);
+                  var exit = 0;
+                  if (oldState) {
+                    if (newState) {
+                      return mountedTree;
+                    } else {
+                      exit = 1;
+                    }
+                  } else if (newState) {
+                    exit = 1;
+                  } else {
+                    return mountedTree;
+                  }
+                  if (exit === 1) {
+                    var domNode = Fluid.getDomNode(mountedTree);
+                    var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
+                    var newDomNode = Fluid.getDomNode(newTree$1);
+                    translate(domNode, newState ? -30 : 30, 0);
+                    fade(domNode, true);
+                    translate(newDomNode, newState ? -30 : 30, newState ? 30 : -30);
+                    fade(newDomNode, false);
+                    domNode.parentNode.insertBefore(newDomNode, domNode);
+                    return newTree$1;
+                  }
+                  
                 }));
-  } else {
-    return Curry._1(param[/* off */1], (function () {
-                  return Curry._1(setState, true);
-                }));
-  }
+          console.log("Is On", isOn);
+          return /* tuple */[
+                  isOn ? Curry._1(on, (function () {
+                            return Curry._1(setOn, false);
+                          })) : Curry._1(off, (function () {
+                            return Curry._1(setOn, true);
+                          })),
+                  hooks
+                ];
+        }));
+  Curry._1(ctx[/* finish */1], match[1]);
+  return match[0];
 }
 
-var maker = /* record */[
-  /* name */"Toggle",
-  maker_001,
-  /* newStateForProps */undefined,
-  maker_003,
-  maker_004
-];
-
-function make(props) {
-  return Fluid.Maker[/* makeComponent */0](maker, props);
+function awesomeComponent(value, toString, ctx) {
+  var match = Hooks.useState("Awesome", ctx[/* hooks */0], (function (param, hooks) {
+          var setState = param[1];
+          var state = param[0];
+          return /* tuple */[
+                  /* Builtin */Block.__(1, [
+                      "div",
+                      { },
+                      /* :: */[
+                        /* Builtin */Block.__(1, [
+                            "div",
+                            {
+                              onclick: (function () {
+                                  return Curry._1(setState, state + "1");
+                                })
+                            },
+                            /* :: */[
+                              /* String */Block.__(0, ["Awesome " + (Curry._1(toString, value) + (" " + state))]),
+                              /* [] */0
+                            ]
+                          ]),
+                        /* [] */0
+                      ]
+                    ]),
+                  hooks
+                ];
+        }));
+  Curry._1(ctx[/* finish */1], match[1]);
+  return match[0];
 }
 
-var Toggle = /* module */[
-  /* props */props,
-  /* maker */maker,
-  /* make */make
-];
-
-function props$1(value, toString, _) {
-  return /* tuple */[
-          value,
-          toString
-        ];
-}
-
-function maker_001$1() {
-  return "Folks";
-}
-
-function maker_004$1(param, state, setState) {
+function button(text, style, onClick, _) {
   return /* Builtin */Block.__(1, [
-            "div",
-            { },
+            "button",
+            {
+              onclick: (function () {
+                  return Curry._1(onClick, /* () */0);
+                }),
+              style: style
+            },
             /* :: */[
-              /* Builtin */Block.__(1, [
-                  "div",
-                  {
-                    onclick: (function () {
-                        return Curry._1(setState, state + "1");
-                      })
-                  },
-                  /* :: */[
-                    /* String */Block.__(0, ["Awesome " + (Curry._1(param[1], param[0]) + (" " + state))]),
-                    /* [] */0
-                  ]
-                ]),
+              /* String */Block.__(0, [text]),
               /* [] */0
             ]
           ]);
 }
-
-var maker$1 = /* record */[
-  /* name */"Awesome",
-  maker_001$1,
-  /* newStateForProps */undefined,
-  /* reconcileTrees */undefined,
-  maker_004$1
-];
-
-function make$1(props) {
-  return Fluid.Maker[/* makeComponent */0](maker$1, props);
-}
-
-var Awesome = /* module */[
-  /* props */props$1,
-  /* maker */maker$1,
-  /* make */make$1
-];
-
-function props$2(text, style, onClick, _) {
-  return /* tuple */[
-          text,
-          style,
-          onClick
-        ];
-}
-
-var make$2 = Fluid.Maker[/* component */1]("Button", undefined, (function (param) {
-        var onClick = param[2];
-        return /* Builtin */Block.__(1, [
-                  "button",
-                  {
-                    onclick: (function () {
-                        return Curry._1(onClick, /* () */0);
-                      }),
-                    style: param[1]
-                  },
-                  /* :: */[
-                    /* String */Block.__(0, [param[0]]),
-                    /* [] */0
-                  ]
-                ]);
-      }), /* () */0);
-
-var Button = /* module */[
-  /* props */props$2,
-  /* make */make$2
-];
 
 var canvas = Fluid.createElement("canvas", {
       width: 500,
@@ -343,7 +287,7 @@ function loop(x) {
   }
 }
 
-Curry._1((
+var f = (
   function(){
     const ctx = canvas.getContext('2d')
     ctx.beginPath()
@@ -355,7 +299,9 @@ Curry._1((
     ctx.lineWidth = 1
     ctx.stroke()
   }
-), /* () */0);
+);
+
+Curry._1(f, /* () */0);
 
 canvas.addEventListener("mousemove", (function (evt) {
         var box = evt.target.getBoundingClientRect();
@@ -396,65 +342,6 @@ canvas.addEventListener("mousemove", (function (evt) {
                 ]), x / 2, y / 5, match$1[1]);
         return /* () */0;
       }));
-
-function props_000(onClick) {
-  return /* Builtin */Block.__(1, [
-            "div",
-            { },
-            /* :: */[
-              /* String */Block.__(0, ["Click this to"]),
-              /* :: */[
-                /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
-                          "Turn Off",
-                          "background-color: #88ff88",
-                          onClick
-                        ])]),
-                /* [] */0
-              ]
-            ]
-          ]);
-}
-
-function props_001(onClick) {
-  return /* Builtin */Block.__(1, [
-            "div",
-            { },
-            /* :: */[
-              /* Custom */Block.__(2, [Curry._1(make$2, /* tuple */[
-                        "Turn On",
-                        "background-color: #ffacf0",
-                        onClick
-                      ])]),
-              /* :: */[
-                /* String */Block.__(0, ["if you want"]),
-                /* [] */0
-              ]
-            ]
-          ]);
-}
-
-var props$3 = /* record */[
-  props_000,
-  props_001
-];
-
-function props_001$1(prim) {
-  return String(prim);
-}
-
-var props$4 = /* tuple */[
-  5,
-  props_001$1
-];
-
-function props_001$2(x) {
-  return x;
-}
-
-var props$5 = /* tuple */[
-  "Hi",
-  props_001$2
-];
 
 var first_001 = {
   id: "awesome",
@@ -502,11 +389,49 @@ var first_002 = /* :: */[
           ]
         ]),
       /* :: */[
-        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker, props$3)]),
+        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](toggle, (function (param) {
+                    return toggle((function (onClick) {
+                                  return /* Builtin */Block.__(1, [
+                                            "div",
+                                            { },
+                                            /* :: */[
+                                              /* String */Block.__(0, ["Click this to"]),
+                                              /* :: */[
+                                                /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](button, (function (param) {
+                                                            return button("Turn Off", "background-color: #88ff88", onClick, param);
+                                                          }))]),
+                                                /* [] */0
+                                              ]
+                                            ]
+                                          ]);
+                                }), (function (onClick) {
+                                  return /* Builtin */Block.__(1, [
+                                            "div",
+                                            { },
+                                            /* :: */[
+                                              /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](button, (function (param) {
+                                                          return button("Turn On", "background-color: #ffacf0", onClick, param);
+                                                        }))]),
+                                              /* :: */[
+                                                /* String */Block.__(0, ["if you want"]),
+                                                /* [] */0
+                                              ]
+                                            ]
+                                          ]);
+                                }), param);
+                  }))]),
         /* :: */[
-          /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$4)]),
+          /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](awesomeComponent, (function (param) {
+                      return awesomeComponent(5, (function (prim) {
+                                    return String(prim);
+                                  }), param);
+                    }))]),
           /* :: */[
-            /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](maker$1, props$5)]),
+            /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](awesomeComponent, (function (param) {
+                        return awesomeComponent("Hi", (function (x) {
+                                      return x;
+                                    }), param);
+                      }))]),
             /* :: */[
               /* Builtin */Block.__(1, [
                   "div",
@@ -542,7 +467,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          318,
+          335,
           12
         ]
       ];
@@ -557,9 +482,9 @@ export {
   translate ,
   abs ,
   fade ,
-  Toggle ,
-  Awesome ,
-  Button ,
+  toggle ,
+  awesomeComponent ,
+  button ,
   canvas ,
   canvas2 ,
   log ,
@@ -573,6 +498,7 @@ export {
   sd ,
   showLine ,
   loop ,
+  f ,
   first ,
   
 }

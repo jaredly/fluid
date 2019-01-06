@@ -51,7 +51,6 @@ type effect = {
   setCleanup: (unit => unit) => unit,
 };
 
-
 /* also need a "compareTo" (other custom) */
 type custom = {
   init: unit => customWithState,
@@ -62,7 +61,11 @@ and customContents('identity, 'hooks, 'reconcileData) = {
   render: context('hooks, 'reconcileData) => element,
   mutable hooks: option('hooks),
   mutable invalidated: bool,
-  mutable reconciler: option((option('reconcileData), 'reconcileData, reconcilerFunction('reconcileData))),
+  mutable reconciler: option(
+    (
+'reconcileData, option(('reconcileData, reconcilerFunction('reconcileData)))
+    )
+  ),
   mutable onChange: unit => unit,
 }
 
@@ -79,7 +82,7 @@ and hooksContainer('hooks, 'reconcileData) = {
   current: option('hooks),
 }
 
-and reconcilerFunction('data) = (option('data), 'data, mountedTree, element) => mountedTree
+and reconcilerFunction('data) = ('data, 'data, mountedTree, element) => mountedTree
 and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData)) : customWithState
 
 and element =
@@ -179,14 +182,11 @@ let render = (WithState(component)) => {
         component.onChange();
         /* TODO actually trigger a rerender here */
       },
-      setReconciler: (data, reconcile) => component.reconciler = Some((
-        switch (component.reconciler) {
-          | None => None
-          | Some((a, b, c)) => Some(b)
-        },
-        data,
-        reconcile
-      )),
+      setReconciler: (data, reconcile) => component.reconciler = switch (component.reconciler) {
+        | None => Some((data, None))
+        | Some((old, None))
+        | Some((_, Some((old, _)))) => Some((old, Some((data, reconcile))))
+      },
       triggerEffect: (~cleanup, ~fn, ~setCleanup) => {
         effects.contents = [{cleanup, fn, setCleanup}, ...effects.contents];
       },
@@ -251,8 +251,8 @@ and listenForChanges = (WithState(contents) as component, container) => {
   contents.onChange = () => {
     let (newElement, effects) = component->render;
     container.mountedTree = switch (contents.reconciler) {
-      | None => reconcileTrees(container.mountedTree, newElement)
-      | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
+      | Some((oldData, Some((newData, reconcile)))) => reconcile(oldData, newData, container.mountedTree, newElement)
+      | _ => reconcileTrees(container.mountedTree, newElement)
     };
     effects->List.forEach(runEffect);
   }

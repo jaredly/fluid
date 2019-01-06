@@ -1,5 +1,6 @@
 
 open Fluid;
+open Hooks;
 
 module Style = {
   type style;
@@ -51,13 +52,10 @@ let fade = (node, ~out) => {
   )
 };
 
-module Toggle = {
-  type props = {on: (unit => unit) => element, off: (unit => unit) => element};
-  let props = (~on, ~off, ()) => {on, off};
-  let maker = {
-    name: "Toggle",
-    initialState:(_) => false,
-    reconcileTrees:Some((oldState, newState, mountedTree, newTree) => {
+let toggle = (~on, ~off, ctx) => {
+  let (res, hooks) = useState(false, ctx.hooks, ((isOn, setOn), hooks) => {
+    hooks.setReconciler(isOn, (oldState, newState, mountedTree, newTree) => {
+      Js.log3("reconciling I guess", oldState, newState);
       switch (oldState, newState) {
         | (false, true)
         | (true, false) =>
@@ -77,21 +75,35 @@ module Toggle = {
           newTree
         | _ => mountedTree
       }
-    }),
-    newStateForProps: None,
-    render:({on, off}, state, setState) => {
-      if (state) {
-        on(() => setState(false))
-      } else {
-        off(() => setState(true))
-      }
-    }
-  };
-  let make = props => Maker.makeComponent(maker, props);
+    });
+
+    Js.log2("Is On", isOn);
+    (if (isOn) {
+      on(() => setOn(false))
+    } else {
+      off(() => setOn(true))
+    }, hooks)
+
+  });
+  ctx.finish(hooks);
+  res
+};
+
+let awesomeComponent = (~value, ~toString, ctx) => {
+  let (res, hooks) = useState("Awesome", ctx.hooks, ((state, setState), hooks) => {
+    (<div>
+      <div onclick={_evt => setState(state ++ "1")}>
+        {String("Awesome " ++ toString(value) ++ " " ++ state)}
+      </div>
+    </div>, hooks)
+  });
+
+  ctx.finish(hooks);
+  res
 };
 
 /** Yayy polymorphism and a normal props thing! */
-module Awesome = {
+/* module Awesome = {
   let props = (~value, ~toString, ()) => (value, toString);
   let maker = {
     name: "Awesome",
@@ -106,9 +118,13 @@ module Awesome = {
     newStateForProps: None
   };
   let make = props => Maker.makeComponent(maker, props);
+}; */
+
+let button = (~text, ~style, ~onClick, ctx) => {
+  <button style onclick={_evt => onClick()}>(String(text))</button>
 };
 
-module Button = {
+/* module Button = {
   let props = (~text, ~style, ~onClick, ()) => (text, style, onClick);
   let make = Maker.component(
     ~name="Button",
@@ -117,7 +133,7 @@ module Button = {
     },
     ()
   );
-};
+}; */
 
 [@bs.get] external target: Dom.event => Dom.eventTarget = "";
 [@bs.get] external value: Dom.eventTarget => float = "";
@@ -241,7 +257,7 @@ let rec loop = x => {
 };
 /* loop(0); */
 
-[%bs.raw {|
+let f: unit => unit = [%bs.raw {|
   function(){
     const ctx = canvas.getContext('2d')
     ctx.beginPath()
@@ -253,7 +269,8 @@ let rec loop = x => {
     ctx.lineWidth = 1
     ctx.stroke()
   }
-|}]();
+|}];
+f();
 
 canvas->addEventListener("mousemove", evt => {
   let box = evt##target##getBoundingClientRect();
@@ -293,18 +310,18 @@ let first = <div id="awesome" style="padding: 20px">
   <div id="here">
     <div>{String("What")}</div>
   </div>
-  <Toggle
-    on=(onClick => <div>
+  {Custom(Maker.makeComponent(toggle, toggle(
+    ~on=(onClick => <div>
       (String("Click this to"))
-      <Button style="background-color: #88ff88" onClick text="Turn Off" />
-    </div>)
-    off=(onClick => <div>
-      <Button style="background-color: #ffacf0" onClick text="Turn On" />
+      {Custom(Maker.makeComponent(button, button(~style="background-color: #88ff88", ~onClick, ~text="Turn Off")))}
+    </div>),
+    ~off=(onClick => <div>
+      {Custom(Maker.makeComponent(button, button(~style="background-color: #ffacf0", ~onClick, ~text="Turn On")))}
       (String("if you want"))
     </div>)
-  />
-  <Awesome value=5 toString=string_of_int />
-  <Awesome value="Hi"  toString=(x => x) />
+  )))}
+  {Custom(Maker.makeComponent(awesomeComponent, awesomeComponent(~value=5, ~toString=string_of_int)))}
+  {Custom(Maker.makeComponent(awesomeComponent, awesomeComponent(~value="Hi", ~toString=x => x)))}
   <div
     id="Inner"
   >
