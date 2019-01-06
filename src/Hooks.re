@@ -79,6 +79,18 @@ let useState =
   (res, {...hooks, current: Some((hooks.current, state))});
 };
 
+/* [@hook]
+let useReducer = (reducer, initial) => {
+  let%hook (state, setState) = useState(initial);
+  (state, action => setState(reducer(state, action)))
+}; */
+
+let useReducer = (initial, reducer, hooks, fin) => {
+  useState(initial, hooks, ((state, setState), hooks) => {
+    fin((state, action => setState(reducer(state, action))), hooks)
+  });
+};
+
 type effect('args) = {
   args: 'args,
   prevArgs: option('args),
@@ -95,7 +107,7 @@ let useEffect = (fn, args, hooks: hooks((option('next), effect('args))), fin) =>
       hooks.triggerEffect(~cleanup=effect.cleanup.contents, ~fn, ~setCleanup=v => {
         effect.cleanup.contents = Some(v)
       });
-      let (res, hooks) = fin({...hooks, current: None});
+      let (res, hooks) = fin((), {...hooks, current: None});
       (res, {...hooks, current: Some((hooks.current, effect))})
     | Some((next, effect)) =>
       if (effect.args != args) {
@@ -110,19 +122,57 @@ let useEffect = (fn, args, hooks: hooks((option('next), effect('args))), fin) =>
         args,
         prevArgs: Some(effect.args)
       };
-      let (res, hooks) = fin({...hooks, current: next});
+      let (res, hooks) = fin((), {...hooks, current: next});
       (res, {...hooks, current: Some((hooks.current, effect))})
   };
 };
+
+let useMemo = (fn, args, hooks, fin) => {
+  let (value, current) =
+    switch (hooks.current) {
+    | None => (fn(), None)
+    | Some((next, (value, prevArgs))) =>
+      let value = prevArgs == args ? value : fn();
+      (value, next);
+    };
+  let (res, hooks) = fin(value, {...hooks, current});
+  (res, {...hooks, current: Some((hooks.current, (value, args)))});
+};
+
+let useCallback = (fn, args, hooks, fin) => {
+  useMemo(() => fn, args, hooks, fin)
+};
+
+/* let myComponent = (~some, ~prop, {hooks, finish}) => {
+  Js.log("Here");
+  let%hook (state, dispatch) = useReducer(None, action => switch action {
+    | `Awesome => Some(10)
+    | `Nope => None
+  });
+  let%hook (count, setCount) = useState(10);
+  let%hook (name, setName) = useState("name");
+  Js.log("Hi");
+  let%hook () = useEffect(() => {
+    () => ()
+  }, ());
+  Js.log("Ho");
+  "contents"
+}; */
+
 
 let myComponent = (~some, ~prop, {hooks, finish}) => {
   Js.log("Here");
   let (res, hooks) = useState(10, hooks, ((count, setCount), hooks) => {
     useState("name", hooks, ((name, setName), hooks) => {
       Js.log("Hi");
-      useEffect(() => () => (), (), hooks, hooks => {
+      useEffect(() => () => (), (), hooks, ((), hooks) => {
         Js.log("Ho");
-        ("contents", hooks);
+        useReducer(None, (_state, action) => switch action {
+          | `Awesome => Some(10)
+          | `Nope => None
+        }, hooks, ((state, dispatch), hooks) => {
+          ("contents", hooks);
+        });
       });
     })
   });

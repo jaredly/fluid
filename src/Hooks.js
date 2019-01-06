@@ -94,6 +94,19 @@ function useState(initial, hooks, fin) {
         ];
 }
 
+function useReducer(initial, reducer, hooks, fin) {
+  return useState(initial, hooks, (function (param, hooks) {
+                var setState = param[1];
+                var state = param[0];
+                return Curry._2(fin, /* tuple */[
+                            state,
+                            (function (action) {
+                                return Curry._1(setState, Curry._2(reducer, state, action));
+                              })
+                          ], hooks);
+              }));
+}
+
 function newEffect(fn, args) {
   return /* record */[
           /* args */args,
@@ -122,7 +135,7 @@ function useEffect(fn, args, hooks, fin) {
       effect_002,
       /* fn */fn
     ];
-    var match$2 = Curry._1(fin, /* record */[
+    var match$2 = Curry._2(fin, /* () */0, /* record */[
           /* invalidate */hooks[/* invalidate */0],
           /* triggerEffect */hooks[/* triggerEffect */1],
           /* current */match$1[0]
@@ -145,7 +158,7 @@ function useEffect(fn, args, hooks, fin) {
             effect$2[/* cleanup */2][/* contents */0] = v;
             return /* () */0;
           }));
-    var match$3 = Curry._1(fin, /* record */[
+    var match$3 = Curry._2(fin, /* () */0, /* record */[
           /* invalidate */hooks[/* invalidate */0],
           /* triggerEffect */hooks[/* triggerEffect */1],
           /* current */undefined
@@ -165,6 +178,53 @@ function useEffect(fn, args, hooks, fin) {
   }
 }
 
+function useMemo(fn, args, hooks, fin) {
+  var match = hooks[/* current */2];
+  var match$1;
+  if (match !== undefined) {
+    var match$2 = match;
+    var match$3 = match$2[1];
+    var match$4 = Caml_obj.caml_equal(match$3[1], args);
+    var value = match$4 ? match$3[0] : Curry._1(fn, /* () */0);
+    match$1 = /* tuple */[
+      value,
+      match$2[0]
+    ];
+  } else {
+    match$1 = /* tuple */[
+      Curry._1(fn, /* () */0),
+      undefined
+    ];
+  }
+  var value$1 = match$1[0];
+  var match$5 = Curry._2(fin, value$1, /* record */[
+        /* invalidate */hooks[/* invalidate */0],
+        /* triggerEffect */hooks[/* triggerEffect */1],
+        /* current */match$1[1]
+      ]);
+  var hooks$1 = match$5[1];
+  return /* tuple */[
+          match$5[0],
+          /* record */[
+            /* invalidate */hooks$1[/* invalidate */0],
+            /* triggerEffect */hooks$1[/* triggerEffect */1],
+            /* current *//* tuple */[
+              hooks$1[/* current */2],
+              /* tuple */[
+                value$1,
+                args
+              ]
+            ]
+          ]
+        ];
+}
+
+function useCallback(fn, args, hooks, fin) {
+  return useMemo((function () {
+                return fn;
+              }), args, hooks, fin);
+}
+
 function myComponent(_, _$1, param) {
   console.log("Here");
   var match = useState(10, param[/* hooks */0], (function (_, hooks) {
@@ -172,12 +232,20 @@ function myComponent(_, _$1, param) {
                         console.log("Hi");
                         return useEffect((function (_, _$1) {
                                       return /* () */0;
-                                    }), /* () */0, hooks, (function (hooks) {
+                                    }), /* () */0, hooks, (function (_, hooks) {
                                       console.log("Ho");
-                                      return /* tuple */[
-                                              "contents",
-                                              hooks
-                                            ];
+                                      return useReducer(undefined, (function (_, action) {
+                                                    if (action >= 870531222) {
+                                                      return undefined;
+                                                    } else {
+                                                      return 10;
+                                                    }
+                                                  }), hooks, (function (_, hooks) {
+                                                    return /* tuple */[
+                                                            "contents",
+                                                            hooks
+                                                          ];
+                                                  }));
                                     }));
                       }));
         }));
@@ -188,8 +256,11 @@ function myComponent(_, _$1, param) {
 export {
   useRef ,
   useState ,
+  useReducer ,
   newEffect ,
   useEffect ,
+  useMemo ,
+  useCallback ,
   myComponent ,
   
 }
