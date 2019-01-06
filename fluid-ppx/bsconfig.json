@@ -13,7 +13,8 @@
   "bs-dependencies": [],
   "ocaml-dependencies": ["compiler-libs", "unix", "bigarray", "str"],
   "public": ["Main"],
-  "entries": [{
+  "entries": [
+    {
     "backend": "native",
     "main-module": "Tests"
   }, {

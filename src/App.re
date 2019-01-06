@@ -310,18 +310,18 @@ let first = <div id="awesome" style="padding: 20px">
   <div id="here">
     <div>{String("What")}</div>
   </div>
-  {Custom(Maker.makeComponent(toggle, toggle(
-    ~on=(onClick => <div>
+  <Toggle
+    on=(onClick => <div>
       (String("Click this to"))
       {Custom(Maker.makeComponent(button, button(~style="background-color: #88ff88", ~onClick, ~text="Turn Off")))}
-    </div>),
-    ~off=(onClick => <div>
+    </div>)
+    off=(onClick => <div>
       {Custom(Maker.makeComponent(button, button(~style="background-color: #ffacf0", ~onClick, ~text="Turn On")))}
       (String("if you want"))
     </div>)
-  )))}
-  {Custom(Maker.makeComponent(awesomeComponent, awesomeComponent(~value=5, ~toString=string_of_int)))}
-  {Custom(Maker.makeComponent(awesomeComponent, awesomeComponent(~value="Hi", ~toString=x => x)))}
+  />
+  <AwesomeComponent value=5 toString=string_of_int />
+  <AwesomeComponent value="Hi" toString={x => x} />
   <div
     id="Inner"
   >

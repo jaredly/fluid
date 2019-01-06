@@ -42,6 +42,12 @@ let isLowerCase = str => String.lowercase(str) == str;
 open Ast_helper;
 open Longident;
 
+let unCapitalize = text => {
+  let f = String.lowercase(String.sub(text, 0, 1));
+  let rest = String.sub(text, 1, String.length(text) - 1);
+  f ++ rest
+};
+
 let mapper = _argv =>
   Parsetree.{
     ...Ast_mapper.default_mapper,
@@ -53,7 +59,7 @@ let mapper = _argv =>
         } => {
           let args = args |. Belt.List.map(((a, b)) => (a, mapper.expr(mapper, b)));
           switch (target.pexp_desc) {
-            | Pexp_ident({txt: Longident.Lident(name)}) when isLowerCase(String.sub(name, 0, 1)) =>
+            | Pexp_ident({txt: Longident.Lident(name), loc}) when isLowerCase(String.sub(name, 0, 1)) =>
               let rec loop = args => switch args {
                 | [] => assert(false)
                 | [("children", arg), ...rest] => (arg, rest)
@@ -62,22 +68,22 @@ let mapper = _argv =>
               };
               let (children, props) = loop(args);
               Exp.construct(
-                Location.mknoloc(Ldot(Lident("Fluid"), "Builtin")),
+                Location.mkloc(Ldot(Lident("Fluid"), "Builtin"), loc),
                 Some(Exp.tuple([
                   Exp.constant(Const_string(name, None)),
                   Ast_helper.Exp.apply(
-                    Exp.ident(Location.mknoloc(Ldot(Lident("Fluid"), "domProps"))),
+                    Exp.ident(Location.mkloc(Ldot(Lident("Fluid"), "domProps"), loc)),
                     props
                   ),
                   /* TODO auto-up strings */
                   children
                 ]))
               )
-            | Pexp_ident({txt: Ldot(contents, "createElement")}) =>
+            | Pexp_ident({txt: Ldot(contents, "createElement"), loc}) =>
               let rec loop = args => switch args {
                 | [] => (None, args)
-                | [("children", {pexp_desc: Pexp_construct({txt: Lident("[]")}, None)}), ...rest] => (None, rest)
-                | [("children", arg), ...rest] => (Some(arg), rest)
+                | [("children", {pexp_desc: Pexp_construct({txt: Lident("[]")}, None)}), ...rest] => (None, [])
+                | [("children", arg), ...rest] => (Some(arg), [])
                 | [arg, ...rest] => let (children, args) = loop(rest);
                   (children, [arg, ...args])
               };
@@ -86,15 +92,21 @@ let mapper = _argv =>
                 | None => props
                 | Some(arg) => props @ [("children", arg)]
               };
+              let fn = Exp.ident(Location.mkloc(switch contents {
+                  | Ldot(one, two) => Ldot(one, unCapitalize(two))
+                  | Lident(one) => Lident(unCapitalize(one))
+                  | _ => assert(false)
+                }, loc));
               Exp.construct(
-                Location.mknoloc(Ldot(Lident("Fluid"), "Custom")),
+                Location.mkloc(Ldot(Lident("Fluid"), "Custom"), loc),
               Some(Exp.apply(
-                Exp.ident(Location.mknoloc(Ldot(contents, "make"))),
-                [("", Ast_helper.Exp.apply(
-                  Exp.ident(Location.mknoloc(Ldot(contents, "props"))),
-                  props
-                ))]
-              )))
+                Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Maker"), "makeComponent"), loc)),
+                [
+                  ("", fn),
+                  ("", Exp.apply(
+                fn,
+                props
+                ))])))
             | _ => Ast_mapper.default_mapper.expr(mapper, expr)
           }
         }
