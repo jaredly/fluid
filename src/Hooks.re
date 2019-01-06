@@ -4,6 +4,18 @@
 /**
 This is the CPS version, which doesn't require magic to get the types to work.
 This seems like a good thing.
+
+
+hrrrrm but will I need magic to process the hooks?
+this is a good question.
+maybe the context can have functions that I call
+like `registerEffect` or sth
+
+and in this way we can collect the lifecycle things.
+
+because state is the only iffy bit, types-wise, right?
+that and 'ref's. well we don't actually need refs. or do we?
+I guess for things that you won't want to trigger a re-render.
  */
 
 type context('initial) = {
@@ -18,14 +30,24 @@ type state('t) = {
 
 type hooks('current) = {
   invalidate: unit => unit,
+  triggerEffect:
+    (
+      ~cleanup: option(unit => unit),
+      ~fn: (unit, unit) => unit,
+      ~setCleanup: (unit => unit) => unit
+    ) =>
+    unit,
   current: option('current),
 };
 
-type effect('args) = {
-  args: 'args,
-  prevArgs: option('args),
-  cleanup: option(unit => unit),
-  fn: unit => (unit => unit),
+let useRef = (initial, hooks, fin) => {
+  let (r, hooks) = switch (hooks.current) {
+    | None =>
+      (ref(initial), {...hooks, current: None})
+    | Some((inner, r)) => (r, {...hooks, current: inner})
+  };
+  let (res, hooks) = fin(r, hooks);
+  (res, {...hooks, current: Some((hooks.current, r))})
 };
 
 let useState =
@@ -57,15 +79,31 @@ let useState =
   (res, {...hooks, current: Some((hooks.current, state))});
 };
 
-let newEffect = (fn, args) => {fn, args, prevArgs: None, cleanup: None};
+type effect('args) = {
+  args: 'args,
+  prevArgs: option('args),
+  cleanup: ref(option(unit => unit)),
+  fn: unit => (unit => unit),
+};
+
+let newEffect = (fn, args) => {fn, args, prevArgs: None, cleanup: ref(None)};
 
 let useEffect = (fn, args, hooks: hooks((option('next), effect('args))), fin) => {
   switch (hooks.current) {
     | None =>
       let effect = newEffect(fn, args);
+      hooks.triggerEffect(~cleanup=effect.cleanup.contents, ~fn, ~setCleanup=v => {
+        effect.cleanup.contents = Some(v)
+      });
       let (res, hooks) = fin({...hooks, current: None});
       (res, {...hooks, current: Some((hooks.current, effect))})
     | Some((next, effect)) =>
+      if (effect.args != args) {
+        hooks.triggerEffect(~cleanup=effect.cleanup.contents, ~fn, ~setCleanup=v => {
+          effect.cleanup.contents = Some(v)
+        })
+      };
+
       let effect = {
         ...effect,
         fn,
