@@ -30,9 +30,9 @@ let useReconciler = (data, fn, hooks, fin) => {
     | None =>
       (data, {...hooks, current: None})
     | Some((inner, r)) =>
+      hooks.setReconciler(r, data, fn);
       (data, {...hooks, current: inner})
   };
-  hooks.setReconciler(data, fn);
 
   let (res, hooks) = fin((), hooks);
   (res, {...hooks, current: Some((hooks.current, r))})

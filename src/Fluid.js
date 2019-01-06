@@ -75,37 +75,12 @@ function render(param) {
         component[/* invalidated */3] = true;
         return Curry._1(component[/* onChange */5], /* () */0);
       }),
-    /* setReconciler */(function (data, reconcile) {
-        var match = component[/* reconciler */4];
-        var tmp;
-        var exit = 0;
-        var old;
-        if (match !== undefined) {
-          var match$1 = match;
-          var match$2 = match$1[1];
-          if (match$2 !== undefined) {
-            old = match$2[0];
-            exit = 1;
-          } else {
-            old = match$1[0];
-            exit = 1;
-          }
-        } else {
-          tmp = /* tuple */[
-            data,
-            undefined
-          ];
-        }
-        if (exit === 1) {
-          tmp = /* tuple */[
-            old,
-            /* tuple */[
-              data,
-              reconcile
-            ]
-          ];
-        }
-        component[/* reconciler */4] = tmp;
+    /* setReconciler */(function (oldData, data, reconcile) {
+        component[/* reconciler */4] = /* tuple */[
+          oldData,
+          data,
+          reconcile
+        ];
         return /* () */0;
       }),
     /* triggerEffect */(function (cleanup, fn, setCleanup) {
@@ -229,13 +204,7 @@ function listenForChanges(component, container) {
       var tmp;
       if (match$1 !== undefined) {
         var match$2 = match$1;
-        var match$3 = match$2[1];
-        if (match$3 !== undefined) {
-          var match$4 = match$3;
-          tmp = Curry._4(match$4[1], match$2[0], match$4[0], container[/* mountedTree */1], newElement);
-        } else {
-          tmp = reconcileTrees(container[/* mountedTree */1], newElement);
-        }
+        tmp = Curry._4(match$2[2], match$2[0], match$2[1], container[/* mountedTree */1], newElement);
       } else {
         tmp = reconcileTrees(container[/* mountedTree */1], newElement);
       }

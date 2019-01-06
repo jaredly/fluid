@@ -6,15 +6,21 @@ import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 
 function useReconciler(data, fn, hooks, fin) {
   var match = hooks[/* current */3];
-  var match$1 = match !== undefined ? /* tuple */[
+  var match$1;
+  if (match !== undefined) {
+    var match$2 = match;
+    Curry._3(hooks[/* setReconciler */1], match$2[1], data, fn);
+    match$1 = /* tuple */[
       data,
       /* record */[
         /* invalidate */hooks[/* invalidate */0],
         /* setReconciler */hooks[/* setReconciler */1],
         /* triggerEffect */hooks[/* triggerEffect */2],
-        /* current */match[0]
+        /* current */match$2[0]
       ]
-    ] : /* tuple */[
+    ];
+  } else {
+    match$1 = /* tuple */[
       data,
       /* record */[
         /* invalidate */hooks[/* invalidate */0],
@@ -23,18 +29,17 @@ function useReconciler(data, fn, hooks, fin) {
         /* current */undefined
       ]
     ];
-  var hooks$1 = match$1[1];
-  Curry._2(hooks$1[/* setReconciler */1], data, fn);
-  var match$2 = Curry._2(fin, /* () */0, hooks$1);
-  var hooks$2 = match$2[1];
+  }
+  var match$3 = Curry._2(fin, /* () */0, match$1[1]);
+  var hooks$1 = match$3[1];
   return /* tuple */[
-          match$2[0],
+          match$3[0],
           /* record */[
-            /* invalidate */hooks$2[/* invalidate */0],
-            /* setReconciler */hooks$2[/* setReconciler */1],
-            /* triggerEffect */hooks$2[/* triggerEffect */2],
+            /* invalidate */hooks$1[/* invalidate */0],
+            /* setReconciler */hooks$1[/* setReconciler */1],
+            /* triggerEffect */hooks$1[/* triggerEffect */2],
             /* current *//* tuple */[
-              hooks$2[/* current */3],
+              hooks$1[/* current */3],
               match$1[0]
             ]
           ]

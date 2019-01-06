@@ -63,7 +63,7 @@ and customContents('identity, 'hooks, 'reconcileData) = {
   mutable invalidated: bool,
   mutable reconciler: option(
     (
-'reconcileData, option(('reconcileData, reconcilerFunction('reconcileData)))
+'reconcileData, 'reconcileData, reconcilerFunction('reconcileData)
     )
   ),
   mutable onChange: unit => unit,
@@ -71,7 +71,7 @@ and customContents('identity, 'hooks, 'reconcileData) = {
 
 and hooksContainer('hooks, 'reconcileData) = {
   invalidate: unit => unit,
-  setReconciler: ('reconcileData, reconcilerFunction('reconcileData)) => unit,
+  setReconciler: ('reconcileData, 'reconcileData, reconcilerFunction('reconcileData)) => unit,
   triggerEffect:
     (
       ~cleanup: option(unit => unit),
@@ -182,11 +182,7 @@ let render = (WithState(component)) => {
         component.onChange();
         /* TODO actually trigger a rerender here */
       },
-      setReconciler: (data, reconcile) => component.reconciler = switch (component.reconciler) {
-        | None => Some((data, None))
-        | Some((old, None))
-        | Some((_, Some((old, _)))) => Some((old, Some((data, reconcile))))
-      },
+      setReconciler: (oldData, data, reconcile) => component.reconciler = Some((oldData, data, reconcile)),
       triggerEffect: (~cleanup, ~fn, ~setCleanup) => {
         effects.contents = [{cleanup, fn, setCleanup}, ...effects.contents];
       },
@@ -251,7 +247,7 @@ and listenForChanges = (WithState(contents) as component, container) => {
   contents.onChange = () => {
     let (newElement, effects) = component->render;
     container.mountedTree = switch (contents.reconciler) {
-      | Some((oldData, Some((newData, reconcile)))) => reconcile(oldData, newData, container.mountedTree, newElement)
+      | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
       | _ => reconcileTrees(container.mountedTree, newElement)
     };
     effects->List.forEach(runEffect);
