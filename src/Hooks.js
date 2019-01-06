@@ -4,6 +4,43 @@ import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 
+function useReconciler(data, fn, hooks, fin) {
+  var match = hooks[/* current */3];
+  var match$1 = match !== undefined ? /* tuple */[
+      data,
+      /* record */[
+        /* invalidate */hooks[/* invalidate */0],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
+        /* current */match[0]
+      ]
+    ] : /* tuple */[
+      data,
+      /* record */[
+        /* invalidate */hooks[/* invalidate */0],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
+        /* current */undefined
+      ]
+    ];
+  var hooks$1 = match$1[1];
+  Curry._2(hooks$1[/* setReconciler */1], data, fn);
+  var match$2 = Curry._2(fin, /* () */0, hooks$1);
+  var hooks$2 = match$2[1];
+  return /* tuple */[
+          match$2[0],
+          /* record */[
+            /* invalidate */hooks$2[/* invalidate */0],
+            /* setReconciler */hooks$2[/* setReconciler */1],
+            /* triggerEffect */hooks$2[/* triggerEffect */2],
+            /* current *//* tuple */[
+              hooks$2[/* current */3],
+              match$1[0]
+            ]
+          ]
+        ];
+}
+
 function useRef(initial, hooks, fin) {
   var match = hooks[/* current */3];
   var match$1;
@@ -230,7 +267,34 @@ function useCallback(fn, args, hooks, fin) {
               }), args, hooks, fin);
 }
 
-function myComponent(_, param) {
+function myComponent(_, _$1, ctx) {
+  console.log("Here");
+  var match = useReducer(undefined, (function (_, action) {
+          if (action >= 870531222) {
+            return undefined;
+          } else {
+            return 10;
+          }
+        }), ctx[/* hooks */0], (function (_, __hooks) {
+          return useState(10, __hooks, (function (_, __hooks) {
+                        return useState("name", __hooks, (function (_, __hooks) {
+                                      console.log("Hi");
+                                      return useEffect((function (_, _$1) {
+                                                    return /* () */0;
+                                                  }), /* () */0, __hooks, (function (_, __hooks) {
+                                                    return /* tuple */[
+                                                            (console.log("Ho"), "contents"),
+                                                            __hooks
+                                                          ];
+                                                  }));
+                                    }));
+                      }));
+        }));
+  Curry._1(ctx[/* finish */1], match[1]);
+  return match[0];
+}
+
+function myComponent2(_, param) {
   console.log("Here");
   var match = useState(10, param[/* hooks */0], (function (_, hooks) {
           return useState("name", hooks, (function (_, hooks) {
@@ -259,6 +323,7 @@ function myComponent(_, param) {
 }
 
 export {
+  useReconciler ,
   useRef ,
   useState ,
   useReducer ,
@@ -267,6 +332,7 @@ export {
   useMemo ,
   useCallback ,
   myComponent ,
+  myComponent2 ,
   
 }
 /* No side effect */

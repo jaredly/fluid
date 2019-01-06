@@ -51,52 +51,52 @@ function fade(node, out) {
 }
 
 function toggle(on, off, ctx) {
-  var match = Hooks.useState(false, ctx[/* hooks */0], (function (param, hooks) {
+  var match = Hooks.useState(false, ctx[/* hooks */0], (function (param, __hooks) {
           var setOn = param[1];
           var isOn = param[0];
-          Curry._2(hooks[/* setReconciler */1], isOn, (function (oldState, newState, mountedTree, newTree) {
-                  console.log("reconciling I guess", oldState, newState);
-                  var exit = 0;
-                  if (oldState) {
-                    if (newState) {
-                      return mountedTree;
-                    } else {
-                      exit = 1;
-                    }
-                  } else if (newState) {
-                    exit = 1;
-                  } else {
-                    return mountedTree;
-                  }
-                  if (exit === 1) {
-                    var domNode = Fluid.getDomNode(mountedTree);
-                    var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
-                    var newDomNode = Fluid.getDomNode(newTree$1);
-                    translate(domNode, newState ? -30 : 30, 0);
-                    fade(domNode, true);
-                    translate(newDomNode, newState ? -30 : 30, newState ? 30 : -30);
-                    fade(newDomNode, false);
-                    domNode.parentNode.insertBefore(newDomNode, domNode);
-                    return newTree$1;
-                  }
-                  
-                }));
-          console.log("Is On", isOn);
-          return /* tuple */[
-                  isOn ? Curry._1(on, (function () {
-                            return Curry._1(setOn, false);
-                          })) : Curry._1(off, (function () {
-                            return Curry._1(setOn, true);
-                          })),
-                  hooks
-                ];
+          return Hooks.useReconciler(isOn, (function (oldState, newState, mountedTree, newTree) {
+                        console.log("reconciling I guess", oldState, newState);
+                        var exit = 0;
+                        if (oldState) {
+                          if (newState) {
+                            return mountedTree;
+                          } else {
+                            exit = 1;
+                          }
+                        } else if (newState) {
+                          exit = 1;
+                        } else {
+                          return mountedTree;
+                        }
+                        if (exit === 1) {
+                          var domNode = Fluid.getDomNode(mountedTree);
+                          var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
+                          var newDomNode = Fluid.getDomNode(newTree$1);
+                          translate(domNode, newState ? -30 : 30, 0);
+                          fade(domNode, true);
+                          translate(newDomNode, newState ? -30 : 30, newState ? 30 : -30);
+                          fade(newDomNode, false);
+                          domNode.parentNode.insertBefore(newDomNode, domNode);
+                          return newTree$1;
+                        }
+                        
+                      }), __hooks, (function (_, __hooks) {
+                        return /* tuple */[
+                                (console.log("Is On", isOn), isOn ? Curry._1(on, (function () {
+                                            return Curry._1(setOn, false);
+                                          })) : Curry._1(off, (function () {
+                                            return Curry._1(setOn, true);
+                                          }))),
+                                __hooks
+                              ];
+                      }));
         }));
   Curry._1(ctx[/* finish */1], match[1]);
   return match[0];
 }
 
 function awesomeComponent(value, toString, ctx) {
-  var match = Hooks.useState("Awesome", ctx[/* hooks */0], (function (param, hooks) {
+  var match = Hooks.useState("Awesome", ctx[/* hooks */0], (function (param, __hooks) {
           var setState = param[1];
           var state = param[0];
           return /* tuple */[
@@ -112,14 +112,14 @@ function awesomeComponent(value, toString, ctx) {
                                 })
                             },
                             /* :: */[
-                              /* String */Block.__(0, ["Awesome " + (Curry._1(toString, value) + (" " + state))]),
+                              /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
                               /* [] */0
                             ]
                           ]),
                         /* [] */0
                       ]
                     ]),
-                  hooks
+                  __hooks
                 ];
         }));
   Curry._1(ctx[/* finish */1], match[1]);
@@ -467,7 +467,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          335,
+          328,
           12
         ]
       ];

@@ -15,7 +15,7 @@
   "public": ["Main"],
   "entries": [
     {
-    "backend": "native",
+    "backend": "js",
     "main-module": "Tests"
   }, {
     "backend": "native",

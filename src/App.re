@@ -53,53 +53,46 @@ let fade = (node, ~out) => {
 };
 
 let toggle = (~on, ~off, ctx) => {
-  let (res, hooks) = useState(false, ctx.hooks, ((isOn, setOn), hooks) => {
-    hooks.setReconciler(isOn, (oldState, newState, mountedTree, newTree) => {
-      Js.log3("reconciling I guess", oldState, newState);
-      switch (oldState, newState) {
-        | (false, true)
-        | (true, false) =>
-          let domNode = getDomNode(mountedTree);
-          let newTree = inflateTree(instantiateTree(newTree));
-          let newDomNode = getDomNode(newTree);
+  let%hook (isOn, setOn) = useState(false);
 
-          let dist = 30.;
+  let%hook () = useReconciler(isOn, (oldState, newState, mountedTree, newTree) => {
+    Js.log3("reconciling I guess", oldState, newState);
+    switch (oldState, newState) {
+      | (false, true)
+      | (true, false) =>
+        let domNode = getDomNode(mountedTree);
+        let newTree = inflateTree(instantiateTree(newTree));
+        let newDomNode = getDomNode(newTree);
 
-          domNode->translate(newState ? -. dist : dist, 0.);
-          domNode->fade(~out=true);
-          newDomNode->translate(newState ? -. dist : dist, newState ? dist : -. dist);
-          newDomNode->fade(~out=false);
+        let dist = 30.;
 
-          domNode->parentNode->insertBefore(newDomNode, ~reference=domNode);
+        domNode->translate(newState ? -. dist : dist, 0.);
+        domNode->fade(~out=true);
+        newDomNode->translate(newState ? -. dist : dist, newState ? dist : -. dist);
+        newDomNode->fade(~out=false);
 
-          newTree
-        | _ => mountedTree
-      }
-    });
+        domNode->parentNode->insertBefore(newDomNode, ~reference=domNode);
 
-    Js.log2("Is On", isOn);
-    (if (isOn) {
-      on(() => setOn(false))
-    } else {
-      off(() => setOn(true))
-    }, hooks)
-
+        newTree
+      | _ => mountedTree
+    }
   });
-  ctx.finish(hooks);
-  res
+
+  Js.log2("Is On", isOn);
+  if (isOn) {
+    on(() => setOn(false))
+  } else {
+    off(() => setOn(true))
+  }
 };
 
 let awesomeComponent = (~value, ~toString, ctx) => {
-  let (res, hooks) = useState("Awesome", ctx.hooks, ((state, setState), hooks) => {
-    (<div>
-      <div onclick={_evt => setState(state ++ "1")}>
-        {String("Awesome " ++ toString(value) ++ " " ++ state)}
-      </div>
-    </div>, hooks)
-  });
-
-  ctx.finish(hooks);
-  res
+  let%hook (state, setState) = useState("Awesome");
+  <div>
+    <div onclick={_evt => setState(state ++ "1")}>
+      {String("Folkx " ++ toString(value) ++ " " ++ state)}
+    </div>
+  </div>
 };
 
 /** Yayy polymorphism and a normal props thing! */

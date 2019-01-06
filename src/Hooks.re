@@ -25,6 +25,19 @@ type state('t) = {
 
 open Fluid;
 
+let useReconciler = (data, fn, hooks, fin) => {
+  let (r, hooks) = switch (hooks.current) {
+    | None =>
+      (data, {...hooks, current: None})
+    | Some((inner, r)) =>
+      (data, {...hooks, current: inner})
+  };
+  hooks.setReconciler(data, fn);
+
+  let (res, hooks) = fin((), hooks);
+  (res, {...hooks, current: Some((hooks.current, r))})
+};
+
 let useRef = (initial, hooks, fin) => {
   let (r, hooks) = switch (hooks.current) {
     | None =>
@@ -128,9 +141,10 @@ let useCallback = (fn, args, hooks, fin) => {
   useMemo(() => fn, args, hooks, fin)
 };
 
-/* let myComponent = (~some, ~prop, {hooks, finish}) => {
+
+let myComponent = (~some, ~prop, ctx) => {
   Js.log("Here");
-  let%hook (state, dispatch) = useReducer(None, action => switch action {
+  let%hook (state, dispatch) = useReducer(None, (state, action) => switch action {
     | `Awesome => Some(10)
     | `Nope => None
   });
@@ -142,10 +156,9 @@ let useCallback = (fn, args, hooks, fin) => {
   }, ());
   Js.log("Ho");
   "contents"
-}; */
+};
 
-
-let myComponent = (props, {hooks, finish}) => {
+let myComponent2 = (props, {hooks, finish}) => {
   Js.log("Here");
   let (res, hooks) = useState(10, hooks, ((count, setCount), hooks) => {
     useState("name", hooks, ((name, setName), hooks) => {

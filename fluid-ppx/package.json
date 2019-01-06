@@ -4,6 +4,7 @@
   "scripts": {
     "start": "bsb -make-world -backend native -w",
     "postinstall": "bsb -make-world -backend native",
+    "build": "bsb -make-world -backend native",
     "clean": "bsb -clean-world",
     "test": "./lib/bs/native/tests.native",
     "watch": "bsb -make-world -backend native -w"
@@ -20,6 +21,6 @@
   "author": "Jared Forsyth",
   "license": "ISC",
   "dependencies": {
-    "bs-platform": "bsansouci/bsb-native#3.2.0"
+    "bsb-native": "4.0.6"
   }
 }
