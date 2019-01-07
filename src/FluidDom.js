@@ -184,6 +184,8 @@ var Fluid_009 = /* reconcileChildren */include[8];
 
 var Fluid_010 = /* mount */include[9];
 
+var Fluid_011 = /* Hooks */include[10];
+
 var Fluid = /* module */[
   /* NativeInterface */NativeInterface,
   Fluid_001,
@@ -196,6 +198,7 @@ var Fluid = /* module */[
   Fluid_008,
   Fluid_009,
   Fluid_010,
+  Fluid_011,
   /* Native */Native
 ];
 

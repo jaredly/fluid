@@ -2,7 +2,6 @@
 
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
-import * as Hooks from "./Hooks.js";
 import * as Printf from "bs-platform/lib/es6/printf.js";
 import * as Spring from "./Spring.js";
 import * as Animate from "./Animate.js";
@@ -51,10 +50,10 @@ function fade(node, out) {
 }
 
 function toggle(on, off, ctx) {
-  var match = Hooks.useState(false, ctx[/* hooks */0], (function (param, __hooks) {
+  var match = Curry._3(FluidDom.Fluid[/* Hooks */11][/* useState */2], false, ctx[/* hooks */0], (function (param, __hooks) {
           var setOn = param[1];
           var isOn = param[0];
-          return Hooks.useReconciler(isOn, (function (oldState, newState, mountedTree, newTree) {
+          return Curry._4(FluidDom.Fluid[/* Hooks */11][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
                         console.log("reconciling I guess", oldState, newState);
                         var exit = 0;
                         if (oldState) {
@@ -96,15 +95,15 @@ function toggle(on, off, ctx) {
 }
 
 function awesomeComponent(value, toString, ctx) {
-  var match = Hooks.useState("Awesome", ctx[/* hooks */0], (function (param, __hooks) {
+  var match = Curry._3(FluidDom.Fluid[/* Hooks */11][/* useState */2], "Awesome", ctx[/* hooks */0], (function (param, __hooks) {
           var setState = param[1];
           var state = param[0];
           return /* tuple */[
                   /* Builtin */Block.__(1, [
-                      Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                      Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                       /* :: */[
                         /* Builtin */Block.__(1, [
-                            Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, (function () {
+                            Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, (function () {
                                     return Curry._1(setState, state + "1");
                                   }), undefined, /* () */0),
                             /* :: */[
@@ -124,7 +123,7 @@ function awesomeComponent(value, toString, ctx) {
 
 function button(text, style, onClick, _) {
   return /* Builtin */Block.__(1, [
-            Curry._7(FluidDom.Fluid[/* Native */11][/* button */1], undefined, undefined, undefined, undefined, (function () {
+            Curry._7(FluidDom.Fluid[/* Native */12][/* button */1], undefined, undefined, undefined, undefined, (function () {
                     return Curry._1(onClick, /* () */0);
                   }), style, /* () */0),
             /* :: */[
@@ -335,13 +334,13 @@ canvas.addEventListener("mousemove", (function (evt) {
         return /* () */0;
       }));
 
-var first_000 = Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], "awesome", undefined, undefined, undefined, undefined, "padding: 20px", /* () */0);
+var first_000 = Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], "awesome", undefined, undefined, undefined, undefined, "padding: 20px", /* () */0);
 
 var first_001 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
     /* Builtin */Block.__(1, [
-        Curry._8(FluidDom.Fluid[/* Native */11][/* input */2], undefined, "range", undefined, undefined, undefined, (function (evt) {
+        Curry._8(FluidDom.Fluid[/* Native */12][/* input */2], undefined, "range", undefined, undefined, undefined, (function (evt) {
                 var v = evt.target.value;
                 console.log(v);
                 var config = /* record */[
@@ -357,10 +356,10 @@ var first_001 = /* :: */[
       ]),
     /* :: */[
       /* Builtin */Block.__(1, [
-          Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
+          Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
           /* :: */[
             /* Builtin */Block.__(1, [
-                Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 /* :: */[
                   /* String */Block.__(0, ["What"]),
                   /* [] */0
@@ -373,7 +372,7 @@ var first_001 = /* :: */[
         /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], toggle, (function (param) {
                     return toggle((function (onClick) {
                                   return /* Builtin */Block.__(1, [
-                                            Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                            Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                             /* :: */[
                                               /* String */Block.__(0, ["Click this to"]),
                                               /* :: */[
@@ -386,7 +385,7 @@ var first_001 = /* :: */[
                                           ]);
                                 }), (function (onClick) {
                                   return /* Builtin */Block.__(1, [
-                                            Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                            Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                             /* :: */[
                                               /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
                                                           return button("Turn On", "background-color: #ffacf0", onClick, param);
@@ -413,7 +412,7 @@ var first_001 = /* :: */[
                       }))]),
             /* :: */[
               /* Builtin */Block.__(1, [
-                  Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
+                  Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
                   /* :: */[
                     /* String */Block.__(0, ["world"]),
                     /* [] */0

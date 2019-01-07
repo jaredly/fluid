@@ -2,6 +2,7 @@
 
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
+import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
 import * as Belt_List from "bs-platform/lib/es6/belt_List.js";
 
 function F(NativeInterface) {
@@ -294,6 +295,272 @@ function F(NativeInterface) {
     var tree = inflateTree(instantiateTree(el));
     return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(tree));
   };
+  var useReconciler = function (data, fn, hooks, fin) {
+    var match = hooks[/* current */3];
+    var match$1;
+    if (match !== undefined) {
+      var match$2 = match;
+      Curry._3(hooks[/* setReconciler */1], match$2[1], data, fn);
+      match$1 = /* tuple */[
+        data,
+        /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */match$2[0]
+        ]
+      ];
+    } else {
+      match$1 = /* tuple */[
+        data,
+        /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */undefined
+        ]
+      ];
+    }
+    var match$3 = Curry._2(fin, /* () */0, match$1[1]);
+    var hooks$1 = match$3[1];
+    return /* tuple */[
+            match$3[0],
+            /* record */[
+              /* invalidate */hooks$1[/* invalidate */0],
+              /* setReconciler */hooks$1[/* setReconciler */1],
+              /* triggerEffect */hooks$1[/* triggerEffect */2],
+              /* current *//* tuple */[
+                hooks$1[/* current */3],
+                match$1[0]
+              ]
+            ]
+          ];
+  };
+  var useRef = function (initial, hooks, fin) {
+    var match = hooks[/* current */3];
+    var match$1;
+    if (match !== undefined) {
+      var match$2 = match;
+      match$1 = /* tuple */[
+        match$2[1],
+        /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */match$2[0]
+        ]
+      ];
+    } else {
+      match$1 = /* tuple */[
+        /* record */[/* contents */initial],
+        /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */undefined
+        ]
+      ];
+    }
+    var r = match$1[0];
+    var match$3 = Curry._2(fin, r, match$1[1]);
+    var hooks$1 = match$3[1];
+    return /* tuple */[
+            match$3[0],
+            /* record */[
+              /* invalidate */hooks$1[/* invalidate */0],
+              /* setReconciler */hooks$1[/* setReconciler */1],
+              /* triggerEffect */hooks$1[/* triggerEffect */2],
+              /* current *//* tuple */[
+                hooks$1[/* current */3],
+                r
+              ]
+            ]
+          ];
+  };
+  var useState = function (initial, hooks, fin) {
+    var match = hooks[/* current */3];
+    var match$1;
+    if (match !== undefined) {
+      var match$2 = match;
+      match$1 = /* tuple */[
+        match$2[1],
+        /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */match$2[0]
+        ]
+      ];
+    } else {
+      var st = /* record */[/* contents */initial];
+      match$1 = /* tuple */[
+        st,
+        /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */undefined
+        ]
+      ];
+    }
+    var hooks$1 = match$1[1];
+    var state = match$1[0];
+    var match$3 = Curry._2(fin, /* tuple */[
+          state[/* contents */0],
+          (function (v) {
+              state[/* contents */0] = v;
+              return Curry._1(hooks$1[/* invalidate */0], /* () */0);
+            })
+        ], hooks$1);
+    var hooks$2 = match$3[1];
+    return /* tuple */[
+            match$3[0],
+            /* record */[
+              /* invalidate */hooks$2[/* invalidate */0],
+              /* setReconciler */hooks$2[/* setReconciler */1],
+              /* triggerEffect */hooks$2[/* triggerEffect */2],
+              /* current *//* tuple */[
+                hooks$2[/* current */3],
+                state
+              ]
+            ]
+          ];
+  };
+  var useReducer = function (initial, reducer, hooks, fin) {
+    return useState(initial, hooks, (function (param, hooks) {
+                  var setState = param[1];
+                  var state = param[0];
+                  return Curry._2(fin, /* tuple */[
+                              state,
+                              (function (action) {
+                                  return Curry._1(setState, Curry._2(reducer, state, action));
+                                })
+                            ], hooks);
+                }));
+  };
+  var newEffect = function (fn, args) {
+    return /* record */[
+            /* args */args,
+            /* cleanup : record */[/* contents */undefined],
+            /* fn */fn
+          ];
+  };
+  var useEffect = function (fn, args, hooks, fin) {
+    var match = hooks[/* current */3];
+    if (match !== undefined) {
+      var match$1 = match;
+      var effect = match$1[1];
+      var effect$1 = Caml_obj.caml_notequal(effect[/* args */0], args) ? (Curry._3(hooks[/* triggerEffect */2], effect[/* cleanup */1][/* contents */0], fn, (function (v) {
+                  effect[/* cleanup */1][/* contents */0] = v;
+                  return /* () */0;
+                })), /* record */[
+            /* args */args,
+            /* cleanup */effect[/* cleanup */1],
+            /* fn */fn
+          ]) : effect;
+      var match$2 = Curry._2(fin, /* () */0, /* record */[
+            /* invalidate */hooks[/* invalidate */0],
+            /* setReconciler */hooks[/* setReconciler */1],
+            /* triggerEffect */hooks[/* triggerEffect */2],
+            /* current */match$1[0]
+          ]);
+      var hooks$1 = match$2[1];
+      return /* tuple */[
+              match$2[0],
+              /* record */[
+                /* invalidate */hooks$1[/* invalidate */0],
+                /* setReconciler */hooks$1[/* setReconciler */1],
+                /* triggerEffect */hooks$1[/* triggerEffect */2],
+                /* current *//* tuple */[
+                  hooks$1[/* current */3],
+                  effect$1
+                ]
+              ]
+            ];
+    } else {
+      var effect$2 = newEffect(fn, args);
+      Curry._3(hooks[/* triggerEffect */2], effect$2[/* cleanup */1][/* contents */0], fn, (function (v) {
+              effect$2[/* cleanup */1][/* contents */0] = v;
+              return /* () */0;
+            }));
+      var match$3 = Curry._2(fin, /* () */0, /* record */[
+            /* invalidate */hooks[/* invalidate */0],
+            /* setReconciler */hooks[/* setReconciler */1],
+            /* triggerEffect */hooks[/* triggerEffect */2],
+            /* current */undefined
+          ]);
+      var hooks$2 = match$3[1];
+      return /* tuple */[
+              match$3[0],
+              /* record */[
+                /* invalidate */hooks$2[/* invalidate */0],
+                /* setReconciler */hooks$2[/* setReconciler */1],
+                /* triggerEffect */hooks$2[/* triggerEffect */2],
+                /* current *//* tuple */[
+                  hooks$2[/* current */3],
+                  effect$2
+                ]
+              ]
+            ];
+    }
+  };
+  var useMemo = function (fn, args, hooks, fin) {
+    var match = hooks[/* current */3];
+    var match$1;
+    if (match !== undefined) {
+      var match$2 = match;
+      var match$3 = match$2[1];
+      var match$4 = Caml_obj.caml_equal(match$3[1], args);
+      var value = match$4 ? match$3[0] : Curry._1(fn, /* () */0);
+      match$1 = /* tuple */[
+        value,
+        match$2[0]
+      ];
+    } else {
+      match$1 = /* tuple */[
+        Curry._1(fn, /* () */0),
+        undefined
+      ];
+    }
+    var value$1 = match$1[0];
+    var match$5 = Curry._2(fin, value$1, /* record */[
+          /* invalidate */hooks[/* invalidate */0],
+          /* setReconciler */hooks[/* setReconciler */1],
+          /* triggerEffect */hooks[/* triggerEffect */2],
+          /* current */match$1[1]
+        ]);
+    var hooks$1 = match$5[1];
+    return /* tuple */[
+            match$5[0],
+            /* record */[
+              /* invalidate */hooks$1[/* invalidate */0],
+              /* setReconciler */hooks$1[/* setReconciler */1],
+              /* triggerEffect */hooks$1[/* triggerEffect */2],
+              /* current *//* tuple */[
+                hooks$1[/* current */3],
+                /* tuple */[
+                  value$1,
+                  args
+                ]
+              ]
+            ]
+          ];
+  };
+  var useCallback = function (fn, args, hooks, fin) {
+    return useMemo((function () {
+                  return fn;
+                }), args, hooks, fin);
+  };
+  var Hooks = /* module */[
+    /* useReconciler */useReconciler,
+    /* useRef */useRef,
+    /* useState */useState,
+    /* useReducer */useReducer,
+    /* newEffect */newEffect,
+    /* useEffect */useEffect,
+    /* useMemo */useMemo,
+    /* useCallback */useCallback
+  ];
   return /* module */[
           /* Maker */Maker,
           /* render */render,
@@ -304,7 +571,8 @@ function F(NativeInterface) {
           /* listenForChanges */listenForChanges,
           /* reconcileTrees */reconcileTrees,
           /* reconcileChildren */reconcileChildren,
-          /* mount */mount
+          /* mount */mount,
+          /* Hooks */Hooks
         ];
 }
 

@@ -272,72 +272,14 @@ function useCallback(fn, args, hooks, fin) {
               }), args, hooks, fin);
 }
 
-function myComponent(_, _$1, ctx) {
-  console.log("Here");
-  var match = useReducer(undefined, (function (_, action) {
-          if (action >= 870531222) {
-            return undefined;
-          } else {
-            return 10;
-          }
-        }), ctx[/* hooks */0], (function (_, __hooks) {
-          return useState(10, __hooks, (function (_, __hooks) {
-                        return useState("name", __hooks, (function (_, __hooks) {
-                                      console.log("Hi");
-                                      return useEffect((function (_, _$1) {
-                                                    return /* () */0;
-                                                  }), /* () */0, __hooks, (function (_, __hooks) {
-                                                    return /* tuple */[
-                                                            (console.log("Ho"), "contents"),
-                                                            __hooks
-                                                          ];
-                                                  }));
-                                    }));
-                      }));
-        }));
-  Curry._1(ctx[/* finish */1], match[1]);
-  return match[0];
-}
-
-function myComponent2(_, param) {
-  console.log("Here");
-  var match = useState(10, param[/* hooks */0], (function (_, hooks) {
-          return useState("name", hooks, (function (_, hooks) {
-                        console.log("Hi");
-                        return useEffect((function (_, _$1) {
-                                      return /* () */0;
-                                    }), /* () */0, hooks, (function (_, hooks) {
-                                      console.log("Ho");
-                                      return useReducer(undefined, (function (_, action) {
-                                                    if (action >= 870531222) {
-                                                      return undefined;
-                                                    } else {
-                                                      return 10;
-                                                    }
-                                                  }), hooks, (function (_, hooks) {
-                                                    return /* tuple */[
-                                                            "contents",
-                                                            hooks
-                                                          ];
-                                                  }));
-                                    }));
-                      }));
-        }));
-  Curry._1(param[/* finish */1], match[1]);
-  return match[0];
-}
-
 export {
   useReconciler ,
   useRef ,
   useState ,
   useReducer ,
-  newEffect ,
   useEffect ,
   useMemo ,
   useCallback ,
-  myComponent ,
-  myComponent2 ,
   
 }
 /* No side effect */

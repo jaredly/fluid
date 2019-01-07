@@ -19,7 +19,85 @@ module type NativeInterface = {
   let replaceWith: (nativeNode, nativeNode) => unit;
 };
 
+module type Hooks = {
 
+};
+
+module type Fluid = {
+  module NativeInterface: NativeInterface;
+  type customWithState;
+  type hooksContainer('hooks, 'reconcileData);
+  type context('hooks, 'reconcileData) = {
+    hooks: hooksContainer('hooks, 'reconcileData),
+    finish: hooksContainer('hooks, 'reconcileData) => unit,
+  };
+  type custom;
+  type element =
+  | String(string)
+  | Builtin(NativeInterface.element, list(element)): element
+  | Custom(custom /* already contains its props & children */)
+
+  and container = {
+    mutable custom: customWithState,
+    mutable mountedTree
+  }
+
+  and mountedTree =
+  | MString(string, NativeInterface.nativeNode)
+  | MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree)): mountedTree
+  | MCustom(container);
+
+  type reconcilerFunction('data) = ('data, 'data, mountedTree, element) => mountedTree;
+
+  let mount: (element, NativeInterface.nativeNode) => unit;
+  module Maker:
+    {
+      let makeComponent:
+        ('identity, context('hooks, 'reconcileData) => element) => custom;
+    };
+
+  module Hooks: {
+    type effect('a);
+    let useReconciler:
+      ('a, reconcilerFunction('a),
+      hooksContainer((option('b), 'a), 'a),
+      (unit, hooksContainer('b, 'a)) =>
+      ('c, hooksContainer('d, 'e))) =>
+      ('c, hooksContainer((option('d), 'a), 'e));
+    let useRef:
+      ('a, hooksContainer((option('b), ref('a)), 'c),
+      (ref('a), hooksContainer('b, 'c)) =>
+      ('d, hooksContainer('e, 'f))) =>
+      ('d, hooksContainer((option('e), ref('a)), 'f));
+    let useState:
+      ('a, hooksContainer((option('next), ref('a)), 'z),
+      (('a, 'a => unit), hooksContainer('next, 'z)) =>
+      ('res, hooksContainer('next, 'z))) =>
+      ('res, hooksContainer((option('next), ref('a)), 'z));
+    let useReducer:
+      ('a, ('a, 'b) => 'a,
+      hooksContainer((option('c), ref('a)), 'd),
+      (('a, 'b => unit), hooksContainer('c, 'd)) =>
+      ('e, hooksContainer('c, 'd))) =>
+      ('e, hooksContainer((option('c), ref('a)), 'd));
+    let useEffect:
+      ((unit, unit) => unit, 'args,
+      hooksContainer((option('next), effect('args)), 'z),
+      (unit, hooksContainer('next, 'z)) =>
+      ('a, hooksContainer('b, 'c))) =>
+      ('a, hooksContainer((option('b), effect('args)), 'c));
+    let useMemo:
+      (unit => 'a, 'b, hooksContainer((option('c), ('a, 'b)), 'd),
+      ('a, hooksContainer('c, 'd)) =>
+      ('e, hooksContainer('f, 'g))) =>
+      ('e, hooksContainer((option('f), ('a, 'b)), 'g));
+    let useCallback:
+      ('a, 'b, hooksContainer((option('c), ('a, 'b)), 'd),
+      ('a, hooksContainer('c, 'd)) =>
+      ('e, hooksContainer('f, 'g))) =>
+      ('e, hooksContainer((option('f), ('a, 'b)), 'g));
+  }
+};
 
 module F = (NativeInterface: NativeInterface) => {
 
@@ -91,7 +169,7 @@ and context('initial, 'reconcile) = {
 ;
 
 module Maker = {
-  let makeComponent = (identity: 'identity, render: context('state, 'reconcile) => element) => {
+  let makeComponent = (identity: 'identity, render: context('hooks, 'reconcile) => element) => {
     {
       init: () => {
         WithState({
@@ -106,7 +184,7 @@ module Maker = {
       clone: (WithState(contents)) => {
         /* If the `identity` is strictly equal, then we know that the types must be the same. */
         if (Obj.magic(contents.identity) === identity) {
-          let contents: customContents('props, 'state, 'reconcileData) = Obj.magic(contents);
+          let contents: customContents('props, 'hooks, 'reconcileData) = Obj.magic(contents);
           if (contents.render === render) {
             `Same
           } else {
@@ -277,5 +355,125 @@ On a component, I need to be able to:
 lifecycle methods or something
 
  */
+
+module Hooks = {
+
+  let useReconciler = (data, fn, hooks: hooksContainer('a, 'b), fin) => {
+    let (r, hooks) = switch (hooks.current) {
+      | None =>
+        (data, {...hooks, current: None})
+      | Some((inner, r)) =>
+        hooks.setReconciler(r, data, fn);
+        (data, {...hooks, current: inner})
+    };
+
+    let (res, hooks) = fin((), hooks);
+    (res, {...hooks, current: Some((hooks.current, r))})
+  };
+
+  let useRef = (initial, hooks, fin) => {
+    let (r, hooks) = switch (hooks.current) {
+      | None =>
+        (ref(initial), {...hooks, current: None})
+      | Some((inner, r)) => (r, {...hooks, current: inner})
+    };
+    let (res, hooks) = fin(r, hooks);
+    (res, {...hooks, current: Some((hooks.current, r))})
+  };
+
+  let useState =
+      (
+        initial: 'a,
+        hooks: hooksContainer((option('next), ref('a)), 'z),
+        fin: (('a, 'a => unit), hooksContainer('next, 'z)) => ('res, hooksContainer('next, 'z)),
+      )
+      : ('res, hooksContainer((option('next), ref('a)), 'z)) => {
+    let (state, hooks) =
+      switch (hooks.current) {
+      | None =>
+        let st = ref(initial);
+        (st, {...hooks, current: None});
+      | Some((next, state)) => (state, {...hooks, current: next})
+      };
+    let (res, hooks) =
+      fin(
+        (
+          state.contents,
+          v => {
+            state.contents = v;
+            hooks.invalidate();
+          },
+        ),
+        hooks,
+      );
+    (res, {...hooks, current: Some((hooks.current, state))});
+  };
+
+  /* [@hook]
+  let useReducer = (reducer, initial) => {
+    let%hook (state, setState) = useState(initial);
+    (state, action => setState(reducer(state, action)))
+  }; */
+
+  let useReducer = (initial, reducer, hooks, fin) => {
+    useState(initial, hooks, ((state, setState), hooks) => {
+      fin((state, action => setState(reducer(state, action))), hooks)
+    });
+  };
+
+  type effect('args) = {
+    args: 'args,
+    cleanup: ref(option(unit => unit)),
+    fn: unit => (unit => unit),
+  };
+
+  let newEffect = (fn, args) => {fn, args, cleanup: ref(None)};
+
+  let useEffect = (fn, args, hooks: hooksContainer((option('next), effect('args)), 'z), fin) => {
+    switch (hooks.current) {
+      | None =>
+        let effect = newEffect(fn, args);
+        hooks.triggerEffect(~cleanup=effect.cleanup.contents, ~fn, ~setCleanup=v => {
+          effect.cleanup.contents = Some(v)
+        });
+        let (res, hooks) = fin((), {...hooks, current: None});
+        (res, {...hooks, current: Some((hooks.current, effect))})
+      | Some((next, effect)) =>
+        let effect = if (effect.args != args) {
+          hooks.triggerEffect(~cleanup=effect.cleanup.contents, ~fn, ~setCleanup=v => {
+            effect.cleanup.contents = Some(v)
+          });
+          {
+            ...effect,
+            fn,
+            args,
+          };
+        } else {
+          effect
+        };
+
+        let (res, hooks) = fin((), {...hooks, current: next});
+        (res, {...hooks, current: Some((hooks.current, effect))})
+    };
+  };
+
+  let useMemo = (fn, args, hooks, fin) => {
+    let (value, current) =
+      switch (hooks.current) {
+      | None => (fn(), None)
+      | Some((next, (value, prevArgs))) =>
+        let value = prevArgs == args ? value : fn();
+        (value, next);
+      };
+    let (res, hooks) = fin(value, {...hooks, current});
+    (res, {...hooks, current: Some((hooks.current, (value, args)))});
+  };
+
+  let useCallback = (fn, args, hooks, fin) => {
+    useMemo(() => fn, args, hooks, fin)
+  };
+
+
+}
 
 };
