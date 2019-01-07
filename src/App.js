@@ -2,12 +2,12 @@
 
 import * as Block from "bs-platform/lib/es6/block.js";
 import * as Curry from "bs-platform/lib/es6/curry.js";
-import * as Fluid from "./Fluid.js";
 import * as Hooks from "./Hooks.js";
 import * as Printf from "bs-platform/lib/es6/printf.js";
 import * as Spring from "./Spring.js";
 import * as Animate from "./Animate.js";
 import * as Caml_obj from "bs-platform/lib/es6/caml_obj.js";
+import * as FluidDom from "./FluidDom.js";
 import * as Pervasives from "bs-platform/lib/es6/pervasives.js";
 import * as Js_primitive from "bs-platform/lib/es6/js_primitive.js";
 import * as Caml_builtin_exceptions from "bs-platform/lib/es6/caml_builtin_exceptions.js";
@@ -69,9 +69,9 @@ function toggle(on, off, ctx) {
                           return mountedTree;
                         }
                         if (exit === 1) {
-                          var nativeNode = Fluid.getNativeNode(mountedTree);
-                          var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
-                          var newNativeNode = Fluid.getNativeNode(newTree$1);
+                          var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */3], mountedTree);
+                          var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */6], Curry._1(FluidDom.Fluid[/* instantiateTree */4], newTree));
+                          var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */3], newTree$1);
                           translate(nativeNode, newState ? -30 : 30, 0);
                           fade(nativeNode, true);
                           translate(newNativeNode, newState ? -30 : 30, newState ? 30 : -30);
@@ -101,16 +101,12 @@ function awesomeComponent(value, toString, ctx) {
           var state = param[0];
           return /* tuple */[
                   /* Builtin */Block.__(1, [
-                      "div",
-                      { },
+                      Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                       /* :: */[
                         /* Builtin */Block.__(1, [
-                            "div",
-                            {
-                              onclick: (function () {
-                                  return Curry._1(setState, state + "1");
-                                })
-                            },
+                            Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, (function () {
+                                    return Curry._1(setState, state + "1");
+                                  }), undefined, /* () */0),
                             /* :: */[
                               /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
                               /* [] */0
@@ -128,13 +124,9 @@ function awesomeComponent(value, toString, ctx) {
 
 function button(text, style, onClick, _) {
   return /* Builtin */Block.__(1, [
-            "button",
-            {
-              onclick: (function () {
-                  return Curry._1(onClick, /* () */0);
-                }),
-              style: style
-            },
+            Curry._7(FluidDom.Fluid[/* Native */11][/* button */1], undefined, undefined, undefined, undefined, (function () {
+                    return Curry._1(onClick, /* () */0);
+                  }), style, /* () */0),
             /* :: */[
               /* String */Block.__(0, [text]),
               /* [] */0
@@ -142,21 +134,21 @@ function button(text, style, onClick, _) {
           ]);
 }
 
-var canvas = Fluid.NativeInterface[/* createElement */1]("canvas", {
+var canvas = Curry._2(FluidDom.Fluid[/* NativeInterface */0][/* createElement */1], "canvas", {
       width: 500,
       height: 200
     });
 
 document.body.appendChild(canvas);
 
-var canvas2 = Fluid.NativeInterface[/* createElement */1]("canvas", {
+var canvas2 = Curry._2(FluidDom.Fluid[/* NativeInterface */0][/* createElement */1], "canvas", {
       width: 500,
       height: 500
     });
 
 document.body.appendChild(canvas2);
 
-var log = Fluid.NativeInterface[/* createElement */1]("div", { });
+var log = Curry._2(FluidDom.Fluid[/* NativeInterface */0][/* createElement */1], "div", { });
 
 document.body.appendChild(log);
 
@@ -343,43 +335,32 @@ canvas.addEventListener("mousemove", (function (evt) {
         return /* () */0;
       }));
 
-var first_001 = {
-  id: "awesome",
-  style: "padding: 20px"
-};
+var first_000 = Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], "awesome", undefined, undefined, undefined, undefined, "padding: 20px", /* () */0);
 
-var first_002 = /* :: */[
+var first_001 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
     /* Builtin */Block.__(1, [
-        "input",
-        {
-          type: "range",
-          oninput: (function (evt) {
-              var v = evt.target.value;
-              console.log(v);
-              var config = /* record */[
-                /* damping */v,
-                /* stiffness */100,
-                /* restDisplacementThreshold */0.001,
-                /* restVelocityThreshold */0.001
-              ];
-              var state = Spring.init(0, config);
-              return Curry._4(visualize, canvas2, state, Spring.advance, Spring.isAtRest);
-            })
-        },
+        Curry._8(FluidDom.Fluid[/* Native */11][/* input */2], undefined, "range", undefined, undefined, undefined, (function (evt) {
+                var v = evt.target.value;
+                console.log(v);
+                var config = /* record */[
+                  /* damping */v,
+                  /* stiffness */100,
+                  /* restDisplacementThreshold */0.001,
+                  /* restVelocityThreshold */0.001
+                ];
+                var state = Spring.init(0, config);
+                return Curry._4(visualize, canvas2, state, Spring.advance, Spring.isAtRest);
+              }), undefined, /* () */0),
         /* [] */0
       ]),
     /* :: */[
       /* Builtin */Block.__(1, [
-          "div",
-          {
-            id: "here"
-          },
+          Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
           /* :: */[
             /* Builtin */Block.__(1, [
-                "div",
-                { },
+                Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 /* :: */[
                   /* String */Block.__(0, ["What"]),
                   /* [] */0
@@ -389,15 +370,14 @@ var first_002 = /* :: */[
           ]
         ]),
       /* :: */[
-        /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](toggle, (function (param) {
+        /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], toggle, (function (param) {
                     return toggle((function (onClick) {
                                   return /* Builtin */Block.__(1, [
-                                            "div",
-                                            { },
+                                            Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                             /* :: */[
                                               /* String */Block.__(0, ["Click this to"]),
                                               /* :: */[
-                                                /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](button, (function (param) {
+                                                /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
                                                             return button("Turn Off", "background-color: #88ff88", onClick, param);
                                                           }))]),
                                                 /* [] */0
@@ -406,10 +386,9 @@ var first_002 = /* :: */[
                                           ]);
                                 }), (function (onClick) {
                                   return /* Builtin */Block.__(1, [
-                                            "div",
-                                            { },
+                                            Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                             /* :: */[
-                                              /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](button, (function (param) {
+                                              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
                                                           return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                         }))]),
                                               /* :: */[
@@ -421,23 +400,20 @@ var first_002 = /* :: */[
                                 }), param);
                   }))]),
         /* :: */[
-          /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](awesomeComponent, (function (param) {
+          /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], awesomeComponent, (function (param) {
                       return awesomeComponent(5, (function (prim) {
                                     return String(prim);
                                   }), param);
                     }))]),
           /* :: */[
-            /* Custom */Block.__(2, [Fluid.Maker[/* makeComponent */0](awesomeComponent, (function (param) {
+            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], awesomeComponent, (function (param) {
                         return awesomeComponent("Hi", (function (x) {
                                       return x;
                                     }), param);
                       }))]),
             /* :: */[
               /* Builtin */Block.__(1, [
-                  "div",
-                  {
-                    id: "Inner"
-                  },
+                  Curry._7(FluidDom.Fluid[/* Native */11][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
                   /* :: */[
                     /* String */Block.__(0, ["world"]),
                     /* [] */0
@@ -453,21 +429,20 @@ var first_002 = /* :: */[
 ];
 
 var first = /* Builtin */Block.__(1, [
-    "div",
-    first_001,
-    first_002
+    first_000,
+    first_001
   ]);
 
 var match = document.getElementById("root");
 
 if (match !== undefined) {
-  Fluid.mount(first, Js_primitive.valFromOption(match));
+  Curry._2(FluidDom.Fluid[/* mount */10], first, Js_primitive.valFromOption(match));
 } else {
   throw [
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          337,
+          338,
           12
         ]
       ];

@@ -1,4 +1,6 @@
 
+open FluidDom;
+
 /* thinking about a hooks state api */
 
 /**
@@ -24,6 +26,7 @@ type state('t) = {
 };
 
 open Fluid;
+
 
 let useReconciler = (data, fn, hooks, fin) => {
   let (r, hooks) = switch (hooks.current) {

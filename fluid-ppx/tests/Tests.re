@@ -13,9 +13,13 @@ module Fluid = {
   type m =
   | Custom(unit)
   | String(string)
-  | Builtin(string, unit, list(m));
+  | Builtin(unit, list(m));
   module Maker = {
     let makeComponent = (fn, render) => ()
+  };
+  module Native = {
+    let div = (~id=?, ()) => ();
+    let span = (~id=?, ()) => ();
   };
   type context('a) = {
     hooks: unit,

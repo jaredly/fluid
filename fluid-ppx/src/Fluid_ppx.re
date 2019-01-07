@@ -181,9 +181,8 @@ let mapper = _argv =>
               Exp.construct(
                 Location.mkloc(Ldot(Lident("Fluid"), "Builtin"), loc),
                 Some(Exp.tuple([
-                  Exp.constant(Const_string(name, None)),
-                  Ast_helper.Exp.apply(
-                    Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "NativeInterface"), "nativeProps"), loc)),
+                  Exp.apply(
+                    Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Native"), name), loc)),
                     props
                   ),
                   /* TODO auto-up strings */

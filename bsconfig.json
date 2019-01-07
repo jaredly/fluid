@@ -9,5 +9,6 @@
     "module": "es6",
     "in-source": true
   },
+  "refmt": 3,
   "ppx-flags": ["./fluid-ppx/lib/bs/native/fluid_ppx.native"]
 }

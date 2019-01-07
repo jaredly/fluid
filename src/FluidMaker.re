@@ -1,5 +1,5 @@
 
-module type NativeInterface = (Config: { type nativePropsFn; }) => {
+module type NativeInterface = {
   type element;
   type nativeNode;
 
@@ -10,73 +10,18 @@ module type NativeInterface = (Config: { type nativePropsFn; }) => {
 
   let inflate: element => nativeNode;
 
-  let nativeProps: Config.nativePropsFn;
   let createTextNode: string => nativeNode;
   let setTextContent: (nativeNode, string) => unit;
+  let parentNode: nativeNode => nativeNode;
+  let appendChild: (nativeNode, nativeNode) => unit;
+  let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit;
+  let removeChild: (nativeNode, nativeNode) => unit;
+  let replaceWith: (nativeNode, nativeNode) => unit;
 };
 
-module NativeInterface = {
-  type nativeProps;
-
-  type nativeNode;
 
 
-  [@bs.obj] external nativeProps: (
-    ~id:string=?,
-    ~_type:string=?,
-    ~onchange:Dom.event => unit=?,
-    ~oninput:Dom.event => unit=?,
-    ~width:int=?,
-    ~height:int=?,
-    ~onclick:Dom.event => unit=?,
-    ~style:string=?,
-    unit
-    ) => nativeProps = "";
-
-  /* external opaqueProps: domProps('a) => nativeProps = "%identity"; */
-  [@bs.scope "document"][@bs.val] external _createElement: string => nativeNode = "createElement";
-  let setDomProps: (nativeNode, nativeProps) => unit = [%bs.raw (node, props) => {|
-    Object.keys(props).forEach(key => {
-      if (key === 'checked' || key === 'value') {
-        node[key] = props[key]
-      } else if (typeof props[key] === 'function') {
-        node[key] = props[key]
-      } else {
-        node.setAttribute(key, props[key])
-      }
-    })
-  |}];
-  let createElement = (typ, nativeProps) => {
-    let node = _createElement(typ);
-    setDomProps(node, nativeProps);
-    node;
-  };
-
-  [@bs.scope "document"][@bs.val] external createTextNode: string => nativeNode = "";
-  [@bs.set] external setTextContent: (nativeNode, string) => unit = "textContent";
-  [@bs.get] external parentNode: nativeNode => nativeNode = "";
-  [@bs.send] external appendChild: (nativeNode, nativeNode) => unit = "";
-  [@bs.send] external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "";
-  [@bs.send] external removeChild: (nativeNode, nativeNode) => unit = "";
-  let updateNativeProps = (node, _oldProps, newProps) => {
-    setDomProps(node, newProps);
-  };
-  [@bs.send] external replaceWith: (nativeNode, nativeNode) => unit = "";
-
-
-  type element = {tag: string, props: nativeProps};
-  let maybeUpdate = (~mounted, ~mountPoint, ~newElement) => {
-    if (mounted.tag == newElement.tag) {
-      updateNativeProps(mountPoint, mounted.props, newElement.props);
-      true
-    } else {
-      false
-    }
-  };
-  let inflate = ({tag, props}) => createElement(tag, props);
-
-
-}
+module F = (NativeInterface: NativeInterface) => {
 
 type effect = {
   cleanup: option(unit => unit),
@@ -120,12 +65,12 @@ and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData
 
 and element =
 | String(string)
-| Builtin(string, NativeInterface.nativeProps, list(element)): element
+| Builtin(NativeInterface.element, list(element)): element
 | Custom(custom /* already contains its props & children */)
 
 and instanceTree =
 | IString(string)
-| IBuiltin(string, NativeInterface.nativeProps, list(instanceTree)): instanceTree
+| IBuiltin(NativeInterface.element, list(instanceTree)): instanceTree
 | ICustom(customWithState, instanceTree, list(effect))
 
 and container = {
@@ -135,7 +80,7 @@ and container = {
 
 and mountedTree =
 | MString(string, NativeInterface.nativeNode)
-| MBuiltin(string, NativeInterface.nativeProps, NativeInterface.nativeNode, list(mountedTree)): mountedTree
+| MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree)): mountedTree
 | MCustom(container)
 
 and context('initial, 'reconcile) = {
@@ -203,7 +148,7 @@ let render = (WithState(component)) => {
 
 let rec getNativeNode = tree => switch tree {
   | MString(_, node)
-  | MBuiltin(_, _, node, _) => node
+  | MBuiltin(_, node, _) => node
   | MCustom({mountedTree}) => getNativeNode(mountedTree)
 };
 
@@ -220,7 +165,7 @@ Phases of the algorithm:
 
 let rec instantiateTree: element => instanceTree = el => switch el {
   | String(contents) => IString(contents)
-  | Builtin(string, nativeProps, children) => IBuiltin(string, nativeProps, children->List.map(instantiateTree))
+  | Builtin(nativeElement, children) => IBuiltin(nativeElement, children->List.map(instantiateTree))
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
@@ -238,11 +183,11 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
 
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
   | IString(contents) => MString(contents, NativeInterface.createTextNode(contents))
-  | IBuiltin(string, nativeProps, children) =>
-    let node = NativeInterface.createElement(string, nativeProps);
+  | IBuiltin(nativeElement, children) =>
+    let node = NativeInterface.inflate(nativeElement);
     let children = children->List.map(inflateTree);
     children->List.forEach(child => NativeInterface.appendChild(node, getNativeNode(child)));
-    MBuiltin(string, nativeProps, node, children);
+    MBuiltin(nativeElement, node, children);
   | ICustom(custom, instanceTree, effects) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
@@ -270,9 +215,15 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       NativeInterface.setTextContent(node, b);
       MString(b, node)
     }
-  | (MBuiltin(a, aProps, node, aChildren), Builtin(b, bProps, bChildren)) when a == b =>
-    NativeInterface.updateNativeProps(node, aProps, bProps);
-    MBuiltin(b, bProps, node, reconcileChildren(node, aChildren, bChildren));
+  | (MBuiltin(aElement, node, aChildren), Builtin(bElement, bChildren)) =>
+    if (NativeInterface.maybeUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
+      MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren));
+    } else {
+      let tree = inflateTree(instantiateTree(next));
+      /* unmount prev nodes */
+      NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
+      tree
+    }
   | (MCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
       | `Same => MCustom(a)
@@ -326,3 +277,5 @@ On a component, I need to be able to:
 lifecycle methods or something
 
  */
+
+};
