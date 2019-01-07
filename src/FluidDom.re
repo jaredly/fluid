@@ -93,7 +93,7 @@ module Fluid = {
     };
 
     let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()): NativeInterface.element => {
-      NativeInterface.tag: "div",
+      NativeInterface.tag: "input",
       props:
         NativeInterface.nativeProps(
           ~id?,

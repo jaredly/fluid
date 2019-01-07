@@ -153,7 +153,7 @@ function input(id, _type, width, height, onchange, oninput, style, _) {
     tmp.style = Js_primitive.valFromOption(style);
   }
   return /* record */[
-          /* tag */"div",
+          /* tag */"input",
           /* props */tmp
         ];
 }
