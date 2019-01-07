@@ -101,3 +101,42 @@ selected photo cell to the <PhotoDetailView> to zoom with.
 Reconciling back will bring the thing back, I think?
 
 could get complicated.
+
+
+# Thinking about native support
+
+I've moved all dom related things into a `NativeInterface` file
+Open question: What does the JSX do?
+for native components.
+
+annnd maybe this is the point where I should abstract all the things
+into `View` and `Text` and `Button` etc.
+
+but again, for the times when you need a native component.
+
+```html
+<div onClick={x} />
+```
+
+or in cocoa land
+
+```html
+<ns-view onClick={x} />
+```
+
+for html we get around by just being unsafe, and knowing that the dom is incredibly forgiving of bad values.
+cocoa will not be so forgiving.
+
+Therefore, maybe having functions to call is the best way to do it.
+
+So `<div onClick={x} />` becomes `Fluid.Builtin(Native.div(~onClick=x, ()), [])`
+
+and then `Native.div` can create the `NativeElement` that it wants.
+
+
+Another consideration. Currently I'm pretending that all native elements have the same type.
+Again, the dom is forgiving, and you can add a `TextNode` in the same way you would a `div`.
+
+although looks like in AppKit I can use an `NSTextField`
+
+anddd maybe those can be added with abandon? Will see how far I get

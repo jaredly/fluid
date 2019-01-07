@@ -6,8 +6,10 @@ module Awesome = {
 };
 
 module Fluid = {
-  let builtin = (name: string, domProps: unit, children: list(string)) => "Hello";
-  let domProps = (~id=?, ~onclick=?, ()) => ();
+  let builtin = (name: string, nativeProps: unit, children: list(string)) => "Hello";
+  module NativeInterface = {
+    let nativeProps = (~id=?, ~onclick=?, ()) => ();
+  }
   type m =
   | Custom(unit)
   | String(string)

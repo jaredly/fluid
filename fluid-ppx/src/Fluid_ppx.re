@@ -183,7 +183,7 @@ let mapper = _argv =>
                 Some(Exp.tuple([
                   Exp.constant(Const_string(name, None)),
                   Ast_helper.Exp.apply(
-                    Exp.ident(Location.mkloc(Ldot(Lident("Fluid"), "domProps"), loc)),
+                    Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "NativeInterface"), "nativeProps"), loc)),
                     props
                   ),
                   /* TODO auto-up strings */

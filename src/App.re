@@ -4,7 +4,7 @@ open Hooks;
 
 module Style = {
   type style;
-  [@bs.get] external style: domNode => style = "";
+  [@bs.get] external style: NativeInterface.nativeNode => style = "";
   [@bs.set] external transform: (style, string) => unit = "";
   [@bs.set] external opacity: (style, float) => unit = "";
 };
@@ -23,7 +23,7 @@ let translate = (node, dx, offset) => {
   )
 };
 
-let abs: domNode => unit = [%bs.raw {|
+let abs: NativeInterface.nativeNode => unit = [%bs.raw {|
 function(node) {
   const box = node.getBoundingClientRect();
   node.style.position = 'absolute';
@@ -46,7 +46,7 @@ let fade = (node, ~out) => {
     () => {
       if (out) {
 
-      node->parentNode->removeChild(node)
+      node->NativeInterface.parentNode->NativeInterface.removeChild(node)
       }
     }
   )
@@ -60,18 +60,18 @@ let toggle = (~on, ~off, ctx) => {
     switch (oldState, newState) {
       | (false, true)
       | (true, false) =>
-        let domNode = getDomNode(mountedTree);
+        let nativeNode = getNativeNode(mountedTree);
         let newTree = inflateTree(instantiateTree(newTree));
-        let newDomNode = getDomNode(newTree);
+        let newNativeNode = getNativeNode(newTree);
 
         let dist = 30.;
 
-        domNode->translate(newState ? -. dist : dist, 0.);
-        domNode->fade(~out=true);
-        newDomNode->translate(newState ? -. dist : dist, newState ? dist : -. dist);
-        newDomNode->fade(~out=false);
+        nativeNode->translate(newState ? -. dist : dist, 0.);
+        nativeNode->fade(~out=true);
+        newNativeNode->translate(newState ? -. dist : dist, newState ? dist : -. dist);
+        newNativeNode->fade(~out=false);
 
-        domNode->parentNode->insertBefore(newDomNode, ~reference=domNode);
+        nativeNode->NativeInterface.parentNode->NativeInterface.insertBefore(newNativeNode, ~reference=nativeNode);
 
         newTree
       | _ => mountedTree
@@ -86,6 +86,8 @@ let toggle = (~on, ~off, ctx) => {
   }
 };
 
+
+/* [@memo] */
 let awesomeComponent = (~value, ~toString, ctx) => {
   let%hook (state, setState) = useState("Awesome");
   <div>
@@ -94,6 +96,13 @@ let awesomeComponent = (~value, ~toString, ctx) => {
     </div>
   </div>
 };
+
+/* let awesomeComponentMemoized = (~value, ~toString, ctx) => {
+  let%hook rendered = useMemo(() => {
+    <AwesomeComponent value toString />
+  }, (value, toString));
+  rendered
+}; */
 
 /** Yayy polymorphism and a normal props thing! */
 /* module Awesome = {
@@ -130,19 +139,19 @@ let button = (~text, ~style, ~onClick, ctx) => {
 
 [@bs.get] external target: Dom.event => Dom.eventTarget = "";
 [@bs.get] external value: Dom.eventTarget => float = "";
-[@bs.scope "document"] [@bs.val] external body: domNode = "";
+[@bs.scope "document"] [@bs.val] external body: NativeInterface.nativeNode = "";
 
-let canvas = createElement("canvas", domProps(~width=500, ~height=200, ()));
-appendChild(body, canvas)
+let canvas = NativeInterface.createElement("canvas", NativeInterface.nativeProps(~width=500, ~height=200, ()));
+NativeInterface.appendChild(body, canvas)
 
-let canvas2 = createElement("canvas", domProps(~width=500, ~height=500, ()));
-appendChild(body, canvas2);
+let canvas2 = NativeInterface.createElement("canvas", NativeInterface.nativeProps(~width=500, ~height=500, ()));
+NativeInterface.appendChild(body, canvas2);
 
-let log = createElement("div", domProps());
-appendChild(body, log);
+let log = NativeInterface.createElement("div", NativeInterface.nativeProps());
+NativeInterface.appendChild(body, log);
 
-[@bs.send] external addEventListener: (domNode, string, 'evt => unit) => unit = "";
-[@bs.set] external textContent: (domNode, string) => unit = "";
+[@bs.send] external addEventListener: (NativeInterface.nativeNode, string, 'evt => unit) => unit = "";
+[@bs.set] external textContent: (NativeInterface.nativeNode, string) => unit = "";
 
 let plot: (float, float, float, string) => unit = [%bs.raw {|
 function (x, y, scale, color) {
@@ -152,7 +161,7 @@ function (x, y, scale, color) {
 }
 |}];
 
-let visualize: (domNode, Spring.state, (. float, Spring.state) => Spring.state, (. Spring.state) => bool) => unit = [%bs.raw {|
+let visualize: (NativeInterface.nativeNode, Spring.state, (. float, Spring.state) => Spring.state, (. Spring.state) => bool) => unit = [%bs.raw {|
   function (canvas, state, advance, isAtRest) {
     canvas.width = 500
     canvas.height = 500
@@ -211,7 +220,7 @@ let zoom = 1.;
 /*
 237, 25.6; 95, 16.4; 12.5, 5.8; 3.5, 3; 2, 2.2; 246, 25.8
 */
-[@bs.set] external awesome: (domNode, array((float, float))) => unit = "";
+[@bs.set] external awesome: (NativeInterface.nativeNode, array((float, float))) => unit = "";
 
 let changes = [||];
 
@@ -322,7 +331,7 @@ let first = <div id="awesome" style="padding: 20px">
   </div>
 </div>;
 
-[@bs.val][@bs.scope "document"] external getElementById: string => option(domNode) = "";
+[@bs.val][@bs.scope "document"] external getElementById: string => option(NativeInterface.nativeNode) = "";
 
 switch (getElementById("root")) {
   | None => assert(false)

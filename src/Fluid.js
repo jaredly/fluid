@@ -5,26 +5,47 @@ import * as Curry from "bs-platform/lib/es6/curry.js";
 import * as Belt_List from "bs-platform/lib/es6/belt_List.js";
 
 var setDomProps = function (node,props){
-  Object.keys(props).forEach(key => {
-    if (key === 'checked' || key === 'value') {
-      node[key] = props[key]
-    } else if (typeof props[key] === 'function') {
-      node[key] = props[key]
-    } else {
-      node.setAttribute(key, props[key])
-    }
-  })
-};
+    Object.keys(props).forEach(key => {
+      if (key === 'checked' || key === 'value') {
+        node[key] = props[key]
+      } else if (typeof props[key] === 'function') {
+        node[key] = props[key]
+      } else {
+        node.setAttribute(key, props[key])
+      }
+    })
+  };
 
-function createElement(typ, domProps) {
+function createElement(typ, nativeProps) {
   var node = document.createElement(typ);
-  setDomProps(node, domProps);
+  setDomProps(node, nativeProps);
   return node;
 }
 
-function updateDomProps(node, _, newProps) {
+function updateNativeProps(node, _, newProps) {
   return setDomProps(node, newProps);
 }
+
+function maybeUpdate(mounted, mountPoint, newElement) {
+  if (mounted[/* tag */0] === newElement[/* tag */0]) {
+    setDomProps(mountPoint, newElement[/* props */1]);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function inflate(param) {
+  return createElement(param[/* tag */0], param[/* props */1]);
+}
+
+var NativeInterface = /* module */[
+  /* setDomProps */setDomProps,
+  /* createElement */createElement,
+  /* updateNativeProps */updateNativeProps,
+  /* maybeUpdate */maybeUpdate,
+  /* inflate */inflate
+];
 
 function makeComponent(identity, render) {
   return /* record */[
@@ -112,7 +133,7 @@ function render(param) {
         ];
 }
 
-function getDomNode(_tree) {
+function getNativeNode(_tree) {
   while(true) {
     var tree = _tree;
     switch (tree.tag | 0) {
@@ -167,17 +188,17 @@ function inflateTree(el) {
                   document.createTextNode(contents)
                 ]);
     case 1 : 
-        var domProps = el[1];
+        var nativeProps = el[1];
         var string = el[0];
-        var node = createElement(string, domProps);
+        var node = createElement(string, nativeProps);
         var children = Belt_List.map(el[2], inflateTree);
         Belt_List.forEach(children, (function (child) {
-                node.appendChild(getDomNode(child));
+                node.appendChild(getNativeNode(child));
                 return /* () */0;
               }));
         return /* MBuiltin */Block.__(1, [
                   string,
-                  domProps,
+                  nativeProps,
                   node,
                   children
                 ]);
@@ -277,7 +298,7 @@ function reconcileTrees(prev, next) {
                   return /* MCustom */Block.__(2, [a]);
                 } else {
                   var tree = inflateTree(instantiateTree(next));
-                  getDomNode(prev).replaceWith(getDomNode(tree));
+                  getNativeNode(prev).replaceWith(getNativeNode(tree));
                   return tree;
                 }
               } else {
@@ -296,7 +317,7 @@ function reconcileTrees(prev, next) {
   }
   if (exit === 1) {
     var tree$2 = inflateTree(instantiateTree(next));
-    getDomNode(prev).replaceWith(getDomNode(tree$2));
+    getNativeNode(prev).replaceWith(getNativeNode(tree$2));
     return tree$2;
   }
   
@@ -311,7 +332,7 @@ function reconcileChildren(parentNode, aChildren, bChildren) {
             ];
     } else {
       Belt_List.forEach(aChildren, (function (child) {
-              parentNode.removeChild(getDomNode(child));
+              parentNode.removeChild(getNativeNode(child));
               return /* () */0;
             }));
       return /* [] */0;
@@ -321,7 +342,7 @@ function reconcileChildren(parentNode, aChildren, bChildren) {
             return inflateTree(instantiateTree(child));
           }));
     Belt_List.forEach(more, (function (child) {
-            parentNode.appendChild(getDomNode(child));
+            parentNode.appendChild(getNativeNode(child));
             return /* () */0;
           }));
     return more;
@@ -332,17 +353,15 @@ function reconcileChildren(parentNode, aChildren, bChildren) {
 
 function mount(el, node) {
   var tree = inflateTree(instantiateTree(el));
-  node.appendChild(getDomNode(tree));
+  node.appendChild(getNativeNode(tree));
   return /* () */0;
 }
 
 export {
-  setDomProps ,
-  createElement ,
-  updateDomProps ,
+  NativeInterface ,
   Maker ,
   render ,
-  getDomNode ,
+  getNativeNode ,
   instantiateTree ,
   runEffect ,
   inflateTree ,

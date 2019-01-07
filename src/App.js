@@ -69,14 +69,14 @@ function toggle(on, off, ctx) {
                           return mountedTree;
                         }
                         if (exit === 1) {
-                          var domNode = Fluid.getDomNode(mountedTree);
+                          var nativeNode = Fluid.getNativeNode(mountedTree);
                           var newTree$1 = Fluid.inflateTree(Fluid.instantiateTree(newTree));
-                          var newDomNode = Fluid.getDomNode(newTree$1);
-                          translate(domNode, newState ? -30 : 30, 0);
-                          fade(domNode, true);
-                          translate(newDomNode, newState ? -30 : 30, newState ? 30 : -30);
-                          fade(newDomNode, false);
-                          domNode.parentNode.insertBefore(newDomNode, domNode);
+                          var newNativeNode = Fluid.getNativeNode(newTree$1);
+                          translate(nativeNode, newState ? -30 : 30, 0);
+                          fade(nativeNode, true);
+                          translate(newNativeNode, newState ? -30 : 30, newState ? 30 : -30);
+                          fade(newNativeNode, false);
+                          nativeNode.parentNode.insertBefore(newNativeNode, nativeNode);
                           return newTree$1;
                         }
                         
@@ -142,21 +142,21 @@ function button(text, style, onClick, _) {
           ]);
 }
 
-var canvas = Fluid.createElement("canvas", {
+var canvas = Fluid.NativeInterface[/* createElement */1]("canvas", {
       width: 500,
       height: 200
     });
 
 document.body.appendChild(canvas);
 
-var canvas2 = Fluid.createElement("canvas", {
+var canvas2 = Fluid.NativeInterface[/* createElement */1]("canvas", {
       width: 500,
       height: 500
     });
 
 document.body.appendChild(canvas2);
 
-var log = Fluid.createElement("div", { });
+var log = Fluid.NativeInterface[/* createElement */1]("div", { });
 
 document.body.appendChild(log);
 
@@ -467,7 +467,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          328,
+          337,
           12
         ]
       ];

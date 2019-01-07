@@ -1,12 +1,12 @@
 ####{BSB GENERATED: NO EDIT
-# -backend js
+# -backend native
 FLG -ppx /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bsb-native/lib/bsppx.exe
-S /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bsb-native/lib/ocaml/js
-B /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bsb-native/lib/ocaml/js
-FLG -nostdlib -color always -no-alias-deps
+S /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bsb-native/lib/ocaml/native
+B /Users/jared/clone/explorations/fluid/fluid-ppx/node_modules/bsb-native/lib/ocaml/native
+FLG -color always -no-alias-deps
 FLG -w -30-40+6+7+27+32..39+44+45+101-6+7-26-27-32..40-28-44-45
 S tests
-B lib/bs/js/tests
+B lib/bs/native/tests
 S src
-B lib/bs/js/src
+B lib/bs/native/src
 ####BSB GENERATED: NO EDIT}
