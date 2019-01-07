@@ -2,12 +2,13 @@ module NativeInterface:
   {
     type nativeProps;
     type nativeNode;
-
-    /* let nativeProps:
+    let nativeProps:
       (~id: string=?, ~_type: string=?, ~onchange: Dom.event => unit=?,
       ~oninput: Dom.event => unit=?, ~width: int=?, ~height: int=?,
       ~onclick: Dom.event => unit=?, ~style: string=?, unit) =>
       nativeProps;
+
+    /*
     let _createElement: string => nativeNode; */
 
     let setDomProps: (nativeNode, nativeProps) => unit;

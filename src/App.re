@@ -89,9 +89,12 @@ let toggle = (~on, ~off, ctx) => {
 };
 
 
+
+module NativeInterface = FluidDom.NativeInterface;
+
 /* [@memo] */
 let awesomeComponent = (~value, ~toString, ctx) => {
-  let%hook (state, setState) = useState("Awesome");
+  let%hook (state, setState) = Fluid.Hooks.useState("Awesome");
   <div>
     <div onclick={_evt => setState(state ++ "1")}>
       {String("Folkx " ++ toString(value) ++ " " ++ state)}
