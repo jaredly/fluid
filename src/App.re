@@ -1,7 +1,6 @@
 
 open FluidDom;
-open Fluid;
-open Hooks;
+/* open Hooks; */
 
 module Style = {
   type style;
@@ -54,6 +53,7 @@ let fade = (node, ~out) => {
 };
 
 let toggle = (~on, ~off, ctx) => {
+  open Fluid.Hooks;
   let%hook (isOn, setOn) = useState(false);
 
   let%hook () = useReconciler(isOn, (oldState, newState, mountedTree, newTree) => {
@@ -61,6 +61,7 @@ let toggle = (~on, ~off, ctx) => {
     switch (oldState, newState) {
       | (false, true)
       | (true, false) =>
+        open Fluid;
         let nativeNode = getNativeNode(mountedTree);
         let newTree = inflateTree(instantiateTree(newTree));
         let newNativeNode = getNativeNode(newTree);
@@ -316,10 +317,10 @@ let first = <div id="awesome" style="padding: 20px">
   <Toggle
     on=(onClick => <div>
       (String("Click this to"))
-      {Custom(Maker.makeComponent(button, button(~style="background-color: #88ff88", ~onClick, ~text="Turn Off")))}
+      <Button style="background-color: #88ff88" onClick text="Turn Off" />
     </div>)
     off=(onClick => <div>
-      {Custom(Maker.makeComponent(button, button(~style="background-color: #ffacf0", ~onClick, ~text="Turn On")))}
+      <Button style="background-color: #ffacf0" onClick text="Turn On" />
       (String("if you want"))
     </div>)
   />
@@ -336,5 +337,5 @@ let first = <div id="awesome" style="padding: 20px">
 
 switch (getElementById("root")) {
   | None => assert(false)
-  | Some(node) => mount(first, node)
+  | Some(node) => Fluid.mount(first, node)
 }

@@ -5,7 +5,7 @@
     "pack": "fpack watch --development ./src/App.js"
   },
   "dependencies": {
-    "bs-platform": "^4.0.6",
+    "bsb-native": "^4.0.7000",
     "fpack": "^0.6.6"
   }
 }

@@ -1,6 +1,3 @@
-
-module Fluid = {
-
   module NativeInterface = {
     type nativeProps;
 
@@ -60,6 +57,9 @@ module Fluid = {
     };
     let inflate = ({tag, props}) => createElement(tag, props);
   };
+
+module Fluid = {
+  module NativeInterface = NativeInterface;
 
   include FluidMaker.F(NativeInterface);
 

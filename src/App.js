@@ -41,8 +41,7 @@ function fade(node, out) {
                 return /* () */0;
               }), (function () {
                 if (out) {
-                  node.parentNode.removeChild(node);
-                  return /* () */0;
+                  return FluidDom.NativeInterface[/* removeChild */9](FluidDom.NativeInterface[/* parentNode */6](node), node);
                 } else {
                   return 0;
                 }
@@ -50,10 +49,10 @@ function fade(node, out) {
 }
 
 function toggle(on, off, ctx) {
-  var match = Curry._3(FluidDom.Fluid[/* Hooks */11][/* useState */2], false, ctx[/* hooks */0], (function (param, __hooks) {
+  var match = Curry._3(FluidDom.Fluid[/* Hooks */6][/* useState */2], false, ctx[/* hooks */0], (function (param, __hooks) {
           var setOn = param[1];
           var isOn = param[0];
-          return Curry._4(FluidDom.Fluid[/* Hooks */11][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
+          return Curry._4(FluidDom.Fluid[/* Hooks */6][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
                         console.log("reconciling I guess", oldState, newState);
                         var exit = 0;
                         if (oldState) {
@@ -68,14 +67,14 @@ function toggle(on, off, ctx) {
                           return mountedTree;
                         }
                         if (exit === 1) {
-                          var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */3], mountedTree);
-                          var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */6], Curry._1(FluidDom.Fluid[/* instantiateTree */4], newTree));
-                          var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */3], newTree$1);
+                          var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */1], mountedTree);
+                          var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */2], Curry._1(FluidDom.Fluid[/* instantiateTree */3], newTree));
+                          var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */1], newTree$1);
                           translate(nativeNode, newState ? -30 : 30, 0);
                           fade(nativeNode, true);
                           translate(newNativeNode, newState ? -30 : 30, newState ? 30 : -30);
                           fade(newNativeNode, false);
-                          nativeNode.parentNode.insertBefore(newNativeNode, nativeNode);
+                          Curry._3(FluidDom.Fluid[/* NativeInterface */0][/* insertBefore */8], Curry._1(FluidDom.Fluid[/* NativeInterface */0][/* parentNode */6], nativeNode), newNativeNode, nativeNode);
                           return newTree$1;
                         }
                         
@@ -95,15 +94,15 @@ function toggle(on, off, ctx) {
 }
 
 function awesomeComponent(value, toString, ctx) {
-  var match = Curry._3(FluidDom.Fluid[/* Hooks */11][/* useState */2], "Awesome", ctx[/* hooks */0], (function (param, __hooks) {
+  var match = Curry._3(FluidDom.Fluid[/* Hooks */6][/* useState */2], "Awesome", ctx[/* hooks */0], (function (param, __hooks) {
           var setState = param[1];
           var state = param[0];
           return /* tuple */[
                   /* Builtin */Block.__(1, [
-                      Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                      Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                       /* :: */[
                         /* Builtin */Block.__(1, [
-                            Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, (function () {
+                            Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], undefined, undefined, undefined, undefined, (function () {
                                     return Curry._1(setState, state + "1");
                                   }), undefined, /* () */0),
                             /* :: */[
@@ -123,7 +122,7 @@ function awesomeComponent(value, toString, ctx) {
 
 function button(text, style, onClick, _) {
   return /* Builtin */Block.__(1, [
-            Curry._7(FluidDom.Fluid[/* Native */12][/* button */1], undefined, undefined, undefined, undefined, (function () {
+            Curry._7(FluidDom.Fluid[/* Native */7][/* button */1], undefined, undefined, undefined, undefined, (function () {
                     return Curry._1(onClick, /* () */0);
                   }), style, /* () */0),
             /* :: */[
@@ -133,23 +132,17 @@ function button(text, style, onClick, _) {
           ]);
 }
 
-var canvas = Curry._2(FluidDom.Fluid[/* NativeInterface */0][/* createElement */1], "canvas", {
-      width: 500,
-      height: 200
-    });
+var canvas = FluidDom.NativeInterface[/* createElement */3]("canvas", FluidDom.NativeInterface[/* nativeProps */0](undefined, undefined, undefined, undefined, 500, 200, undefined, undefined, /* () */0));
 
-document.body.appendChild(canvas);
+FluidDom.NativeInterface[/* appendChild */7](document.body, canvas);
 
-var canvas2 = Curry._2(FluidDom.Fluid[/* NativeInterface */0][/* createElement */1], "canvas", {
-      width: 500,
-      height: 500
-    });
+var canvas2 = FluidDom.NativeInterface[/* createElement */3]("canvas", FluidDom.NativeInterface[/* nativeProps */0](undefined, undefined, undefined, undefined, 500, 500, undefined, undefined, /* () */0));
 
-document.body.appendChild(canvas2);
+FluidDom.NativeInterface[/* appendChild */7](document.body, canvas2);
 
-var log = Curry._2(FluidDom.Fluid[/* NativeInterface */0][/* createElement */1], "div", { });
+var log = FluidDom.NativeInterface[/* createElement */3]("div", FluidDom.NativeInterface[/* nativeProps */0](undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0));
 
-document.body.appendChild(log);
+FluidDom.NativeInterface[/* appendChild */7](document.body, log);
 
 var plot = (
 function (x, y, scale, color) {
@@ -334,13 +327,13 @@ canvas.addEventListener("mousemove", (function (evt) {
         return /* () */0;
       }));
 
-var first_000 = Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], "awesome", undefined, undefined, undefined, undefined, "padding: 20px", /* () */0);
+var first_000 = Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], "awesome", undefined, undefined, undefined, undefined, "padding: 20px", /* () */0);
 
 var first_001 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
     /* Builtin */Block.__(1, [
-        Curry._8(FluidDom.Fluid[/* Native */12][/* input */2], undefined, "range", undefined, undefined, undefined, (function (evt) {
+        Curry._8(FluidDom.Fluid[/* Native */7][/* input */2], undefined, "range", undefined, undefined, undefined, (function (evt) {
                 var v = evt.target.value;
                 console.log(v);
                 var config = /* record */[
@@ -356,10 +349,10 @@ var first_001 = /* :: */[
       ]),
     /* :: */[
       /* Builtin */Block.__(1, [
-          Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
+          Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
           /* :: */[
             /* Builtin */Block.__(1, [
-                Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 /* :: */[
                   /* String */Block.__(0, ["What"]),
                   /* [] */0
@@ -369,14 +362,14 @@ var first_001 = /* :: */[
           ]
         ]),
       /* :: */[
-        /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], toggle, (function (param) {
+        /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */5][/* makeComponent */0], toggle, (function (param) {
                     return toggle((function (onClick) {
                                   return /* Builtin */Block.__(1, [
-                                            Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                            Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                             /* :: */[
                                               /* String */Block.__(0, ["Click this to"]),
                                               /* :: */[
-                                                /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
+                                                /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */5][/* makeComponent */0], button, (function (param) {
                                                             return button("Turn Off", "background-color: #88ff88", onClick, param);
                                                           }))]),
                                                 /* [] */0
@@ -385,9 +378,9 @@ var first_001 = /* :: */[
                                           ]);
                                 }), (function (onClick) {
                                   return /* Builtin */Block.__(1, [
-                                            Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                            Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                             /* :: */[
-                                              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
+                                              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */5][/* makeComponent */0], button, (function (param) {
                                                           return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                         }))]),
                                               /* :: */[
@@ -399,20 +392,20 @@ var first_001 = /* :: */[
                                 }), param);
                   }))]),
         /* :: */[
-          /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], awesomeComponent, (function (param) {
+          /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */5][/* makeComponent */0], awesomeComponent, (function (param) {
                       return awesomeComponent(5, (function (prim) {
                                     return String(prim);
                                   }), param);
                     }))]),
           /* :: */[
-            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], awesomeComponent, (function (param) {
+            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */5][/* makeComponent */0], awesomeComponent, (function (param) {
                         return awesomeComponent("Hi", (function (x) {
                                       return x;
                                     }), param);
                       }))]),
             /* :: */[
               /* Builtin */Block.__(1, [
-                  Curry._7(FluidDom.Fluid[/* Native */12][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
+                  Curry._7(FluidDom.Fluid[/* Native */7][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
                   /* :: */[
                     /* String */Block.__(0, ["world"]),
                     /* [] */0
@@ -435,13 +428,13 @@ var first = /* Builtin */Block.__(1, [
 var match = document.getElementById("root");
 
 if (match !== undefined) {
-  Curry._2(FluidDom.Fluid[/* mount */10], first, Js_primitive.valFromOption(match));
+  Curry._2(FluidDom.Fluid[/* mount */4], first, Js_primitive.valFromOption(match));
 } else {
   throw [
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          338,
+          339,
           12
         ]
       ];

@@ -57,6 +57,7 @@ let isHook = expr =>
   };
 
 let rec hasAnotherHook = expr => isHook(expr) || switch (expr.pexp_desc) {
+  | Pexp_open(_, _, exp) => hasAnotherHook(exp)
   | Pexp_sequence(one, two) => hasAnotherHook(two)
   | Pexp_let(_, _, rest) => hasAnotherHook(rest)
   | _ => false

@@ -3,7 +3,7 @@
   "sources": "src",
   "bsc-flags": ["-open", "Belt"],
   "warnings": {
-    "number": "-27-45-40-26-32"
+    "number": "-27-45-40-26-32-44"
   },
   "package-specs": {
     "module": "es6",

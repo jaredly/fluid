@@ -38,14 +38,6 @@ function inflate(param) {
   return createElement(param[/* tag */0], param[/* props */1]);
 }
 
-var NativeInterface = /* module */[
-  /* setDomProps */setDomProps,
-  /* createElement */createElement,
-  /* updateNativeProps */updateNativeProps,
-  /* maybeUpdate */maybeUpdate,
-  /* inflate */inflate
-];
-
 var include = FluidMaker.F([
       maybeUpdate,
       inflate,
@@ -76,6 +68,8 @@ var include = FluidMaker.F([
           return /* () */0;
         })
     ]);
+
+var Hooks = include[10];
 
 function div(id, _type, width, height, onclick, style, _) {
   var tmp = { };
@@ -164,45 +158,121 @@ var Native = /* module */[
   /* input */input
 ];
 
-var Fluid_001 = /* Maker */include[0];
+function NativeInterface_002(prim) {
+  return document.createTextNode(prim);
+}
 
-var Fluid_002 = /* render */include[1];
+function NativeInterface_003(prim, prim$1) {
+  prim.textContent = prim$1;
+  return /* () */0;
+}
 
-var Fluid_003 = /* getNativeNode */include[2];
+function NativeInterface_004(prim) {
+  return prim.parentNode;
+}
 
-var Fluid_004 = /* instantiateTree */include[3];
+function NativeInterface_005(prim, prim$1) {
+  prim.appendChild(prim$1);
+  return /* () */0;
+}
 
-var Fluid_005 = /* runEffect */include[4];
+function NativeInterface_006(prim, prim$1, prim$2) {
+  prim.insertBefore(prim$1, prim$2);
+  return /* () */0;
+}
 
-var Fluid_006 = /* inflateTree */include[5];
+function NativeInterface_007(prim, prim$1) {
+  prim.removeChild(prim$1);
+  return /* () */0;
+}
 
-var Fluid_007 = /* listenForChanges */include[6];
+function NativeInterface_009(prim, prim$1) {
+  prim.replaceWith(prim$1);
+  return /* () */0;
+}
 
-var Fluid_008 = /* reconcileTrees */include[7];
+var NativeInterface = [
+  setDomProps,
+  createElement,
+  NativeInterface_002,
+  NativeInterface_003,
+  NativeInterface_004,
+  NativeInterface_005,
+  NativeInterface_006,
+  NativeInterface_007,
+  updateNativeProps,
+  NativeInterface_009,
+  maybeUpdate,
+  inflate
+];
 
-var Fluid_009 = /* reconcileChildren */include[8];
+var Fluid_000 = [
+  setDomProps,
+  createElement,
+  (function (prim) {
+      return document.createTextNode(prim);
+    }),
+  (function (prim, prim$1) {
+      prim.textContent = prim$1;
+      return /* () */0;
+    }),
+  (function (prim) {
+      return prim.parentNode;
+    }),
+  (function (prim, prim$1) {
+      prim.appendChild(prim$1);
+      return /* () */0;
+    }),
+  (function (prim, prim$1, prim$2) {
+      prim.insertBefore(prim$1, prim$2);
+      return /* () */0;
+    }),
+  (function (prim, prim$1) {
+      prim.removeChild(prim$1);
+      return /* () */0;
+    }),
+  updateNativeProps,
+  (function (prim, prim$1) {
+      prim.replaceWith(prim$1);
+      return /* () */0;
+    }),
+  maybeUpdate,
+  inflate
+];
 
-var Fluid_010 = /* mount */include[9];
+var Fluid_001 = include[2];
 
-var Fluid_011 = /* Hooks */include[10];
+var Fluid_002 = include[5];
 
-var Fluid = /* module */[
-  /* NativeInterface */NativeInterface,
+var Fluid_003 = include[3];
+
+var Fluid_004 = include[9];
+
+var Fluid_005 = include[0];
+
+var Fluid_006 = [
+  Hooks[0],
+  Hooks[1],
+  Hooks[2],
+  Hooks[3],
+  Hooks[5],
+  Hooks[6],
+  Hooks[7]
+];
+
+var Fluid = [
+  Fluid_000,
   Fluid_001,
   Fluid_002,
   Fluid_003,
   Fluid_004,
   Fluid_005,
   Fluid_006,
-  Fluid_007,
-  Fluid_008,
-  Fluid_009,
-  Fluid_010,
-  Fluid_011,
-  /* Native */Native
+  Native
 ];
 
 export {
+  NativeInterface ,
   Fluid ,
   
 }

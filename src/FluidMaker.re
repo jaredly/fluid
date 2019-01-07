@@ -19,10 +19,6 @@ module type NativeInterface = {
   let replaceWith: (nativeNode, nativeNode) => unit;
 };
 
-module type Hooks = {
-
-};
-
 module type Fluid = {
   module NativeInterface: NativeInterface;
   type customWithState;
@@ -32,6 +28,7 @@ module type Fluid = {
     finish: hooksContainer('hooks, 'reconcileData) => unit,
   };
   type custom;
+  type effect;
   type element =
   | String(string)
   | Builtin(NativeInterface.element, list(element)): element
@@ -42,12 +39,24 @@ module type Fluid = {
     mutable mountedTree
   }
 
+  and instanceTree =
+  IString(string)
+  | IBuiltin(NativeInterface.element,
+  list(instanceTree)) :
+  instanceTree
+  | ICustom(customWithState,
+  instanceTree, list(effect))
+
   and mountedTree =
   | MString(string, NativeInterface.nativeNode)
   | MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree)): mountedTree
   | MCustom(container);
 
   type reconcilerFunction('data) = ('data, 'data, mountedTree, element) => mountedTree;
+
+  let getNativeNode: mountedTree => NativeInterface.nativeNode;
+  let inflateTree: instanceTree => mountedTree;
+  let instantiateTree: element => instanceTree;
 
   let mount: (element, NativeInterface.nativeNode) => unit;
   module Maker:
