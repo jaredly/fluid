@@ -25,7 +25,7 @@
   },
   "bs-dependencies": ["flex"],
   "package-specs": {
-    "module": "es6",
+    "module": "commonjs",
     "in-source": true
   },
   "c-linker-flags": ["-framework", "Cocoa"],

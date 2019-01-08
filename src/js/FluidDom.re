@@ -48,7 +48,7 @@ module NativeInterface = {
     snode##style##right #= (string_of_float(layout.layout.right) ++ "px");
     snode##style##width #= (string_of_float(layout.layout.width) ++ "px");
     snode##style##height #= (string_of_float(layout.layout.height) ++ "px");
-    Js.log2("layout", layout);
+    /* Js.log2("layout", (layout.layout.width, layout.layout.height, layout.layout.top, layout.layout.left)); */
 
     /* Js.log3("layout", [|
       layout.layout.left,
@@ -68,7 +68,7 @@ module NativeInterface = {
     | Exactly /* 'exactly' */
     | AtMost 'at-most' */
     {
-      Layout.LayoutTypes.width: float_of_int(String.length(text)) *. 20.,
+      Layout.LayoutTypes.width: float_of_int(String.length(text)) *. 15.,
       height: 16.,
     }
   };

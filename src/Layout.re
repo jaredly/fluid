@@ -9,9 +9,7 @@ module Node = {
 let rootContext = {contents: 0};
 
 module Encoding = FloatEncoding;
-/* module LayoutTestUtils = LayoutTestUtils.Create(Node, FloatEncoding); */
 module Layout = Layout.Create(Node, Encoding);
-/* module LayoutPrint = LayoutPrint.Create(Node, FloatEncoding); */
 module LayoutSupport = Layout.LayoutSupport;
 module LayoutTypes = LayoutSupport.LayoutTypes;
 
@@ -56,7 +54,7 @@ let style =
       ~flexDirection=LayoutTypes.Column,
       ~flexGrow=Encoding.cssUndefined,
       ~flexShrink=Encoding.cssUndefined,
-      ~alignItems=LayoutTypes.AlignAuto,
+      ~alignItems=LayoutTypes.AlignFlexStart,
       ~justifyContent=LayoutTypes.JustifyFlexStart,
       ~position=LayoutTypes.Relative,
       ~top=Encoding.cssUndefined,

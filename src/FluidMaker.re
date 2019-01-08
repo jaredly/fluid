@@ -42,12 +42,9 @@ module type Fluid = {
   }
 
   and instanceTree =
-  IString(string)
-  | IBuiltin(NativeInterface.element,
-  list(instanceTree)) :
-  instanceTree
-  | ICustom(customWithState,
-  instanceTree, list(effect))
+  | IString(string)
+  | IBuiltin(NativeInterface.element, list(instanceTree)) : instanceTree
+  | ICustom(customWithState, instanceTree, list(effect))
 
   and mountedTree =
   | MString(string, NativeInterface.nativeNode)
@@ -123,6 +120,7 @@ type custom = {
   init: unit => customWithState,
   clone: customWithState => [`Different | `Same | `Compatible(customWithState)],
 }
+
 and customContents('identity, 'hooks, 'reconcileData) = {
   identity: 'identity,
   render: context('hooks, 'reconcileData) => element,
@@ -210,7 +208,6 @@ module Maker = {
       }
     }
   };
-
 };
 
 let render = (WithState(component)) => {
@@ -266,12 +263,14 @@ let rec getMountedLayout = element => switch element {
 
 let rec instantiateTree: element => instanceTree = el => switch el {
   | String(contents) => IString(contents, Layout.createNodeWithMeasure([||], Layout.style(), NativeInterface.measureText(contents)))
+
   | Builtin(nativeElement, children, layout) =>
     let ichildren = children->List.map(instantiateTree);
     IBuiltin(nativeElement, ichildren, Layout.createNode(ichildren->List.map(getInstanceLayout)->List.toArray, switch layout {
       | None => Layout.style()
       | Some(s) => s
     }))
+
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
@@ -291,11 +290,13 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
   | IString(contents, layout) => 
     /* TODO set layout properties here... or something */
     MString(contents, NativeInterface.createTextNode(contents), layout)
+
   | IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);
     let children = children->List.map(inflateTree);
     children->List.forEach(child => NativeInterface.appendChild(node, getNativeNode(child)));
     MBuiltin(nativeElement, node, children, layout);
+
   | ICustom(custom, instanceTree, effects) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
@@ -377,7 +378,8 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
 
 let mount = (el, node) => {
   let instances = instantiateTree(el);
-  Layout.layout(getInstanceLayout(instances));
+  let instanceLayout = getInstanceLayout(instances);
+  Layout.layout(instanceLayout);
   let tree = inflateTree(instances);
   node->NativeInterface.appendChild(getNativeNode(tree))
 };
