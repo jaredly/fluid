@@ -143,12 +143,15 @@ function F(NativeInterface) {
                     Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
                   ]);
       case 1 : 
+          var measure = el[3];
           var layout = el[2];
           var ichildren = Belt_List.map(el[1], instantiateTree);
+          var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
+          var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
           return /* IBuiltin */Block.__(1, [
                     el[0],
                     ichildren,
-                    Layout.createNode(Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout)), layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
+                    measure !== undefined ? Layout.createNodeWithMeasure(childLayouts, style, measure) : Layout.createNode(childLayouts, style)
                   ]);
       case 2 : 
           var custom = Curry._1(el[0][/* init */0], /* () */0);

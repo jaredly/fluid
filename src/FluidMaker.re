@@ -21,7 +21,7 @@ module type NativeInterface = {
   let replaceWith: (nativeNode, nativeNode) => unit;
 };
 
-module type Fluid = {
+/* module type Fluid = {
   module NativeInterface: NativeInterface;
   type customWithState;
   type hooksContainer('hooks, 'reconcileData);
@@ -29,7 +29,7 @@ module type Fluid = {
   type effect;
   type element =
   | String(string)
-  | Builtin(NativeInterface.element, list(element)): element
+  | Builtin(NativeInterface.element, list(element), option(Layout.measureType)): element
   | Custom(custom /* already contains its props & children */)
 
   and container = {
@@ -101,7 +101,7 @@ module type Fluid = {
       ('e, hooksContainer('f, 'g))) =>
       ('e, hooksContainer((option('f), ('a, 'b)), 'g));
   }
-};
+}; */
 
 module F = (NativeInterface: NativeInterface) => {
 
@@ -148,7 +148,7 @@ and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData
 
 and element =
 | String(string)
-| Builtin(NativeInterface.element, list(element), option(Layout.style)): element
+| Builtin(NativeInterface.element, list(element), option(Layout.style), option(Layout.measureType)): element
 | Custom(custom /* already contains its props & children */)
 
 and instanceTree =
@@ -254,12 +254,17 @@ let rec getMountedLayout = element => switch element {
 let rec instantiateTree: element => instanceTree = el => switch el {
   | String(contents) => IString(contents, Layout.createNodeWithMeasure([||], Layout.style(), NativeInterface.measureText(contents)))
 
-  | Builtin(nativeElement, children, layout) =>
+  | Builtin(nativeElement, children, layout, measure) =>
     let ichildren = children->List.map(instantiateTree);
-    IBuiltin(nativeElement, ichildren, Layout.createNode(ichildren->List.map(getInstanceLayout)->List.toArray, switch layout {
+    let childLayouts = ichildren->List.map(getInstanceLayout)->List.toArray;
+    let style = switch layout {
       | None => Layout.style()
       | Some(s) => s
-    }))
+    };
+    IBuiltin(nativeElement, ichildren, switch measure {
+      | None => Layout.createNode(childLayouts, style)
+      | Some(m) => Layout.createNodeWithMeasure(childLayouts, style, m)
+    })
 
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
@@ -315,12 +320,13 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       Layout.LayoutSupport.markDirty(layout);
       MString(b, node, layout)
     }
-  | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle)) =>
+  | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
     if (NativeInterface.maybeUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
       aLayout.style = switch bLayoutStyle {
         | Some(s) => s
         | _ => Layout.style()
       };
+      /* TODO assign the measure function */
       /* TODO flush layout changes */
       MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
     } else {

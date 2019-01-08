@@ -128,7 +128,8 @@ function div(id, $staropt$star, layout, _type, width, height, onclick, style, pa
               /* props */tmp
             ],
             children,
-            layout
+            layout,
+            undefined
           ]);
 }
 
@@ -158,6 +159,7 @@ function button(id, children, _type, width, height, onclick, style, param) {
               /* props */tmp
             ],
             children,
+            undefined,
             undefined
           ]);
 }
@@ -191,6 +193,7 @@ function input(id, _type, width, height, onchange, oninput, style, param) {
               /* props */tmp
             ],
             /* [] */0,
+            undefined,
             undefined
           ]);
 }

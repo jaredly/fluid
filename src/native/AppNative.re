@@ -18,19 +18,22 @@ let nextColor = color =>
   };
 
 
-let colorSwitcher = ctx => {
+let colorSwitcher = hooks => {
   let%hook (color, setColor) = useState(red);
   <view>
     <view
       backgroundColor=color
       layout={Layout.style(~width=100., ~height=30., ())}
     />
-    <button onPress={() => setColor(nextColor(color))} title="Toggle" />
-    <view layout={Layout.style(~height=30., ())} />
+    <view layout={Layout.style(~flexDirection=Row, ())}>
+    <button onPress={() => setColor(red)} title="Red" />
+    <button onPress={() => setColor(green)} title="Green" />
+    <button onPress={() => setColor(blue)} title="Blue" />
+    </view>
   </view>;
 };
 
-let first = ctx => {
+let first = hooks => {
   let%hook (times, setTimes) = useState(0);
 
   <view layout={Layout.style(~marginHorizontal=10., ())}>
@@ -54,7 +57,6 @@ let first = ctx => {
       }
       title="Hello to you too"
     />
-    <view layout={Layout.style(~height=30., ())} />
   </view>;
 };
 

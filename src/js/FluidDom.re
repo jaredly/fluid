@@ -117,7 +117,7 @@ module Fluid = {
           ~style?,
           (),
         ),
-    }, children, layout);
+    }, children, layout, None);
 
     let button = (~id=?, ~children, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
     Builtin({
@@ -132,7 +132,7 @@ module Fluid = {
           ~style?,
           (),
         ),
-    }, children, None);
+    }, children, None, None);
 
     let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()) => 
     Builtin({
@@ -148,6 +148,6 @@ module Fluid = {
           ~style?,
           (),
         ),
-    }, [], None);
+    }, [], None, None);
   }
 }

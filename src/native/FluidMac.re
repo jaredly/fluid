@@ -83,9 +83,25 @@ module Fluid = {
   include FluidMaker.F(NativeInterface);
 
   module Native = {
-    let view = (~onPress=?, ~backgroundColor=?, ()): NativeInterface.element => View(onPress, {backgroundColor: backgroundColor});
+    let view = (~onPress=?, ~children=[], ~layout=?, ~backgroundColor=?, ()) => 
+    Builtin(
+      View(onPress, {backgroundColor: backgroundColor}),
+      children,
+      layout,
+      None
+    )
+      ;
 
-    let button = (~onPress, ~title, ()): NativeInterface.element => Button(title, onPress);
+    let button = (~onPress, ~title, ~layout=?, ()) => 
+    Builtin(
+      Button(title, onPress),
+      [],
+      layout,
+      Some((a, b, c, d, e) => {
+        let {Layout.LayoutTypes.width, height}: Layout.LayoutTypes.dimensions = NativeInterface.measureText(title, a, b, c, d, e);
+        {Layout.LayoutTypes.width: width +. 20., height: height +. 10.}
+      })
+    );
 
   }
 
