@@ -9,7 +9,19 @@
 #include <caml/callback.h>
 
 // #include <string.h> // for memcpy
-// #include <caml/alloc.h>
+#include <caml/alloc.h>
+
+@interface FlippedView : NSView
+{
+}
+- (BOOL)isFlipped;
+@end
+
+@implementation FlippedView : NSView
+- (BOOL)isFlipped {
+  return YES;
+}
+@end
 
 @interface MLButtonDelegate : NSObject
 
@@ -102,6 +114,7 @@
   [appMenuItem setSubmenu:appMenu];
 
 
+  window.contentView = [[FlippedView alloc] initWithFrame:NSMakeRect(0, 0, 800, 500)];
   printf("5\n");
   caml_callback(onLaunch, (value) (window.contentView));
   printf("6\n");
@@ -177,6 +190,20 @@
 //   return YES;
 // }
 // @end
+
+// @implementation Win : NSWindow
+
+// - (void)applicationDidFinishLaunching: (NSNotification *)notification
+// {
+//   [self orderFront: self];
+// }
+
+// - (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSNotification *)notification
+// {
+//   return YES;
+// }
+// @end
+
 
 
 
@@ -275,8 +302,27 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
   CAMLreturn0;
 }
 
-CAMLprim value fluid_create_NSButton(value title_v, value onPress_v) {
-  CAMLparam2(title_v, onPress_v);
+CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v) {
+  CAMLparam3(text_v, font_v, fontSize_v);
+  CAMLlocal1(result);
+
+  NSString *textContent = [NSString stringWithUTF8String:String_val (text_v)];
+  NSString *font = [NSString stringWithUTF8String:String_val (font_v)];
+  double fontSize = Double_val(fontSize_v);
+
+  NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:[NSFont fontWithName:font size:fontSize], NSFontAttributeName, nil];
+  NSAttributedString *text = [[NSAttributedString alloc] initWithString:textContent attributes: attributes];
+  NSSize textSize = [text size];
+
+  result = caml_alloc_tuple(2);
+  Store_field (result, 0, caml_copy_double(textSize.width));
+  Store_field (result, 1, caml_copy_double(textSize.height));
+
+  CAMLreturn(result);
+}
+
+CAMLprim value fluid_create_NSButton(value title_v, value onPress_v, value pos_v, value size_v) {
+  CAMLparam4(title_v, onPress_v, pos_v, size_v);
   printf("Create button\n");
 
   NSString *title = [NSString stringWithUTF8String:String_val (title_v)];
@@ -285,24 +331,59 @@ CAMLprim value fluid_create_NSButton(value title_v, value onPress_v) {
 
   NSButton* button = [NSButton buttonWithTitle:title target:delegate action:@selector(onPress)];
 
+  float top = Double_val(Field(pos_v, 0));
+  float left = Double_val(Field(pos_v, 1));
+  float width = Double_val(Field(size_v, 0));
+  float height = Double_val(Field(size_v, 1));
+
+  [button setFrameOrigin:NSMakePoint(left, top)];
+  [button setFrameSize:NSMakeSize(width, height)];
+
   CAMLreturn((value) button);
 }
 
-CAMLprim value fluid_create_NSTextView(value contents_v) {
-  CAMLparam1(contents_v);
-  printf("Create text view\n");
+CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size_v) {
+  CAMLparam3(contents_v, pos_v, size_v);
 
   NSString *contents = [NSString stringWithUTF8String:String_val (contents_v)];
   NSTextField* text = [NSTextField labelWithString:contents];
 
+  // NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
+  // NSDictionary *attributes = @{
+  //                             NSForegroundColorAttributeName : [NSColor blueColor],
+  //                             NSFontAttributeName : [NSFont fontWithName:@"Ariel" size:16.f]
+  //                             };
+  // [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
+  // text.attributedStringValue = attrstr;
+
+  float top = Double_val(Field(pos_v, 0));
+  float left = Double_val(Field(pos_v, 1));
+  float width = Double_val(Field(size_v, 0));
+  float height = Double_val(Field(size_v, 1));
+
+
+  printf("Create text view %s, %f,%f %f x %f\n", String_val(contents_v), left, top, width, height);
+
+  [text setFrameOrigin:NSMakePoint(left, top)];
+  [text setFrameSize:NSMakeSize(width, height)];
+
+  // NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(left, top, width, height)];
+  // [view addSubview:text];
+
   CAMLreturn((value) text);
 }
 
-CAMLprim value fluid_create_NSView() {
-  CAMLparam0();
-  printf("Create view\n");
+CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v) {
+  CAMLparam3(onPress_v, pos_v, size_v);
 
-  NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+  float top = Double_val(Field(pos_v, 0));
+  float left = Double_val(Field(pos_v, 1));
+  float width = Double_val(Field(size_v, 0));
+  float height = Double_val(Field(size_v, 1));
+  printf("Create view %f,%f %f x %f\n", top, left, width, height);
+
+  NSView* view = [[FlippedView alloc] initWithFrame:NSMakeRect(left, top, width, height)];
+  view.layer.backgroundColor = CGColorCreateGenericRGB(255, 1, 0, 1);
 
   CAMLreturn((value) view);
 }
@@ -314,7 +395,14 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v) {
   NSTextField* text = (NSTextField*)text_v;
   NSString *contents = [NSString stringWithUTF8String:String_val (contents_v)];
 
-  text.stringValue = contents;
+  NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
+  NSDictionary *attributes = @{
+                              NSForegroundColorAttributeName : [NSColor blueColor],
+                              NSFontAttributeName : [NSFont fontWithName:@"Ariel" size:16.f]
+                              };
+  [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
+
+  text.attributedStringValue = attrstr;
 
   CAMLreturn0;
 }

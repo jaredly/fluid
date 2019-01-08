@@ -26,5 +26,5 @@ let d = Layout.createNode(
 
 Layout.layout(d);
 
-Js.log2(d.layout.width, d.layout.height);
-Js.log4(c.layout.top, c.layout.left, c.layout.width, c.layout.height);
+Printf.printf("%f, %f\n", d.layout.width, d.layout.height);
+Printf.printf("%f, %f, %f x %f\n", c.layout.top, c.layout.left, c.layout.width, c.layout.height);

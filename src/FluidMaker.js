@@ -172,16 +172,17 @@ function F(NativeInterface) {
   var inflateTree = function (el) {
     switch (el.tag | 0) {
       case 0 : 
+          var layout = el[1];
           var contents = el[0];
           return /* MString */Block.__(0, [
                     contents,
-                    Curry._1(NativeInterface[/* createTextNode */3], contents),
-                    el[1]
+                    Curry._2(NativeInterface[/* createTextNode */3], contents, layout),
+                    layout
                   ]);
       case 1 : 
-          var layout = el[2];
+          var layout$1 = el[2];
           var nativeElement = el[0];
-          var node = Curry._2(NativeInterface[/* inflate */1], nativeElement, layout);
+          var node = Curry._2(NativeInterface[/* inflate */1], nativeElement, layout$1);
           var children = Belt_List.map(el[1], inflateTree);
           Belt_List.forEach(children, (function (child) {
                   return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(child));
@@ -190,7 +191,7 @@ function F(NativeInterface) {
                     nativeElement,
                     node,
                     children,
-                    layout
+                    layout$1
                   ]);
       case 2 : 
           var custom = el[0];

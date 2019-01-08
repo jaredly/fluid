@@ -45,6 +45,10 @@ function measureText(text, _node, width, widthMode, height, heightMode) {
         ];
 }
 
+function createTextNode(text, layout) {
+  return document.createTextNode(text);
+}
+
 function updateNativeProps(node, _oldProps, newProps) {
   return setDomProps(node, newProps);
 }
@@ -67,6 +71,7 @@ var NativeInterface = /* module */[
   /* string_of_float */string_of_float,
   /* createElement */createElement,
   /* measureText */measureText,
+  /* createTextNode */createTextNode,
   /* updateNativeProps */updateNativeProps,
   /* maybeUpdate */maybeUpdate,
   /* inflate */inflate
@@ -76,9 +81,7 @@ var include = FluidMaker.F([
       maybeUpdate,
       inflate,
       measureText,
-      (function (prim) {
-          return document.createTextNode(prim);
-        }),
+      createTextNode,
       (function (prim, prim$1) {
           prim.textContent = prim$1;
           return /* () */0;

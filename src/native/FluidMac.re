@@ -5,7 +5,7 @@ module NativeInterface = {
   type nativeNode;
 
 
-  external createTextNode: string => nativeNode = "fluid_create_NSTextView";
+  external createTextNode: (string, ~pos: (float, float), ~size: (float, float)) => nativeNode = "fluid_create_NSTextView";
   external setTextContent: (nativeNode, string) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
   external appendChild: (nativeNode, nativeNode) => unit = "fluid_NSView_appendChild";
@@ -14,10 +14,26 @@ module NativeInterface = {
 
   external replaceWith: (nativeNode, nativeNode) => unit = "fluid_NSView_replaceWith";
 
-  external createView: (~onPress: unit => unit=?, unit) => nativeNode = "fluid_create_NSView";
-  external createButton: (~title: string, ~onPress: unit => unit, unit) => nativeNode = "fluid_create_NSButton";
+  external createView: (
+    ~onPress: option(unit => unit),
+    ~pos: (float, float),
+    ~size: (float, float)
+  ) => nativeNode = "fluid_create_NSView";
+  external createButton: (
+    ~title: string,
+    ~onPress: unit => unit,
+    ~pos: (float, float),
+    ~size: (float, float)
+  ) => nativeNode = "fluid_create_NSButton";
 
   external startApp: (~title: string, nativeNode => unit) => unit = "fluid_startApp";
+
+  external measureText: (~text: string, ~font: string, ~fontSize: float) => (float, float) = "fluid_measureText";
+
+  let measureText = (text, _, _, _, _, _) => {
+    let (width, height) = measureText(~text, ~font="Helvetica", ~fontSize=16.);
+    {Layout.LayoutTypes.width, height}
+  };
 
   type element =
     | View(option(unit => unit))
@@ -26,9 +42,16 @@ module NativeInterface = {
   let maybeUpdate = (~mounted, ~mountPoint, ~newElement) => {
     false
   };
-  let inflate = element => switch element {
-    | View(onPress) => createView(~onPress?, ())
-    | Button(title, onPress) => createButton(~title, ~onPress, ())
+
+  let createTextNode = (text, {Layout.LayoutTypes.layout: {top, left, width, height}}) =>
+    createTextNode(text, ~pos=(top, left), ~size=(width, height));
+
+  let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
+    | View(onPress) => 
+    Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
+    createView(~onPress, ~pos=(top, left), ~size=(width, height))
+    | Button(title, onPress) =>
+    createButton(~title, ~onPress, ~pos=(top, left), ~size=(width, height))
   }
 };
 

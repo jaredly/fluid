@@ -13,7 +13,7 @@ module type NativeInterface = {
 
   let measureText: string => Layout.measureType;
 
-  let createTextNode: string => nativeNode;
+  let createTextNode: (string, Layout.node) => nativeNode;
   let setTextContent: (nativeNode, string) => unit;
   let appendChild: (nativeNode, nativeNode) => unit;
   /* let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit; */
@@ -289,7 +289,7 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
   | IString(contents, layout) => 
     /* TODO set layout properties here... or something */
-    MString(contents, NativeInterface.createTextNode(contents), layout)
+    MString(contents, NativeInterface.createTextNode(contents, layout), layout)
 
   | IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);

@@ -74,6 +74,7 @@ module NativeInterface = {
   };
 
   [@bs.scope "document"][@bs.val] external createTextNode: string => nativeNode = "";
+  let createTextNode = (text, layout) => createTextNode(text);
   [@bs.set] external setTextContent: (nativeNode, string) => unit = "textContent";
   [@bs.get] external parentNode: nativeNode => nativeNode = "";
   [@bs.send] external appendChild: (nativeNode, nativeNode) => unit = "";
