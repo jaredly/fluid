@@ -28,6 +28,7 @@ function string_of_float(f) {
 
 function createElement(typ, nativeProps, layout) {
   var node = document.createElement(typ);
+  setDomProps(node, nativeProps);
   node.style.position = "absolute";
   node.style.left = string_of_float(layout[/* layout */2][/* left */0]) + "px";
   node.style.top = string_of_float(layout[/* layout */2][/* top */1]) + "px";
@@ -35,19 +36,46 @@ function createElement(typ, nativeProps, layout) {
   node.style.right = string_of_float(layout[/* layout */2][/* right */2]) + "px";
   node.style.width = string_of_float(layout[/* layout */2][/* width */4]) + "px";
   node.style.height = string_of_float(layout[/* layout */2][/* height */5]) + "px";
-  setDomProps(node, nativeProps);
   return node;
 }
 
-function measureText(text, _node, width, widthMode, height, heightMode) {
-  return /* record */[
-          /* width */text.length * 15,
-          /* height */16
-        ];
+var defaultFont = /* record */[
+  /* fontName */"system-ui",
+  /* fontSize */16
+];
+
+var measureWithCanvas = (
+  function() {
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    document.body.appendChild(canvas);
+    return function (text, font) {
+      context.font = font[1] + 'px ' + font[0]
+      const dims = context.measureText(text);
+      console.log(dims)
+      return [dims.width, font[1] * 1.2]
+    }
+  }()
+  );
+
+function measureText(text, font, _node, width, widthMode, height, heightMode) {
+  var font$1 = font !== undefined ? font : defaultFont;
+  return measureWithCanvas(text, font$1);
 }
 
-function createTextNode(text, layout) {
-  return document.createTextNode(text);
+function setTextContent(el, text, font) {
+  var font$1 = font !== undefined ? font : defaultFont;
+  el.textContent = text;
+  var style = el.style;
+  style.fontFamily = font$1[/* fontName */0];
+  style.fontSize = string_of_float(font$1[/* fontSize */1]) + "px";
+  return /* () */0;
+}
+
+function createTextNode(text, layout, font) {
+  var el = createElement("span", { }, layout);
+  setTextContent(el, text, font);
+  return el;
 }
 
 function updateNativeProps(node, _oldProps, newProps) {
@@ -71,7 +99,10 @@ var NativeInterface = /* module */[
   /* setDomProps */setDomProps,
   /* string_of_float */string_of_float,
   /* createElement */createElement,
+  /* defaultFont */defaultFont,
+  /* measureWithCanvas */measureWithCanvas,
   /* measureText */measureText,
+  /* setTextContent */setTextContent,
   /* createTextNode */createTextNode,
   /* updateNativeProps */updateNativeProps,
   /* maybeUpdate */maybeUpdate,
@@ -83,10 +114,7 @@ var include = FluidMaker.F([
       inflate,
       measureText,
       createTextNode,
-      (function (prim, prim$1) {
-          prim.textContent = prim$1;
-          return /* () */0;
-        }),
+      setTextContent,
       (function (prim, prim$1) {
           prim.appendChild(prim$1);
           return /* () */0;
@@ -208,7 +236,7 @@ var Fluid_001 = /* string */include[0];
 
 var Fluid_002 = /* Maker */include[1];
 
-var Fluid_003 = /* render */include[2];
+var Fluid_003 = /* runRender */include[2];
 
 var Fluid_004 = /* getNativeNode */include[3];
 
@@ -253,4 +281,4 @@ var Fluid = /* module */[
 
 exports.NativeInterface = NativeInterface;
 exports.Fluid = Fluid;
-/* include Not a pure module */
+/* measureWithCanvas Not a pure module */

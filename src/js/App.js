@@ -12,6 +12,8 @@ var Caml_builtin_exceptions = require("bsb-native/lib/js/caml_builtin_exceptions
 
 var Style = /* module */[];
 
+var str = FluidDom.Fluid[/* string */1];
+
 function translate(node, dx, offset) {
   return Animate.spring(1, 10, undefined, (function (amount) {
                 node.style.transform = "translateX(" + (Pervasives.string_of_float((1 - amount) * dx + offset) + "px)");
@@ -90,7 +92,7 @@ function awesomeComponent(value, toString, hooks) {
                 Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                       undefined,
                       /* :: */[
-                        /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
+                        Curry._3(str, undefined, undefined, "Folkx " + (Curry._1(toString, value) + (" " + state))),
                         /* [] */0
                       ],
                       undefined,
@@ -117,7 +119,7 @@ function awesomeComponent(value, toString, hooks) {
 
 function button(text, style, onClick, hooks) {
   return Curry._8(FluidDom.Fluid[/* Native */15][/* button */1], undefined, /* :: */[
-              /* String */Block.__(0, [text]),
+              Curry._3(str, undefined, undefined, text),
               /* [] */0
             ], undefined, undefined, undefined, (function (_evt) {
                 return Curry._1(onClick, /* () */0);
@@ -127,7 +129,7 @@ function button(text, style, onClick, hooks) {
 var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
       "awesome",
       /* :: */[
-        /* String */Block.__(0, ["Hello"]),
+        Curry._3(str, undefined, undefined, "Hello"),
         /* :: */[
           Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                 "here",
@@ -135,7 +137,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                   Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                         undefined,
                         /* :: */[
-                          /* String */Block.__(0, ["What"]),
+                          Curry._3(str, undefined, undefined, "What"),
                           /* [] */0
                         ],
                         undefined,
@@ -171,7 +173,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
 var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
       "awesome",
       /* :: */[
-        /* String */Block.__(0, ["Hello"]),
+        Curry._3(str, undefined, undefined, "Hello"),
         /* :: */[
           Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                 "here",
@@ -179,7 +181,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                   Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                         undefined,
                         /* :: */[
-                          /* String */Block.__(0, ["What"]),
+                          Curry._3(str, undefined, undefined, "What"),
                           /* [] */0
                         ],
                         undefined,
@@ -206,7 +208,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                                       return Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                                                   undefined,
                                                   /* :: */[
-                                                    /* String */Block.__(0, ["Click this to"]),
+                                                    Curry._3(str, undefined, undefined, "Click this to"),
                                                     /* :: */[
                                                       /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
                                                                   return button("Turn Off", "background-color: #88ff88", onClick, param);
@@ -230,7 +232,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                                                                 return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                               }))]),
                                                     /* :: */[
-                                                      /* String */Block.__(0, ["if you want"]),
+                                                      Curry._3(str, undefined, undefined, "if you want"),
                                                       /* [] */0
                                                     ]
                                                   ],
@@ -260,7 +262,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                   Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                         "Inner",
                         /* :: */[
-                          /* String */Block.__(0, ["world"]),
+                          Curry._3(str, undefined, undefined, "world"),
                           /* [] */0
                         ],
                         undefined,
@@ -296,13 +298,14 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          148,
+          150,
           12
         ]
       ];
 }
 
 exports.Style = Style;
+exports.str = str;
 exports.translate = translate;
 exports.fade = fade;
 exports.toggle = toggle;

@@ -8,8 +8,12 @@ var Caml_obj = require("bsb-native/lib/js/caml_obj.js");
 var Belt_List = require("bsb-native/lib/js/belt_List.js");
 
 function F(NativeInterface) {
-  var string = function (x) {
-    return /* String */Block.__(0, [x]);
+  var string = function (layout, font, x) {
+    return /* String */Block.__(0, [
+              x,
+              layout,
+              font
+            ]);
   };
   var makeComponent = function (identity, render) {
     return /* record */[
@@ -50,7 +54,7 @@ function F(NativeInterface) {
           ];
   };
   var Maker = /* module */[/* makeComponent */makeComponent];
-  var render = function (param) {
+  var runRender = function (param) {
     var component = param[0];
     var effects = /* record */[/* contents : [] */0];
     var hooks_000 = function (param) {
@@ -137,17 +141,20 @@ function F(NativeInterface) {
   var instantiateTree = function (el) {
     switch (el.tag | 0) {
       case 0 : 
+          var font = el[2];
+          var layout = el[1];
           var contents = el[0];
           return /* IString */Block.__(0, [
                     contents,
-                    Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
+                    Layout.createNodeWithMeasure(/* array */[], layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._2(NativeInterface[/* measureText */2], contents, font)),
+                    font
                   ]);
       case 1 : 
           var measure = el[3];
-          var layout = el[2];
+          var layout$1 = el[2];
           var ichildren = Belt_List.map(el[1], instantiateTree);
           var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
-          var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+          var style = layout$1 !== undefined ? layout$1 : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
           return /* IBuiltin */Block.__(1, [
                     el[0],
                     ichildren,
@@ -155,7 +162,7 @@ function F(NativeInterface) {
                   ]);
       case 2 : 
           var custom = Curry._1(el[0][/* init */0], /* () */0);
-          var match = render(custom);
+          var match = runRender(custom);
           return /* ICustom */Block.__(2, [
                     custom,
                     instantiateTree(match[0]),
@@ -174,12 +181,14 @@ function F(NativeInterface) {
   var inflateTree = function (el) {
     switch (el.tag | 0) {
       case 0 : 
+          var font = el[2];
           var layout = el[1];
           var contents = el[0];
           return /* MString */Block.__(0, [
                     contents,
-                    Curry._2(NativeInterface[/* createTextNode */3], contents, layout),
-                    layout
+                    Curry._3(NativeInterface[/* createTextNode */3], contents, layout, font),
+                    layout,
+                    font
                   ]);
       case 1 : 
           var layout$1 = el[2];
@@ -211,7 +220,7 @@ function F(NativeInterface) {
   var listenForChanges = function (component, container) {
     var contents = component[0];
     contents[/* onChange */5] = (function (param) {
-        var match = render(component);
+        var match = runRender(component);
         var newElement = match[0];
         var match$1 = contents[/* reconciler */4];
         var tmp;
@@ -230,20 +239,31 @@ function F(NativeInterface) {
     var exit = 0;
     switch (prev.tag | 0) {
       case 0 : 
-          var layout = prev[2];
+          var font = prev[3];
+          var layoutNode = prev[2];
           var node = prev[1];
+          var a = prev[0];
           switch (next.tag | 0) {
             case 0 : 
+                var bfont = next[2];
+                var blayout = next[1];
                 var b = next[0];
-                if (prev[0] === b) {
-                  return prev;
+                if (a === b && Caml_obj.caml_equal(font, bfont)) {
+                  layoutNode[/* style */1] = blayout !== undefined ? blayout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+                  return /* MString */Block.__(0, [
+                            a,
+                            node,
+                            layoutNode,
+                            font
+                          ]);
                 } else {
-                  Curry._2(NativeInterface[/* setTextContent */4], node, b);
-                  Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layout);
+                  Curry._3(NativeInterface[/* setTextContent */4], node, b, bfont);
+                  Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layoutNode);
                   return /* MString */Block.__(0, [
                             b,
                             node,
-                            layout
+                            layoutNode,
+                            bfont
                           ]);
                 }
             case 1 : 
@@ -281,17 +301,17 @@ function F(NativeInterface) {
           }
           break;
       case 2 : 
-          var a = prev[0];
+          var a$1 = prev[0];
           switch (next.tag | 0) {
             case 0 : 
             case 1 : 
                 exit = 1;
                 break;
             case 2 : 
-                var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
+                var match = Curry._1(next[0][/* clone */1], a$1[/* custom */0]);
                 if (typeof match === "number") {
                   if (match >= 925282182) {
-                    return /* MCustom */Block.__(2, [a]);
+                    return /* MCustom */Block.__(2, [a$1]);
                   } else {
                     var tree$1 = inflateTree(instantiateTree(next));
                     Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
@@ -299,12 +319,12 @@ function F(NativeInterface) {
                   }
                 } else {
                   var custom = match[1];
-                  var match$1 = render(custom);
-                  var tree$2 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
-                  a[/* custom */0] = custom;
-                  a[/* mountedTree */1] = tree$2;
+                  var match$1 = runRender(custom);
+                  var tree$2 = reconcileTrees(a$1[/* mountedTree */1], match$1[0]);
+                  a$1[/* custom */0] = custom;
+                  a$1[/* mountedTree */1] = tree$2;
                   Belt_List.forEach(match$1[1], runEffect);
-                  return /* MCustom */Block.__(2, [a]);
+                  return /* MCustom */Block.__(2, [a$1]);
                 }
             
           }
@@ -561,7 +581,7 @@ function F(NativeInterface) {
   return /* module */[
           /* string */string,
           /* Maker */Maker,
-          /* render */render,
+          /* runRender */runRender,
           /* getNativeNode */getNativeNode,
           /* getInstanceLayout */getInstanceLayout,
           /* getMountedLayout */getMountedLayout,

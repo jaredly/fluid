@@ -9,6 +9,8 @@ module Style = {
   [@bs.set] external opacity: (style, float) => unit = "";
 };
 
+let str = Fluid.string;
+
 let translate = (node, dx, offset) => {
   Animate.spring(
     ~dampingRatio=1.,
@@ -95,13 +97,13 @@ let awesomeComponent = (~value, ~toString, hooks) => {
   let%hook (state, setState) = Fluid.Hooks.useState("Awesome");
   <div>
     <div onclick={_evt => setState(state ++ "1")}>
-      {String("Folkx " ++ toString(value) ++ " " ++ state)}
+      {str("Folkx " ++ toString(value) ++ " " ++ state)}
     </div>
   </div>
 };
 
 let button = (~text, ~style, ~onClick, hooks) => {
-  <button style onclick={_evt => onClick()}>(String(text))</button>
+  <button style onclick={_evt => onClick()}>(str(text))</button>
 };
 
 [@bs.get] external target: Dom.event => Dom.eventTarget = "";
@@ -112,25 +114,25 @@ let button = (~text, ~style, ~onClick, hooks) => {
 [@bs.set] external textContent: (NativeInterface.nativeNode, string) => unit = "";
 
 let simple = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ())}>
-  {String("Hello")}
+  {str("Hello")}
   <div id="here" layout={Layout.style(~width=100., ~height=50., ())}>
-    <div>{String("What")}</div>
+    <div>{str("What")}</div>
   </div>
 </div>;
 
 let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ())}>
-  {String("Hello")}
+  {str("Hello")}
   <div id="here" layout={Layout.style(~width=100., ~height=50., ())}>
-    <div>{String("What")}</div>
+    <div>{str("What")}</div>
   </div>
   <Toggle
     on=(onClick => <div>
-      (String("Click this to"))
+      (str("Click this to"))
       <Button style="background-color: #88ff88" onClick text="Turn Off" />
     </div>)
     off=(onClick => <div>
       <Button style="background-color: #ffacf0" onClick text="Turn On" />
-      (String("if you want"))
+      (str("if you want"))
     </div>)
   />
   <AwesomeComponent value=5 toString=string_of_int />
@@ -138,7 +140,7 @@ let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ()
   <div
     id="Inner"
   >
-    {String("world")}
+    {str("world")}
   </div>
 </div>;
 

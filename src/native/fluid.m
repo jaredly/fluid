@@ -302,21 +302,51 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
   CAMLreturn0;
 }
 
-CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v) {
-  CAMLparam3(text_v, font_v, fontSize_v);
+CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, value maxWidth_v) {
+  CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);
+
+  NSSize textSize;
 
   NSString *textContent = [NSString stringWithUTF8String:String_val (text_v)];
   NSString *font = [NSString stringWithUTF8String:String_val (font_v)];
   double fontSize = Double_val(fontSize_v);
 
-  NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:[NSFont fontWithName:font size:fontSize], NSFontAttributeName, nil];
-  NSAttributedString *text = [[NSAttributedString alloc] initWithString:textContent attributes: attributes];
-  NSSize textSize = [text size];
+  NSFont *nsFont = [NSFont fontWithName:font size:fontSize];
+  if (nsFont == nil) {
+    result = caml_alloc_tuple(2);
+    printf("Invalid font %s\n", String_val (font_v));
+    Store_field (result, 0, caml_copy_double(0.f));
+    Store_field (result, 1, caml_copy_double(0.f));
+
+    CAMLreturn(result);
+  }
+
+  if (Is_block(maxWidth_v)) {
+    float maxWidth = Double_val(Field(maxWidth_v, 0));
+
+    NSTextStorage *textStorage = [[[NSTextStorage alloc]
+          initWithString:textContent] autorelease];
+    NSTextContainer *textContainer = [[[NSTextContainer alloc]
+          initWithContainerSize: NSMakeSize(maxWidth, FLT_MAX)] autorelease];
+    NSLayoutManager *layoutManager = [[[NSLayoutManager alloc] init]
+          autorelease];
+    [layoutManager addTextContainer:textContainer];
+    [textStorage addLayoutManager:layoutManager];
+    [textStorage addAttribute:NSFontAttributeName value:nsFont
+          range:NSMakeRange(0, [textStorage length])];
+    [textContainer setLineFragmentPadding:2.0];
+    (void) [layoutManager glyphRangeForTextContainer:textContainer];
+    textSize = [layoutManager usedRectForTextContainer:textContainer].size;
+  } else {
+    NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:nsFont, NSFontAttributeName, nil];
+    NSAttributedString *text = [[NSAttributedString alloc] initWithString:textContent attributes: attributes];
+    textSize = [text size];
+  }
 
   result = caml_alloc_tuple(2);
-  Store_field (result, 0, caml_copy_double(textSize.width));
-  Store_field (result, 1, caml_copy_double(textSize.height));
+  Store_field (result, 0, caml_copy_double(textSize.width + 5.0));
+  Store_field (result, 1, caml_copy_double(textSize.height + 5.0));
 
   CAMLreturn(result);
 }
@@ -367,11 +397,25 @@ CAMLprim value fluid_create_NSButton(value title_v, value onPress_v, value pos_v
   CAMLreturn((value) button);
 }
 
-CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size_v) {
-  CAMLparam3(contents_v, pos_v, size_v);
+CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size_v, value font_v) {
+  CAMLparam4(contents_v, pos_v, size_v, font_v);
 
   NSString *contents = [NSString stringWithUTF8String:String_val (contents_v)];
-  NSTextField* text = [NSTextField labelWithString:contents];
+  NSTextField* text;
+
+  NSString *fontName = [NSString stringWithUTF8String:String_val (Field(font_v, 0))];
+  double fontSize = Double_val(Field(font_v, 1));
+
+  NSFont *nsFont = [NSFont fontWithName:fontName size:fontSize];
+  if (nsFont != nil) {
+    NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
+    NSDictionary *attributes = @{ NSFontAttributeName : nsFont };
+    // [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
+    [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
+    text =  [NSTextField labelWithAttributedString:attrstr];
+  } else {
+    text =  [NSTextField labelWithString:contents];
+  }
 
   // NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
   // NSDictionary *attributes = @{
@@ -389,13 +433,17 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size
 
   printf("Create text view %s, %f,%f %f x %f\n", String_val(contents_v), left, top, width, height);
 
-  [text setFrameOrigin:NSMakePoint(left, top)];
-  [text setFrameSize:NSMakeSize(width, height)];
+  // [text setFrameOrigin:NSMakePoint(left, top)];
+  // [text setFrameSize:NSMakeSize(width, height)];
 
-  // NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(left, top, width, height)];
-  // [view addSubview:text];
+  // text.wantsLayer = true;
+  // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
 
-  CAMLreturn((value) text);
+  // CAMLreturn((value) text);
+
+  NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(left, top, width, height)];
+  [view addSubview:text];
+  CAMLreturn((value) view);
 }
 
 CAMLprim value fluid_update_NSView(value view_v, value onPress_v, value style_v) {
@@ -454,22 +502,28 @@ CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, v
   CAMLreturn((value) view);
 }
 
-void fluid_set_NSTextView_textContent(value text_v, value contents_v) {
-  CAMLparam2(text_v, contents_v);
+void fluid_set_NSTextView_textContent(value text_v, value contents_v, value font_v) {
+  CAMLparam3(text_v, contents_v, font_v);
   printf("set text contents\n");
 
-  NSTextField* text = (NSTextField*)text_v;
+  // NSTextField* text = (NSTextField*)text_v;
+  NSTextField* text = (NSTextField*)(((NSView*)text_v).subviews[0]);
   NSString *contents = [NSString stringWithUTF8String:String_val (contents_v)];
 
-  // NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
-  // NSDictionary *attributes = @{
-  //                             NSForegroundColorAttributeName : [NSColor blueColor],
-  //                             // NSFontAttributeName : [NSFont fontWithName:@"Helvetica" size:16.f]
-  //                             };
-  // [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
-  // text.attributedStringValue = attrstr;
+  NSString *fontName = [NSString stringWithUTF8String:String_val (Field(font_v, 0))];
+  double fontSize = Double_val(Field(font_v, 1));
 
-  text.stringValue = contents;
+  NSFont *nsFont = [NSFont fontWithName:fontName size:fontSize];
+  if (nsFont != nil) {
+    NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
+    NSDictionary *attributes = @{ NSFontAttributeName : nsFont };
+    [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
+    text.attributedStringValue = attrstr;
+  } else {
+    text.stringValue = contents;
+  }
+
+
 
   CAMLreturn0;
 }

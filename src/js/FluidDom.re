@@ -2,6 +2,7 @@ module NativeInterface = {
   type nativeProps;
 
   type nativeNode;
+  type font = {fontName: string, fontSize: float};
 
   [@bs.obj] external nativeProps: (
     ~id:string=?,
@@ -41,6 +42,8 @@ module NativeInterface = {
     let node = _createElement(typ);
     let snode = Obj.magic(node);
 
+    setDomProps(node, nativeProps);
+
     snode##style##position #= "absolute";
     snode##style##left #= (string_of_float(layout.layout.left) ++ "px");
     snode##style##top #= (string_of_float(layout.layout.top) ++ "px");
@@ -59,23 +62,51 @@ module NativeInterface = {
       layout.layout.height,
     |], node); */
 
-    setDomProps(node, nativeProps);
     node;
   };
 
-  let measureText = (text, _node, width, widthMode, height, heightMode) => {
+  let defaultFont = {fontName: "system-ui", fontSize: 16.};
+
+  let measureWithCanvas: (. string, font) => Layout.LayoutTypes.dimensions = [%bs.raw {|
+  function() {
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    document.body.appendChild(canvas);
+    return function (text, font) {
+      context.font = font[1] + 'px ' + font[0]
+      const dims = context.measureText(text);
+      console.log(dims)
+      return [dims.width, font[1] * 1.2]
+    }
+  }()
+  |}];
+
+  let measureText = (text, font, _node, width, widthMode, height, heightMode) => {
+    let font = switch font { | None => defaultFont | Some(f) => f };
+    measureWithCanvas(. text, font)
         /* | Undefined /* 'undefined' */
     | Exactly /* 'exactly' */
     | AtMost 'at-most' */
-    {
+    /* {
       Layout.LayoutTypes.width: float_of_int(String.length(text)) *. 15.,
       height: 16.,
-    }
+    } */
   };
 
   [@bs.scope "document"][@bs.val] external createTextNode: string => nativeNode = "";
-  let createTextNode = (text, layout) => createTextNode(text);
   [@bs.set] external setTextContent: (nativeNode, string) => unit = "textContent";
+  let setTextContent = (el, text, font) => {
+    let font = switch font { | None => defaultFont | Some(f) => f };
+    setTextContent(el, text);
+    let style = Obj.magic(el)##style;
+    style##fontFamily #= font.fontName;
+    style##fontSize #= (string_of_float(font.fontSize) ++ "px");
+  };
+  let createTextNode = (text, layout, font) => {
+    let el = createElement("span", Js.Obj.empty() |> Obj.magic, layout);
+    setTextContent(el, text, font);
+    el
+  };
   [@bs.get] external parentNode: nativeNode => nativeNode = "";
   [@bs.send] external appendChild: (nativeNode, nativeNode) => unit = "";
   [@bs.send] external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "";

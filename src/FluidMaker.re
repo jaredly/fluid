@@ -3,6 +3,8 @@ open Belt;
 module type NativeInterface = {
   type element;
   type nativeNode;
+  type font;
+
 
   /* If it returns true, then the elements were of the same type and the mounted node was updated.
   If false, they weren't of the same type and no update happened.
@@ -11,10 +13,10 @@ module type NativeInterface = {
 
   let inflate: (element, Layout.node) => nativeNode;
 
-  let measureText: string => Layout.measureType;
+  let measureText: (string, option(font)) => Layout.measureType;
 
-  let createTextNode: (string, Layout.node) => nativeNode;
-  let setTextContent: (nativeNode, string) => unit;
+  let createTextNode: (string, Layout.node, option(font)) => nativeNode;
+  let setTextContent: (nativeNode, string, option(font)) => unit;
   let appendChild: (nativeNode, nativeNode) => unit;
   /* let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit; */
   let removeChild: (nativeNode, nativeNode) => unit;
@@ -147,12 +149,12 @@ and reconcilerFunction('data) = ('data, 'data, mountedTree, element) => mountedT
 and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData)) : customWithState
 
 and element =
-| String(string)
+| String(string, option(Layout.style), option(NativeInterface.font))
 | Builtin(NativeInterface.element, list(element), option(Layout.style), option(Layout.measureType)): element
 | Custom(custom /* already contains its props & children */)
 
 and instanceTree =
-| IString(string, Layout.node)
+| IString(string, Layout.node, option(NativeInterface.font))
 | IBuiltin(NativeInterface.element, list(instanceTree), Layout.node)
 | ICustom(customWithState, instanceTree, list(effect))
 
@@ -162,13 +164,13 @@ and container = {
 }
 
 and mountedTree =
-| MString(string, NativeInterface.nativeNode, Layout.node)
+| MString(string, NativeInterface.nativeNode, Layout.node, option(NativeInterface.font))
 | MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node): mountedTree
 | MCustom(container)
 
 ;
 
-let string = x => String(x);
+let string = (~layout=?, ~font=?, x) => String(x, layout, font);
 
 module Maker = {
   let makeComponent = (identity: 'identity, render: hooksContainer('hooks, 'reconcile) => element) => {
@@ -203,7 +205,7 @@ module Maker = {
   };
 };
 
-let render = (WithState(component)) => {
+let runRender = (WithState(component)) => {
   let effects = ref([]);
   let hooks = {
     invalidate: () => {
@@ -223,7 +225,7 @@ let render = (WithState(component)) => {
 };
 
 let rec getNativeNode = tree => switch tree {
-  | MString(_, node, _)
+  | MString(_, node, _, _)
   | MBuiltin(_, node, _, _) => node
   | MCustom({mountedTree}) => getNativeNode(mountedTree)
 };
@@ -240,19 +242,28 @@ Phases of the algorithm:
  */
 
 let rec getInstanceLayout = element => switch element {
-  | IString(_, node) => node
-  | IBuiltin(_, _, node) => node
+  | IString(_, layout, _)
+  | IBuiltin(_, _, layout) => layout
   | ICustom(_, el, _) => getInstanceLayout(el)
 };
 
 let rec getMountedLayout = element => switch element {
-  | MString(_, _, node) => node
-  | MBuiltin(_, _, _, node) => node
+  | MString(_, _, layout, _)
+  | MBuiltin(_, _, _, layout) => layout
   | MCustom({mountedTree}) => getMountedLayout(mountedTree)
 };
 
 let rec instantiateTree: element => instanceTree = el => switch el {
-  | String(contents) => IString(contents, Layout.createNodeWithMeasure([||], Layout.style(), NativeInterface.measureText(contents)))
+  | String(contents, layout, font) => 
+  IString(
+    contents,
+    Layout.createNodeWithMeasure(
+      [||],
+      switch layout { | None => Layout.style() | Some(l) => l },
+      NativeInterface.measureText(contents, font),
+    ),
+    font
+  );
 
   | Builtin(nativeElement, children, layout, measure) =>
     let ichildren = children->List.map(instantiateTree);
@@ -269,7 +280,7 @@ let rec instantiateTree: element => instanceTree = el => switch el {
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
-    let (tree, effects) = custom->render;
+    let (tree, effects) = custom->runRender;
     ICustom(custom, instantiateTree(tree), effects)
 };
 
@@ -282,9 +293,9 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
 };
 
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
-  | IString(contents, layout) => 
+  | IString(contents, layout, font) => 
     /* TODO set layout properties here... or something */
-    MString(contents, NativeInterface.createTextNode(contents, layout), layout)
+    MString(contents, NativeInterface.createTextNode(contents, layout, font), layout, font)
 
   | IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);
@@ -302,7 +313,7 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
 
 and listenForChanges = (WithState(contents) as component, container) => {
   contents.onChange = () => {
-    let (newElement, effects) = component->render;
+    let (newElement, effects) = component->runRender;
     container.mountedTree = switch (contents.reconciler) {
       | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
       | _ => reconcileTrees(container.mountedTree, newElement)
@@ -312,13 +323,15 @@ and listenForChanges = (WithState(contents) as component, container) => {
 }
 
 and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
-  | (MString(a, node, layout), String(b)) =>
-    if (a == b) {
-      prev
+  | (MString(a, node, layoutNode, font), String(b, blayout, bfont)) =>
+    if (a == b && font == bfont) {
+      /* TODO mark a change if layout != blayout */
+      layoutNode.style = switch blayout { | None => Layout.style() | Some(l) => l };
+      MString(a, node, layoutNode, font)
     } else {
-      NativeInterface.setTextContent(node, b);
-      Layout.LayoutSupport.markDirty(layout);
-      MString(b, node, layout)
+      NativeInterface.setTextContent(node, b, bfont);
+      Layout.LayoutSupport.markDirty(layoutNode);
+      MString(b, node, layoutNode, bfont)
     }
   | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
     if (NativeInterface.maybeUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
@@ -339,7 +352,7 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
     switch (b.clone(a.custom)) {
       | `Same => MCustom(a)
       | `Compatible(custom) =>
-        let (newElement, effects) = custom->render;
+        let (newElement, effects) = custom->runRender;
         let tree = reconcileTrees(a.mountedTree, newElement);
         a.custom = custom;
         a.mountedTree = tree;
