@@ -18,8 +18,8 @@ module Fluid = {
     let makeComponent = (fn, render) => ()
   };
   module Native = {
-    let div = (~id=?, ()) => ();
-    let span = (~id=?, ()) => ();
+    let div = (~id=?, ~children=[], ()) => Builtin((), children, None);
+    let span = (~id=?, ~children=[], ()) => Builtin((), children, None);
   };
   type context('a) = {
     hooks: unit,

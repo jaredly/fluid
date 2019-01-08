@@ -78,40 +78,17 @@ let mapper = _argv =>
           let args = args |> List.map(((a, b)) => (a, mapper.expr(mapper, b)));
           switch (target.pexp_desc) {
             | Pexp_ident({txt: Longident.Lident(name), loc}) when isLowerCase(String.sub(name, 0, 1)) =>
-              let rec loop = args =>
-                switch (args) {
-                | [] => assert(false)
-                | [("children", arg), ...rest] => (arg, rest)
-                | [arg, ...rest] =>
-                  let (children, args) = loop(rest);
-                  (children, [arg, ...args]);
-                };
-              let (children, props) = loop(args);
+              let rec loop = args => switch args {
+                | [] => args
+                | [("children", {pexp_desc: Pexp_construct({txt: Lident("[]")}, None)}), ...rest] => rest
+                | [("children", arg), ...rest] => args
+                | [arg, ...rest] => [arg, ...loop(rest)];
+              };
+              let props = loop(args);
 
-              let rec loop = args =>
-                switch (args) {
-                | [] => (None, [])
-                | [("layout", arg), ...rest] => (Some(arg), rest)
-                | [arg, ...rest] =>
-                  let (layout, args) = loop(rest);
-                  (layout, [arg, ...args]);
-                };
-              let (layout, props) = loop(props);
-
-              Exp.construct(
-                Location.mkloc(Ldot(Lident("Fluid"), "Builtin"), loc),
-                Some(Exp.tuple([
-                  Exp.apply(
-                    Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Native"), name), loc)),
-                    props
-                  ),
-                  /* TODO auto-up strings */
-                  children,
-                  switch layout {
-                    | None => Exp.construct(Location.mkloc(Lident("None"), loc), None)
-                    | Some(prop) => Exp.construct(Location.mkloc(Lident("Some"), loc), Some(prop))
-                  }
-                ]))
+              Exp.apply(~loc,
+                Exp.ident(~loc, Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Native"), name), loc)),
+                props
               )
             | Pexp_ident({txt: Ldot(contents, "createElement"), loc}) =>
               let rec loop = args => switch args {

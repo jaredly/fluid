@@ -104,7 +104,8 @@ module Fluid = {
   include FluidMaker.F(NativeInterface);
 
   module Native = {
-    let div = (~id=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()): NativeInterface.element => {
+    let div = (~id=?, ~children=[], ~layout=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
+    Builtin({
       NativeInterface.tag: "div",
       props:
         NativeInterface.nativeProps(
@@ -116,9 +117,10 @@ module Fluid = {
           ~style?,
           (),
         ),
-    };
+    }, children, layout);
 
-    let button = (~id=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()): NativeInterface.element => {
+    let button = (~id=?, ~children, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
+    Builtin({
       NativeInterface.tag: "button",
       props:
         NativeInterface.nativeProps(
@@ -130,9 +132,10 @@ module Fluid = {
           ~style?,
           (),
         ),
-    };
+    }, children, None);
 
-    let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()): NativeInterface.element => {
+    let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()) => 
+    Builtin({
       NativeInterface.tag: "input",
       props:
         NativeInterface.nativeProps(
@@ -145,6 +148,6 @@ module Fluid = {
           ~style?,
           (),
         ),
-    };
+    }, [], None);
   }
 }

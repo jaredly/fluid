@@ -84,158 +84,208 @@ function awesomeComponent(value, toString, hooks) {
   var match$1 = match[0];
   var setState = match$1[1];
   var state = match$1[0];
-  return /* Builtin */Block.__(1, [
-            Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-            /* :: */[
-              /* Builtin */Block.__(1, [
-                  Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, (function (_evt) {
+  return Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+              undefined,
+              /* :: */[
+                Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                      undefined,
+                      /* :: */[
+                        /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
+                        /* [] */0
+                      ],
+                      undefined,
+                      undefined,
+                      undefined,
+                      undefined,
+                      (function (_evt) {
                           return Curry._1(setState, state + "1");
-                        }), undefined, /* () */0),
-                  /* :: */[
-                    /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
-                    /* [] */0
-                  ],
-                  undefined
-                ]),
-              /* [] */0
-            ],
-            undefined
-          ]);
+                        }),
+                      undefined,
+                      /* () */0
+                    ]),
+                /* [] */0
+              ],
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              /* () */0
+            ]);
 }
 
 function button(text, style, onClick, hooks) {
-  return /* Builtin */Block.__(1, [
-            Curry._7(FluidDom.Fluid[/* Native */15][/* button */1], undefined, undefined, undefined, undefined, (function (_evt) {
-                    return Curry._1(onClick, /* () */0);
-                  }), style, /* () */0),
-            /* :: */[
+  return Curry._8(FluidDom.Fluid[/* Native */15][/* button */1], undefined, /* :: */[
               /* String */Block.__(0, [text]),
               /* [] */0
-            ],
-            undefined
-          ]);
+            ], undefined, undefined, undefined, (function (_evt) {
+                return Curry._1(onClick, /* () */0);
+              }), style, /* () */0);
 }
 
-var simple_000 = Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "awesome", undefined, undefined, undefined, undefined, undefined, /* () */0);
-
-var simple_001 = /* :: */[
-  /* String */Block.__(0, ["Hello"]),
-  /* :: */[
-    /* Builtin */Block.__(1, [
-        Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
-        /* :: */[
-          /* Builtin */Block.__(1, [
-              Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-              /* :: */[
-                /* String */Block.__(0, ["What"]),
-                /* [] */0
-              ],
-              undefined
-            ]),
-          /* [] */0
-        ],
-        Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0)
-      ]),
-    /* [] */0
-  ]
-];
-
-var simple_002 = Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-
-var simple = /* Builtin */Block.__(1, [
-    simple_000,
-    simple_001,
-    simple_002
-  ]);
-
-var first_000 = Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "awesome", undefined, undefined, undefined, undefined, undefined, /* () */0);
-
-var first_001 = /* :: */[
-  /* String */Block.__(0, ["Hello"]),
-  /* :: */[
-    /* Builtin */Block.__(1, [
-        Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
-        /* :: */[
-          /* Builtin */Block.__(1, [
-              Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-              /* :: */[
-                /* String */Block.__(0, ["What"]),
-                /* [] */0
-              ],
-              undefined
-            ]),
-          /* [] */0
-        ],
-        Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0)
-      ]),
-    /* :: */[
-      /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], toggle, (function (param) {
-                  return toggle((function (onClick) {
-                                return /* Builtin */Block.__(1, [
-                                          Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                                          /* :: */[
-                                            /* String */Block.__(0, ["Click this to"]),
-                                            /* :: */[
-                                              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
-                                                          return button("Turn Off", "background-color: #88ff88", onClick, param);
-                                                        }))]),
-                                              /* [] */0
-                                            ]
-                                          ],
-                                          undefined
-                                        ]);
-                              }), (function (onClick) {
-                                return /* Builtin */Block.__(1, [
-                                          Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                                          /* :: */[
-                                            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
-                                                        return button("Turn On", "background-color: #ffacf0", onClick, param);
-                                                      }))]),
-                                            /* :: */[
-                                              /* String */Block.__(0, ["if you want"]),
-                                              /* [] */0
-                                            ]
-                                          ],
-                                          undefined
-                                        ]);
-                              }), param);
-                }))]),
+var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+      "awesome",
       /* :: */[
-        /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
-                    return awesomeComponent(5, (function (prim) {
-                                  return String(prim);
-                                }), param);
-                  }))]),
+        /* String */Block.__(0, ["Hello"]),
         /* :: */[
-          /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
-                      return awesomeComponent("Hi", (function (x) {
-                                    return x;
-                                  }), param);
-                    }))]),
-          /* :: */[
-            /* Builtin */Block.__(1, [
-                Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
+          Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                "here",
                 /* :: */[
-                  /* String */Block.__(0, ["world"]),
+                  Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                        undefined,
+                        /* :: */[
+                          /* String */Block.__(0, ["What"]),
+                          /* [] */0
+                        ],
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        /* () */0
+                      ]),
                   /* [] */0
                 ],
-                undefined
+                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                /* () */0
               ]),
-            /* [] */0
+          /* [] */0
+        ]
+      ],
+      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      /* () */0
+    ]);
+
+var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+      "awesome",
+      /* :: */[
+        /* String */Block.__(0, ["Hello"]),
+        /* :: */[
+          Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                "here",
+                /* :: */[
+                  Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                        undefined,
+                        /* :: */[
+                          /* String */Block.__(0, ["What"]),
+                          /* [] */0
+                        ],
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        /* () */0
+                      ]),
+                  /* [] */0
+                ],
+                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                /* () */0
+              ]),
+          /* :: */[
+            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], toggle, (function (param) {
+                        return toggle((function (onClick) {
+                                      return Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                                                  undefined,
+                                                  /* :: */[
+                                                    /* String */Block.__(0, ["Click this to"]),
+                                                    /* :: */[
+                                                      /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
+                                                                  return button("Turn Off", "background-color: #88ff88", onClick, param);
+                                                                }))]),
+                                                      /* [] */0
+                                                    ]
+                                                  ],
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  /* () */0
+                                                ]);
+                                    }), (function (onClick) {
+                                      return Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                                                  undefined,
+                                                  /* :: */[
+                                                    /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
+                                                                return button("Turn On", "background-color: #ffacf0", onClick, param);
+                                                              }))]),
+                                                    /* :: */[
+                                                      /* String */Block.__(0, ["if you want"]),
+                                                      /* [] */0
+                                                    ]
+                                                  ],
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  undefined,
+                                                  /* () */0
+                                                ]);
+                                    }), param);
+                      }))]),
+            /* :: */[
+              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
+                          return awesomeComponent(5, (function (prim) {
+                                        return String(prim);
+                                      }), param);
+                        }))]),
+              /* :: */[
+                /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
+                            return awesomeComponent("Hi", (function (x) {
+                                          return x;
+                                        }), param);
+                          }))]),
+                /* :: */[
+                  Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
+                        "Inner",
+                        /* :: */[
+                          /* String */Block.__(0, ["world"]),
+                          /* [] */0
+                        ],
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        /* () */0
+                      ]),
+                  /* [] */0
+                ]
+              ]
+            ]
           ]
         ]
-      ]
-    ]
-  ]
-];
-
-var first_002 = Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-
-var first = /* Builtin */Block.__(1, [
-    first_000,
-    first_001,
-    first_002
-  ]);
+      ],
+      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      /* () */0
+    ]);
 
 var match = document.getElementById("root");
 
