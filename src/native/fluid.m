@@ -425,25 +425,25 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size
   // [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
   // text.attributedStringValue = attrstr;
 
-  float top = Double_val(Field(pos_v, 0));
+  float top = Double_val(Field(pos_v, 0)) + 5.0;
   float left = Double_val(Field(pos_v, 1));
   float width = Double_val(Field(size_v, 0));
   float height = Double_val(Field(size_v, 1));
 
 
-  printf("Create text view %s, %f,%f %f x %f\n", String_val(contents_v), left, top, width, height);
+  // printf("Create text view %s, %f,%f %f x %f\n", String_val(contents_v), left, top, width, height);
 
-  // [text setFrameOrigin:NSMakePoint(left, top)];
-  // [text setFrameSize:NSMakeSize(width, height)];
+  [text setFrameOrigin:NSMakePoint(left, top)];
+  [text setFrameSize:NSMakeSize(width, height)];
 
   // text.wantsLayer = true;
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
 
-  // CAMLreturn((value) text);
+  CAMLreturn((value) text);
 
-  NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(left, top, width, height)];
-  [view addSubview:text];
-  CAMLreturn((value) view);
+  // NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(left, top, width, height)];
+  // [view addSubview:text];
+  // CAMLreturn((value) view);
 }
 
 CAMLprim value fluid_update_NSView(value view_v, value onPress_v, value style_v) {
@@ -506,8 +506,8 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value font
   CAMLparam3(text_v, contents_v, font_v);
   printf("set text contents\n");
 
-  // NSTextField* text = (NSTextField*)text_v;
-  NSTextField* text = (NSTextField*)(((NSView*)text_v).subviews[0]);
+  NSTextField* text = (NSTextField*)text_v;
+  // NSTextField* text = (NSTextField*)(((NSView*)text_v).subviews[0]);
   NSString *contents = [NSString stringWithUTF8String:String_val (contents_v)];
 
   NSString *fontName = [NSString stringWithUTF8String:String_val (Field(font_v, 0))];

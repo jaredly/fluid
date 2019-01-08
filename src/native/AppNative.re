@@ -41,7 +41,7 @@ let first = hooks => {
     <view>
       <ColorSwitcher />
       <view
-        layout={Layout.style(~width=40., ~height=40., ())}
+        layout={Layout.style(~width=40., ~height=40., ~alignSelf=AlignCenter, ())}
         backgroundColor={r: 1., g: 0., b: 0., a: 1.}
       />
       {str("These are a few of my best things")}

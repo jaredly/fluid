@@ -28,6 +28,7 @@
     "module": "commonjs",
     "in-source": true
   },
+  "suffix": ".bs.js",
   "c-linker-flags": ["-framework", "Cocoa"],
   "static-libraries": ["lib/fluid.o"],
   "refmt": 3,

@@ -4,7 +4,7 @@
     "build": "bsb -make-world",
     "clean": "bsb -clean-world",
     "native": "bsb -make-world -backend native",
-    "pack": "fpack watch --development ./src/js/App.js"
+    "pack": "fpack watch --development ./src/js/App.bs.js"
   },
   "dependencies": {
     "bsb-native": "^4.0.7000",
