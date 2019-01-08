@@ -177,6 +177,8 @@ and context('initial, 'reconcile) = {
 
 ;
 
+let string = x => String(x);
+
 module Maker = {
   let makeComponent = (identity: 'identity, render: context('hooks, 'reconcile) => element) => {
     {

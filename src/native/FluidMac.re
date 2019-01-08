@@ -1,6 +1,8 @@
 
 module M = Flex.Layout;
 
+type color = {r: float, g: float, b: float, a: float};
+
 module NativeInterface = {
   type nativeNode;
 
@@ -14,10 +16,13 @@ module NativeInterface = {
 
   external replaceWith: (nativeNode, nativeNode) => unit = "fluid_NSView_replaceWith";
 
+  type viewStyles = {backgroundColor: option(color)};
+
   external createView: (
     ~onPress: option(unit => unit),
     ~pos: (float, float),
-    ~size: (float, float)
+    ~size: (float, float),
+    ~style: viewStyles,
   ) => nativeNode = "fluid_create_NSView";
   external createButton: (
     ~title: string,
@@ -26,7 +31,10 @@ module NativeInterface = {
     ~size: (float, float)
   ) => nativeNode = "fluid_create_NSButton";
 
-  external startApp: (~title: string, nativeNode => unit) => unit = "fluid_startApp";
+  external updateButton: (nativeNode, string, (unit => unit)) => unit = "fluid_update_NSButton";
+  external updateView: (nativeNode, option(unit => unit), viewStyles) => unit = "fluid_update_NSView";
+
+  external startApp: (~title: string, ~size: (float, float), nativeNode => unit) => unit = "fluid_startApp";
 
   external measureText: (~text: string, ~font: string, ~fontSize: float) => (float, float) = "fluid_measureText";
 
@@ -36,20 +44,34 @@ module NativeInterface = {
   };
 
   type element =
-    | View(option(unit => unit))
+    | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit);
 
   let maybeUpdate = (~mounted, ~mountPoint, ~newElement) => {
-    false
+    switch (mounted, newElement) {
+      | (View(aPress, aStyle), View(onPress, style)) => 
+        if (aPress != onPress || aStyle != style) {
+          updateView(mountPoint, onPress, style)
+        };
+        true
+
+      | (Button(atitle, apress), Button(btitle, bpress)) =>
+        if (atitle != btitle || apress !== bpress) {
+          updateButton(mountPoint, btitle, bpress)
+        };
+        true
+
+      | _ => false
+    }
   };
 
   let createTextNode = (text, {Layout.LayoutTypes.layout: {top, left, width, height}}) =>
     createTextNode(text, ~pos=(top, left), ~size=(width, height));
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
-    | View(onPress) => 
+    | View(onPress, style) => 
     Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
-    createView(~onPress, ~pos=(top, left), ~size=(width, height))
+    createView(~onPress, ~pos=(top, left), ~size=(width, height), ~style)
     | Button(title, onPress) =>
     createButton(~title, ~onPress, ~pos=(top, left), ~size=(width, height))
   }
@@ -61,9 +83,20 @@ module Fluid = {
   include FluidMaker.F(NativeInterface);
 
   module Native = {
-    let view = (~onPress=?, ()): NativeInterface.element => View(onPress);
+    let view = (~onPress=?, ~backgroundColor=?, ()): NativeInterface.element => View(onPress, {backgroundColor: backgroundColor});
 
     let button = (~onPress, ~title, ()): NativeInterface.element => Button(title, onPress);
 
   }
+
+  let launchWindow = (~title: string, ~root: element) => {
+    let instances = instantiateTree(root);
+    let instanceLayout = getInstanceLayout(instances);
+    Layout.layout(instanceLayout);
+    let tree = inflateTree(instances);
+    let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
+    NativeInterface.startApp(~title, ~size=(width, height), node => {
+      node->NativeInterface.appendChild(getNativeNode(tree))
+    });
+  };
 }

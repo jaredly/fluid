@@ -1,13 +1,50 @@
 open FluidMac;
 
-print_endline("Hello folks");
+let str = Fluid.string;
+
+open Fluid.Hooks;
+
+let red = {r: 1., g: 0., b: 0., a: 1.};
+let green = {r: 0., g: 1., b: 0., a: 1.};
+let blue = {r: 0., g: 0., b: 1., a: 1.};
+
+let nextColor = color =>
+  if (color == red) {
+    green;
+  } else if (color == green) {
+    blue;
+  } else {
+    red;
+  };
+
+
+let colorSwitcher = ctx => {
+  let%hook (color, setColor) = useState(red);
+  <view>
+    <view
+      backgroundColor=color
+      layout={Layout.style(~width=100., ~height=30., ())}
+    />
+    <button onPress={() => setColor(nextColor(color))} title="Toggle" />
+    <view layout={Layout.style(~height=25., ())} />
+  </view>;
+};
 
 let first = ctx => {
-  open Fluid.Hooks;
   let%hook (times, setTimes) = useState(0);
 
-  <view layout={Layout.style(~marginHorizontal=50., ~height=100., ())}>
-    {Fluid.String("Hello world " ++ string_of_int(times))}
+  <view layout={Layout.style(~marginHorizontal=10., ())}>
+    {str("More world")}
+    <view>
+      <ColorSwitcher />
+      <view
+        layout={Layout.style(~width=40., ~height=40., ())}
+        backgroundColor={r: 1., g: 0., b: 0., a: 1.}
+      />
+      {str("These are a few of my best things")}
+      {str("Better now")}
+    </view>
+    {str("Hello world " ++ string_of_int(times))}
     <button
       onPress={
         () => {
@@ -17,19 +54,8 @@ let first = ctx => {
       }
       title="Hello to you too"
     />
-    {Fluid.String("More world")}
-    <view>
-    <view layout={Layout.style(~width=40., ~height=40., ())} />
-    {Fluid.String("These are a few of my best things")}
-    {Fluid.String("Better now")}
-    </view>
+    <view layout={Layout.style(~height=30., ())} />
   </view>;
 };
 
-FluidMac.NativeInterface.startApp(~title="Hello Fluid", node =>  {
-
-  Fluid.mount(<First />, node);
-  print_endline("Done");
-}
-);
-
+Fluid.launchWindow(~title="Hello Fluid", ~root=<First />);
