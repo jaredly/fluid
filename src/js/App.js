@@ -36,10 +36,10 @@ function fade(node, out) {
 }
 
 function toggle(on, off, ctx) {
-  var match = Curry._3(FluidDom.Fluid[/* Hooks */13][/* useState */2], false, ctx[/* hooks */0], (function (param, __hooks) {
+  var match = Curry._3(FluidDom.Fluid[/* Hooks */14][/* useState */2], false, ctx[/* hooks */0], (function (param, __hooks) {
           var setOn = param[1];
           var isOn = param[0];
-          return Curry._4(FluidDom.Fluid[/* Hooks */13][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
+          return Curry._4(FluidDom.Fluid[/* Hooks */14][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
                         console.log("reconciling I guess", oldState, newState);
                         var exit = 0;
                         if (oldState) {
@@ -54,9 +54,9 @@ function toggle(on, off, ctx) {
                           return mountedTree;
                         }
                         if (exit === 1) {
-                          var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */3], mountedTree);
-                          var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */8], Curry._1(FluidDom.Fluid[/* instantiateTree */6], newTree));
-                          var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */3], newTree$1);
+                          var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], mountedTree);
+                          var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */9], Curry._1(FluidDom.Fluid[/* instantiateTree */7], newTree));
+                          var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], newTree$1);
                           translate(nativeNode, newState ? -30 : 30, 0);
                           fade(nativeNode, true);
                           translate(newNativeNode, newState ? -30 : 30, newState ? 30 : -30);
@@ -81,15 +81,15 @@ function toggle(on, off, ctx) {
 }
 
 function awesomeComponent(value, toString, ctx) {
-  var match = Curry._3(FluidDom.Fluid[/* Hooks */13][/* useState */2], "Awesome", ctx[/* hooks */0], (function (param, __hooks) {
+  var match = Curry._3(FluidDom.Fluid[/* Hooks */14][/* useState */2], "Awesome", ctx[/* hooks */0], (function (param, __hooks) {
           var setState = param[1];
           var state = param[0];
           return /* tuple */[
                   /* Builtin */Block.__(1, [
-                      Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                      Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                       /* :: */[
                         /* Builtin */Block.__(1, [
-                            Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], undefined, undefined, undefined, undefined, (function (_evt) {
+                            Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, (function (_evt) {
                                     return Curry._1(setState, state + "1");
                                   }), undefined, /* () */0),
                             /* :: */[
@@ -111,7 +111,7 @@ function awesomeComponent(value, toString, ctx) {
 
 function button(text, style, onClick, ctx) {
   return /* Builtin */Block.__(1, [
-            Curry._7(FluidDom.Fluid[/* Native */14][/* button */1], undefined, undefined, undefined, undefined, (function (_evt) {
+            Curry._7(FluidDom.Fluid[/* Native */15][/* button */1], undefined, undefined, undefined, undefined, (function (_evt) {
                     return Curry._1(onClick, /* () */0);
                   }), style, /* () */0),
             /* :: */[
@@ -122,16 +122,16 @@ function button(text, style, onClick, ctx) {
           ]);
 }
 
-var simple_000 = Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], "awesome", undefined, undefined, undefined, undefined, undefined, /* () */0);
+var simple_000 = Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "awesome", undefined, undefined, undefined, undefined, undefined, /* () */0);
 
 var simple_001 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
     /* Builtin */Block.__(1, [
-        Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
+        Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
         /* :: */[
           /* Builtin */Block.__(1, [
-              Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+              Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
               /* :: */[
                 /* String */Block.__(0, ["What"]),
                 /* [] */0
@@ -154,16 +154,16 @@ var simple = /* Builtin */Block.__(1, [
     simple_002
   ]);
 
-var first_000 = Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], "awesome", undefined, undefined, undefined, undefined, undefined, /* () */0);
+var first_000 = Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "awesome", undefined, undefined, undefined, undefined, undefined, /* () */0);
 
 var first_001 = /* :: */[
   /* String */Block.__(0, ["Hello"]),
   /* :: */[
     /* Builtin */Block.__(1, [
-        Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
+        Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "here", undefined, undefined, undefined, undefined, undefined, /* () */0),
         /* :: */[
           /* Builtin */Block.__(1, [
-              Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+              Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
               /* :: */[
                 /* String */Block.__(0, ["What"]),
                 /* [] */0
@@ -175,14 +175,14 @@ var first_001 = /* :: */[
         Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0)
       ]),
     /* :: */[
-      /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], toggle, (function (param) {
+      /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], toggle, (function (param) {
                   return toggle((function (onClick) {
                                 return /* Builtin */Block.__(1, [
-                                          Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                          Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                           /* :: */[
                                             /* String */Block.__(0, ["Click this to"]),
                                             /* :: */[
-                                              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
+                                              /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
                                                           return button("Turn Off", "background-color: #88ff88", onClick, param);
                                                         }))]),
                                               /* [] */0
@@ -192,9 +192,9 @@ var first_001 = /* :: */[
                                         ]);
                               }), (function (onClick) {
                                 return /* Builtin */Block.__(1, [
-                                          Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                          Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                           /* :: */[
-                                            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], button, (function (param) {
+                                            /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
                                                         return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                       }))]),
                                             /* :: */[
@@ -207,20 +207,20 @@ var first_001 = /* :: */[
                               }), param);
                 }))]),
       /* :: */[
-        /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], awesomeComponent, (function (param) {
+        /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
                     return awesomeComponent(5, (function (prim) {
                                   return String(prim);
                                 }), param);
                   }))]),
         /* :: */[
-          /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */1][/* makeComponent */0], awesomeComponent, (function (param) {
+          /* Custom */Block.__(2, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
                       return awesomeComponent("Hi", (function (x) {
                                     return x;
                                   }), param);
                     }))]),
           /* :: */[
             /* Builtin */Block.__(1, [
-                Curry._7(FluidDom.Fluid[/* Native */14][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], "Inner", undefined, undefined, undefined, undefined, undefined, /* () */0),
                 /* :: */[
                   /* String */Block.__(0, ["world"]),
                   /* [] */0
@@ -246,7 +246,7 @@ var first = /* Builtin */Block.__(1, [
 var match = document.getElementById("root");
 
 if (match !== undefined) {
-  Curry._2(FluidDom.Fluid[/* mount */12], first, Js_primitive.valFromOption(match));
+  Curry._2(FluidDom.Fluid[/* mount */13], first, Js_primitive.valFromOption(match));
 } else {
   throw [
         Caml_builtin_exceptions.assert_failure,

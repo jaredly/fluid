@@ -6,8 +6,12 @@ var Curry = require("bsb-native/lib/js/curry.js");
 var Layout = require("./Layout.js");
 var Caml_obj = require("bsb-native/lib/js/caml_obj.js");
 var Belt_List = require("bsb-native/lib/js/belt_List.js");
+var Caml_builtin_exceptions = require("bsb-native/lib/js/caml_builtin_exceptions.js");
 
 function F(NativeInterface) {
+  var string = function (x) {
+    return /* String */Block.__(0, [x]);
+  };
   var makeComponent = function (identity, render) {
     return /* record */[
             /* init */(function (param) {
@@ -136,30 +140,41 @@ function F(NativeInterface) {
     };
   };
   var instantiateTree = function (el) {
-    switch (el.tag | 0) {
-      case 0 : 
-          var contents = el[0];
-          return /* IString */Block.__(0, [
-                    contents,
-                    Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
-                  ]);
-      case 1 : 
-          var layout = el[2];
-          var ichildren = Belt_List.map(el[1], instantiateTree);
-          return /* IBuiltin */Block.__(1, [
-                    el[0],
-                    ichildren,
-                    Layout.createNode(Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout)), layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
-                  ]);
-      case 2 : 
-          var custom = Curry._1(el[0][/* init */0], /* () */0);
-          var match = render(custom);
-          return /* ICustom */Block.__(2, [
-                    custom,
-                    instantiateTree(match[0]),
-                    match[1]
-                  ]);
-      
+    if (typeof el === "number") {
+      throw [
+            Caml_builtin_exceptions.match_failure,
+            /* tuple */[
+              "FluidMaker.re",
+              267,
+              57
+            ]
+          ];
+    } else {
+      switch (el.tag | 0) {
+        case 0 : 
+            var contents = el[0];
+            return /* IString */Block.__(0, [
+                      contents,
+                      Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
+                    ]);
+        case 1 : 
+            var layout = el[2];
+            var ichildren = Belt_List.map(el[1], instantiateTree);
+            return /* IBuiltin */Block.__(1, [
+                      el[0],
+                      ichildren,
+                      Layout.createNode(Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout)), layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
+                    ]);
+        case 2 : 
+            var custom = Curry._1(el[0][/* init */0], /* () */0);
+            var match = render(custom);
+            return /* ICustom */Block.__(2, [
+                      custom,
+                      instantiateTree(match[0]),
+                      match[1]
+                    ]);
+        
+      }
     }
   };
   var runEffect = function (param) {
@@ -228,83 +243,71 @@ function F(NativeInterface) {
     var exit = 0;
     switch (prev.tag | 0) {
       case 0 : 
-          var layout = prev[2];
-          var node = prev[1];
-          switch (next.tag | 0) {
-            case 0 : 
-                var b = next[0];
-                if (prev[0] === b) {
-                  return prev;
-                } else {
-                  Curry._2(NativeInterface[/* setTextContent */4], node, b);
-                  Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layout);
-                  return /* MString */Block.__(0, [
-                            b,
-                            node,
-                            layout
-                          ]);
-                }
-            case 1 : 
-            case 2 : 
-                exit = 1;
-                break;
-            
+          if (typeof next === "number" || next.tag) {
+            exit = 1;
+          } else {
+            var b = next[0];
+            if (prev[0] === b) {
+              return prev;
+            } else {
+              var layout = prev[2];
+              var node = prev[1];
+              Curry._2(NativeInterface[/* setTextContent */4], node, b);
+              Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layout);
+              return /* MString */Block.__(0, [
+                        b,
+                        node,
+                        layout
+                      ]);
+            }
           }
           break;
       case 1 : 
-          var aLayout = prev[3];
-          var node$1 = prev[1];
-          switch (next.tag | 0) {
-            case 1 : 
-                var bLayoutStyle = next[2];
-                var bElement = next[0];
-                if (Curry._3(NativeInterface[/* maybeUpdate */0], prev[0], node$1, bElement)) {
-                  aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-                  return /* MBuiltin */Block.__(1, [
-                            bElement,
-                            node$1,
-                            reconcileChildren(node$1, prev[2], next[1]),
-                            aLayout
-                          ]);
-                } else {
-                  var tree = inflateTree(instantiateTree(next));
-                  Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
-                  return tree;
-                }
-            case 0 : 
-            case 2 : 
-                exit = 1;
-                break;
-            
+          if (typeof next === "number" || next.tag !== 1) {
+            exit = 1;
+          } else {
+            var bLayoutStyle = next[2];
+            var bElement = next[0];
+            var aLayout = prev[3];
+            var node$1 = prev[1];
+            if (Curry._3(NativeInterface[/* maybeUpdate */0], prev[0], node$1, bElement)) {
+              aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+              return /* MBuiltin */Block.__(1, [
+                        bElement,
+                        node$1,
+                        reconcileChildren(node$1, prev[2], next[1]),
+                        aLayout
+                      ]);
+            } else {
+              var tree = inflateTree(instantiateTree(next));
+              Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
+              return tree;
+            }
           }
           break;
       case 2 : 
-          var a = prev[0];
-          switch (next.tag | 0) {
-            case 0 : 
-            case 1 : 
-                exit = 1;
-                break;
-            case 2 : 
-                var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
-                if (typeof match === "number") {
-                  if (match >= 925282182) {
-                    return /* MCustom */Block.__(2, [a]);
-                  } else {
-                    var tree$1 = inflateTree(instantiateTree(next));
-                    Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
-                    return tree$1;
-                  }
-                } else {
-                  var custom = match[1];
-                  var match$1 = render(custom);
-                  var tree$2 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
-                  a[/* custom */0] = custom;
-                  a[/* mountedTree */1] = tree$2;
-                  Belt_List.forEach(match$1[1], runEffect);
-                  return /* MCustom */Block.__(2, [a]);
-                }
-            
+          if (typeof next === "number" || next.tag !== 2) {
+            exit = 1;
+          } else {
+            var a = prev[0];
+            var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
+            if (typeof match === "number") {
+              if (match >= 925282182) {
+                return /* MCustom */Block.__(2, [a]);
+              } else {
+                var tree$1 = inflateTree(instantiateTree(next));
+                Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
+                return tree$1;
+              }
+            } else {
+              var custom = match[1];
+              var match$1 = render(custom);
+              var tree$2 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
+              a[/* custom */0] = custom;
+              a[/* mountedTree */1] = tree$2;
+              Belt_List.forEach(match$1[1], runEffect);
+              return /* MCustom */Block.__(2, [a]);
+            }
           }
           break;
       
@@ -615,6 +618,7 @@ function F(NativeInterface) {
     /* useCallback */useCallback
   ];
   return /* module */[
+          /* string */string,
           /* Maker */Maker,
           /* render */render,
           /* getNativeNode */getNativeNode,

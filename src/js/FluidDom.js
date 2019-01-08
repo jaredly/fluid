@@ -187,31 +187,33 @@ var Native = /* module */[
   /* input */input
 ];
 
-var Fluid_001 = /* Maker */include[0];
+var Fluid_001 = /* string */include[0];
 
-var Fluid_002 = /* render */include[1];
+var Fluid_002 = /* Maker */include[1];
 
-var Fluid_003 = /* getNativeNode */include[2];
+var Fluid_003 = /* render */include[2];
 
-var Fluid_004 = /* getInstanceLayout */include[3];
+var Fluid_004 = /* getNativeNode */include[3];
 
-var Fluid_005 = /* getMountedLayout */include[4];
+var Fluid_005 = /* getInstanceLayout */include[4];
 
-var Fluid_006 = /* instantiateTree */include[5];
+var Fluid_006 = /* getMountedLayout */include[5];
 
-var Fluid_007 = /* runEffect */include[6];
+var Fluid_007 = /* instantiateTree */include[6];
 
-var Fluid_008 = /* inflateTree */include[7];
+var Fluid_008 = /* runEffect */include[7];
 
-var Fluid_009 = /* listenForChanges */include[8];
+var Fluid_009 = /* inflateTree */include[8];
 
-var Fluid_010 = /* reconcileTrees */include[9];
+var Fluid_010 = /* listenForChanges */include[9];
 
-var Fluid_011 = /* reconcileChildren */include[10];
+var Fluid_011 = /* reconcileTrees */include[10];
 
-var Fluid_012 = /* mount */include[11];
+var Fluid_012 = /* reconcileChildren */include[11];
 
-var Fluid_013 = /* Hooks */include[12];
+var Fluid_013 = /* mount */include[12];
+
+var Fluid_014 = /* Hooks */include[13];
 
 var Fluid = /* module */[
   /* NativeInterface */0,
@@ -228,6 +230,7 @@ var Fluid = /* module */[
   Fluid_011,
   Fluid_012,
   Fluid_013,
+  Fluid_014,
   /* Native */Native
 ];
 

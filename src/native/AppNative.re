@@ -26,7 +26,7 @@ let colorSwitcher = ctx => {
       layout={Layout.style(~width=100., ~height=30., ())}
     />
     <button onPress={() => setColor(nextColor(color))} title="Toggle" />
-    <view layout={Layout.style(~height=25., ())} />
+    <view layout={Layout.style(~height=30., ())} />
   </view>;
 };
 
