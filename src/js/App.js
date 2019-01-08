@@ -36,7 +36,7 @@ function fade(node, out) {
 }
 
 function toggle(on, off, hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */14][/* useState */1], false, hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */14][/* useState */2], false, hooks);
   var match$1 = match[0];
   var setOn = match$1[1];
   var isOn = match$1[0];
@@ -80,7 +80,7 @@ function toggle(on, off, hooks) {
 }
 
 function awesomeComponent(value, toString, hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */14][/* useState */1], "Awesome", hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */14][/* useState */2], "Awesome", hooks);
   var match$1 = match[0];
   var setState = match$1[1];
   var state = match$1[0];

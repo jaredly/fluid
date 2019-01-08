@@ -349,43 +349,61 @@ function F(NativeInterface) {
   };
   var useReconciler = function (data, fn, hooks) {
     var match = hooks[/* current */3][0];
-    var hooks$1;
+    var next;
     if (match !== undefined) {
       var match$1 = match;
       Curry._3(hooks[/* setReconciler */1], match$1[0], data, fn);
-      hooks$1 = /* record */[
-        /* invalidate */hooks[/* invalidate */0],
-        /* setReconciler */hooks[/* setReconciler */1],
-        /* triggerEffect */hooks[/* triggerEffect */2],
-        /* current */match$1[1]
-      ];
+      next = match$1[1];
     } else {
-      var next = /* record */[/* contents */undefined];
-      hooks[/* current */3][0] = /* tuple */[
-        data,
-        next
-      ];
-      hooks$1 = /* record */[
-        /* invalidate */hooks[/* invalidate */0],
-        /* setReconciler */hooks[/* setReconciler */1],
-        /* triggerEffect */hooks[/* triggerEffect */2],
-        /* current */next
-      ];
+      next = /* record */[/* contents */undefined];
     }
+    hooks[/* current */3][0] = /* tuple */[
+      data,
+      next
+    ];
     return /* tuple */[
             /* () */0,
-            hooks$1
+            hooks
           ];
+  };
+  var useRef = function (initial, hooks) {
+    var match = hooks[/* current */3][0];
+    if (match !== undefined) {
+      var match$1 = match;
+      return /* tuple */[
+              match$1[0],
+              /* record */[
+                /* invalidate */hooks[/* invalidate */0],
+                /* setReconciler */hooks[/* setReconciler */1],
+                /* triggerEffect */hooks[/* triggerEffect */2],
+                /* current */match$1[1]
+              ]
+            ];
+    } else {
+      var r = /* record */[/* contents */initial];
+      var next = /* record */[/* contents */undefined];
+      hooks[/* current */3][0] = /* tuple */[
+        r,
+        next
+      ];
+      return /* tuple */[
+              r,
+              /* record */[
+                /* invalidate */hooks[/* invalidate */0],
+                /* setReconciler */hooks[/* setReconciler */1],
+                /* triggerEffect */hooks[/* triggerEffect */2],
+                /* current */next
+              ]
+            ];
+    }
   };
   var useState = function (initial, hooks) {
     var match = hooks[/* current */3][0];
     var match$1;
     if (match !== undefined) {
       var match$2 = match;
-      var state = match$2[0];
-      console.log("HAve", state);
       match$1 = /* tuple */[
-        state,
+        match$2[0],
         match$2[1]
       ];
     } else {
@@ -394,7 +412,6 @@ function F(NativeInterface) {
         initial,
         next
       ];
-      console.log("INiting", initial);
       match$1 = /* tuple */[
         initial,
         next
@@ -409,7 +426,6 @@ function F(NativeInterface) {
                     v,
                     next$1
                   ];
-                  console.log("New", v, hooks[/* current */3]);
                   return Curry._1(hooks[/* invalidate */0], /* () */0);
                 })
             ],
@@ -531,6 +547,7 @@ function F(NativeInterface) {
   };
   var Hooks = /* module */[
     /* useReconciler */useReconciler,
+    /* useRef */useRef,
     /* useState */useState,
     /* useReducer */useReducer,
     /* newEffect */newEffect,

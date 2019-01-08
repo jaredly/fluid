@@ -392,28 +392,26 @@ lifecycle methods or something
     } */
 
     let useReconciler = (data, fn, hooks) => {
-      let hooks = switch (hooks.current^) {
-        | None =>
-          let next = ref(None);
-          hooks.current := Some((data, next));
-          {...hooks, current: next}
+      let next = switch (hooks.current^) {
+        | None => ref(None)
         | Some((r, next)) =>
           hooks.setReconciler(r, data, fn);
-          {...hooks, current: next}
+          next
       };
+      hooks.current := Some((data, next));
       ((), hooks)
     };
 
-    /* let useRef = (initial, hooks) => {
+    let useRef = (initial, hooks) => {
       switch (hooks.current^) {
         | None =>
           let r = ref(initial);
           let next = ref(None);
-          hooks.current := Some((r, next))
+          hooks.current := Some((r, next));
           (r, {...hooks, current: next})
         | Some((r, next)) => (r, {...hooks, current: next})
       };
-    }; */
+    };
 
     let useState =
         (
@@ -425,10 +423,8 @@ lifecycle methods or something
         | None =>
           let next = ref(None);
           hooks.current := Some((initial, next));
-          Js.log2("INiting", initial);
           (initial, next);
         | Some((state, next)) => 
-        Js.log2("HAve", state);
           (state, next)
         };
       (
@@ -436,7 +432,6 @@ lifecycle methods or something
           state,
           v => {
             hooks.current := Some((v, next));
-            Js.log3("New", v, hooks.current);
             hooks.invalidate();
           },
         ),
