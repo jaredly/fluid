@@ -60,4 +60,8 @@ let first = hooks => {
   </view>;
 };
 
+let invalidate = hooks => {
+  let%hook (count, setCount) = useState(0);
+};
+
 Fluid.launchWindow(~title="Hello Fluid", ~root=<First />);
