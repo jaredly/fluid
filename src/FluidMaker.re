@@ -1,3 +1,4 @@
+open Belt;
 
 module type NativeInterface = {
   type element;
@@ -8,13 +9,14 @@ module type NativeInterface = {
    */
   let maybeUpdate: (~mounted: element, ~mountPoint: nativeNode, ~newElement: element) => bool;
 
-  let inflate: element => nativeNode;
+  let inflate: (element, Layout.node) => nativeNode;
+
+  let measureText: string => Layout.measureType;
 
   let createTextNode: string => nativeNode;
   let setTextContent: (nativeNode, string) => unit;
-  let parentNode: nativeNode => nativeNode;
   let appendChild: (nativeNode, nativeNode) => unit;
-  let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit;
+  /* let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit; */
   let removeChild: (nativeNode, nativeNode) => unit;
   let replaceWith: (nativeNode, nativeNode) => unit;
 };
@@ -152,12 +154,12 @@ and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData
 
 and element =
 | String(string)
-| Builtin(NativeInterface.element, list(element)): element
+| Builtin(NativeInterface.element, list(element), option(Layout.style)): element
 | Custom(custom /* already contains its props & children */)
 
 and instanceTree =
-| IString(string)
-| IBuiltin(NativeInterface.element, list(instanceTree)): instanceTree
+| IString(string, Layout.node)
+| IBuiltin(NativeInterface.element, list(instanceTree), Layout.node)
 | ICustom(customWithState, instanceTree, list(effect))
 
 and container = {
@@ -166,8 +168,8 @@ and container = {
 }
 
 and mountedTree =
-| MString(string, NativeInterface.nativeNode)
-| MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree)): mountedTree
+| MString(string, NativeInterface.nativeNode, Layout.node)
+| MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node): mountedTree
 | MCustom(container)
 
 and context('initial, 'reconcile) = {
@@ -234,8 +236,8 @@ let render = (WithState(component)) => {
 };
 
 let rec getNativeNode = tree => switch tree {
-  | MString(_, node)
-  | MBuiltin(_, node, _) => node
+  | MString(_, node, _)
+  | MBuiltin(_, node, _, _) => node
   | MCustom({mountedTree}) => getNativeNode(mountedTree)
 };
 
@@ -250,9 +252,26 @@ Phases of the algorithm:
 
  */
 
+let rec getInstanceLayout = element => switch element {
+  | IString(_, node) => node
+  | IBuiltin(_, _, node) => node
+  | ICustom(_, el, _) => getInstanceLayout(el)
+};
+
+let rec getMountedLayout = element => switch element {
+  | MString(_, _, node) => node
+  | MBuiltin(_, _, _, node) => node
+  | MCustom({mountedTree}) => getMountedLayout(mountedTree)
+};
+
 let rec instantiateTree: element => instanceTree = el => switch el {
-  | String(contents) => IString(contents)
-  | Builtin(nativeElement, children) => IBuiltin(nativeElement, children->List.map(instantiateTree))
+  | String(contents) => IString(contents, Layout.createNodeWithMeasure([||], Layout.style(), NativeInterface.measureText(contents)))
+  | Builtin(nativeElement, children, layout) =>
+    let ichildren = children->List.map(instantiateTree);
+    IBuiltin(nativeElement, ichildren, Layout.createNode(ichildren->List.map(getInstanceLayout)->List.toArray, switch layout {
+      | None => Layout.style()
+      | Some(s) => s
+    }))
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
@@ -269,12 +288,14 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
 };
 
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
-  | IString(contents) => MString(contents, NativeInterface.createTextNode(contents))
-  | IBuiltin(nativeElement, children) =>
-    let node = NativeInterface.inflate(nativeElement);
+  | IString(contents, layout) => 
+    /* TODO set layout properties here... or something */
+    MString(contents, NativeInterface.createTextNode(contents), layout)
+  | IBuiltin(nativeElement, children, layout) =>
+    let node = NativeInterface.inflate(nativeElement, layout);
     let children = children->List.map(inflateTree);
     children->List.forEach(child => NativeInterface.appendChild(node, getNativeNode(child)));
-    MBuiltin(nativeElement, node, children);
+    MBuiltin(nativeElement, node, children, layout);
   | ICustom(custom, instanceTree, effects) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
@@ -295,16 +316,22 @@ and listenForChanges = (WithState(contents) as component, container) => {
 }
 
 and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
-  | (MString(a, node), String(b)) =>
+  | (MString(a, node, layout), String(b)) =>
     if (a == b) {
       prev
     } else {
       NativeInterface.setTextContent(node, b);
-      MString(b, node)
+      Layout.LayoutSupport.markDirty(layout);
+      MString(b, node, layout)
     }
-  | (MBuiltin(aElement, node, aChildren), Builtin(bElement, bChildren)) =>
+  | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle)) =>
     if (NativeInterface.maybeUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
-      MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren));
+      aLayout.style = switch bLayoutStyle {
+        | Some(s) => s
+        | _ => Layout.style()
+      };
+      /* TODO flush layout changes */
+      MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
     } else {
       let tree = inflateTree(instantiateTree(next));
       /* unmount prev nodes */
@@ -349,7 +376,9 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
 };
 
 let mount = (el, node) => {
-  let tree = inflateTree(instantiateTree(el));
+  let instances = instantiateTree(el);
+  Layout.layout(getInstanceLayout(instances));
+  let tree = inflateTree(instances);
   node->NativeInterface.appendChild(getNativeNode(tree))
 };
 

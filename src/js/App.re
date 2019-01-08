@@ -1,4 +1,4 @@
-
+[%%debugger.chrome];
 open FluidDom;
 /* open Hooks; */
 
@@ -89,9 +89,6 @@ let toggle = (~on, ~off, ctx) => {
 };
 
 
-
-module NativeInterface = FluidDom.NativeInterface;
-
 /* [@memo] */
 let awesomeComponent = (~value, ~toString, ctx) => {
   let%hook (state, setState) = Fluid.Hooks.useState("Awesome");
@@ -146,19 +143,19 @@ let button = (~text, ~style, ~onClick, ctx) => {
 [@bs.get] external value: Dom.eventTarget => float = "";
 [@bs.scope "document"] [@bs.val] external body: NativeInterface.nativeNode = "";
 
-let canvas = NativeInterface.createElement("canvas", NativeInterface.nativeProps(~width=500, ~height=200, ()));
-NativeInterface.appendChild(body, canvas)
+let canvas = NativeInterface.createElement("canvas", NativeInterface.nativeProps(~width=500, ~height=200, ()), Layout.null);
+/* NativeInterface.appendChild(body, canvas) */
 
-let canvas2 = NativeInterface.createElement("canvas", NativeInterface.nativeProps(~width=500, ~height=500, ()));
-NativeInterface.appendChild(body, canvas2);
+let canvas2 = NativeInterface.createElement("canvas", NativeInterface.nativeProps(~width=500, ~height=500, ()), Layout.null);
+/* NativeInterface.appendChild(body, canvas2); */
 
-let log = NativeInterface.createElement("div", NativeInterface.nativeProps());
-NativeInterface.appendChild(body, log);
+let log = NativeInterface.createElement("div", NativeInterface.nativeProps(), Layout.null);
+/* NativeInterface.appendChild(body, log); */
 
 [@bs.send] external addEventListener: (NativeInterface.nativeNode, string, 'evt => unit) => unit = "";
 [@bs.set] external textContent: (NativeInterface.nativeNode, string) => unit = "";
 
-let plot: (float, float, float, string) => unit = [%bs.raw {|
+let plot: (. float, float, float, string) => unit = [%bs.raw {|
 function (x, y, scale, color) {
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = color
@@ -248,7 +245,7 @@ let showLine = x => {
       Js.Array.push((stiffness, damping), changes) |> ignore;
     };
     last := overshoot;
-    plot(x, y, float_of_int(scale), switch (overshoot) {
+    plot(. x, y, float_of_int(scale), switch (overshoot) {
       | None => "black"
       | Some(true) => "rgba(255, 0, 0, " ++ string_of_float(float_of_int(t) /. 2000. +. 0.5) ++ ")"
       | Some(false) => "rgba(0, 255, 0, " ++ string_of_float(float_of_int(t) /. 2000. +. 0.5) ++ ")"
@@ -264,7 +261,7 @@ let rec loop = x => {
 };
 /* loop(0); */
 
-let f: unit => unit = [%bs.raw {|
+let f: (. unit) => unit = [%bs.raw {|
   function(){
     const ctx = canvas.getContext('2d')
     ctx.beginPath()
@@ -277,7 +274,7 @@ let f: unit => unit = [%bs.raw {|
     ctx.stroke()
   }
 |}];
-f();
+let m = f(. () );
 
 canvas->addEventListener("mousemove", evt => {
   let box = evt##target##getBoundingClientRect();
@@ -291,7 +288,7 @@ canvas->addEventListener("mousemove", evt => {
   log->textContent(Printf.sprintf("%f stiffness %f damping; %d steps", x /. 2., y /. 5., t))
 });
 
-let first = <div id="awesome" style="padding: 20px">
+let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ())}>
   {String("Hello")}
   <input _type="range" oninput={evt => {
     let v = evt->target->value;
@@ -314,7 +311,7 @@ let first = <div id="awesome" style="padding: 20px">
     visualize(canvas2, state, (. delta, state) => Spring.advance(delta, state), (. state) => Spring.isAtRest(state));
 
   }} />
-  <div id="here">
+  <div id="here" layout={Layout.style(~width=100., ~height=50., ())}>
     <div>{String("What")}</div>
   </div>
   <Toggle

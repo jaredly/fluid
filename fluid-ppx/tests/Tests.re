@@ -13,7 +13,7 @@ module Fluid = {
   type m =
   | Custom(unit)
   | String(string)
-  | Builtin(unit, list(m));
+  | Builtin(unit, list(m), option(unit));
   module Maker = {
     let makeComponent = (fn, render) => ()
   };

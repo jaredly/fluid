@@ -172,13 +172,26 @@ let mapper = _argv =>
           let args = args |> List.map(((a, b)) => (a, mapper.expr(mapper, b)));
           switch (target.pexp_desc) {
             | Pexp_ident({txt: Longident.Lident(name), loc}) when isLowerCase(String.sub(name, 0, 1)) =>
-              let rec loop = args => switch args {
+              let rec loop = args =>
+                switch (args) {
                 | [] => assert(false)
                 | [("children", arg), ...rest] => (arg, rest)
-                | [arg, ...rest] => let (children, args) = loop(rest);
-                  (children, [arg, ...args])
-              };
+                | [arg, ...rest] =>
+                  let (children, args) = loop(rest);
+                  (children, [arg, ...args]);
+                };
               let (children, props) = loop(args);
+
+              let rec loop = args =>
+                switch (args) {
+                | [] => (None, [])
+                | [("layout", arg), ...rest] => (Some(arg), rest)
+                | [arg, ...rest] =>
+                  let (layout, args) = loop(rest);
+                  (layout, [arg, ...args]);
+                };
+              let (layout, props) = loop(props);
+
               Exp.construct(
                 Location.mkloc(Ldot(Lident("Fluid"), "Builtin"), loc),
                 Some(Exp.tuple([
@@ -187,7 +200,11 @@ let mapper = _argv =>
                     props
                   ),
                   /* TODO auto-up strings */
-                  children
+                  children,
+                  switch layout {
+                    | None => [%expr None]
+                    | Some(prop) => [%expr Some([%e prop])]
+                  }
                 ]))
               )
             | Pexp_ident({txt: Ldot(contents, "createElement"), loc}) =>
@@ -214,7 +231,7 @@ let mapper = _argv =>
                 Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Maker"), "makeComponent"), loc)),
                 [
                   ("", fn),
-                  ("", Exp.apply(
+                  ("", props == [] ? fn : Exp.apply(
                 fn,
                 props
                 ))])))

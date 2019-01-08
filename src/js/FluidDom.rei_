@@ -21,6 +21,8 @@ module NativeInterface:
       (nativeNode, nativeNode, ~reference: nativeNode) => unit;
     let removeChild: (nativeNode, nativeNode) => unit;
 
+    let measureText: string => Layout.measureType;
+
     let updateNativeProps: (nativeNode, 'a, nativeProps) => unit;
     let replaceWith: (nativeNode, nativeNode) => unit;
 

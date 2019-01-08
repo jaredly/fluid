@@ -2,6 +2,7 @@
 
 import * as Block from "bsb-native/lib/es6/block.js";
 import * as Curry from "bsb-native/lib/es6/curry.js";
+import * as Layout from "./Layout.js";
 import * as Caml_obj from "bsb-native/lib/es6/caml_obj.js";
 import * as Belt_List from "bsb-native/lib/es6/belt_List.js";
 
@@ -103,14 +104,51 @@ function F(NativeInterface) {
       }
     };
   };
+  var getInstanceLayout = function (_element) {
+    while(true) {
+      var element = _element;
+      switch (element.tag | 0) {
+        case 0 : 
+            return element[1];
+        case 1 : 
+            return element[2];
+        case 2 : 
+            _element = element[1];
+            continue ;
+        
+      }
+    };
+  };
+  var getMountedLayout = function (_element) {
+    while(true) {
+      var element = _element;
+      switch (element.tag | 0) {
+        case 0 : 
+            return element[2];
+        case 1 : 
+            return element[3];
+        case 2 : 
+            _element = element[0][/* mountedTree */1];
+            continue ;
+        
+      }
+    };
+  };
   var instantiateTree = function (el) {
     switch (el.tag | 0) {
       case 0 : 
-          return /* IString */Block.__(0, [el[0]]);
+          var contents = el[0];
+          return /* IString */Block.__(0, [
+                    contents,
+                    Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
+                  ]);
       case 1 : 
+          var layout = el[2];
+          var ichildren = Belt_List.map(el[1], instantiateTree);
           return /* IBuiltin */Block.__(1, [
                     el[0],
-                    Belt_List.map(el[1], instantiateTree)
+                    ichildren,
+                    Layout.createNode(Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout)), layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
                   ]);
       case 2 : 
           var custom = Curry._1(el[0][/* init */0], /* () */0);
@@ -136,11 +174,13 @@ function F(NativeInterface) {
           var contents = el[0];
           return /* MString */Block.__(0, [
                     contents,
-                    Curry._1(NativeInterface[/* createTextNode */2], contents)
+                    Curry._1(NativeInterface[/* createTextNode */3], contents),
+                    el[1]
                   ]);
       case 1 : 
+          var layout = el[2];
           var nativeElement = el[0];
-          var node = Curry._1(NativeInterface[/* inflate */1], nativeElement);
+          var node = Curry._2(NativeInterface[/* inflate */1], nativeElement, layout);
           var children = Belt_List.map(el[1], inflateTree);
           Belt_List.forEach(children, (function (child) {
                   return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(child));
@@ -148,7 +188,8 @@ function F(NativeInterface) {
           return /* MBuiltin */Block.__(1, [
                     nativeElement,
                     node,
-                    children
+                    children,
+                    layout
                   ]);
       case 2 : 
           var custom = el[0];
@@ -185,6 +226,7 @@ function F(NativeInterface) {
     var exit = 0;
     switch (prev.tag | 0) {
       case 0 : 
+          var layout = prev[2];
           var node = prev[1];
           switch (next.tag | 0) {
             case 0 : 
@@ -192,10 +234,12 @@ function F(NativeInterface) {
                 if (prev[0] === b) {
                   return prev;
                 } else {
-                  Curry._2(NativeInterface[/* setTextContent */3], node, b);
+                  Curry._2(NativeInterface[/* setTextContent */4], node, b);
+                  Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layout);
                   return /* MString */Block.__(0, [
                             b,
-                            node
+                            node,
+                            layout
                           ]);
                 }
             case 1 : 
@@ -206,19 +250,23 @@ function F(NativeInterface) {
           }
           break;
       case 1 : 
+          var aLayout = prev[3];
           var node$1 = prev[1];
           switch (next.tag | 0) {
             case 1 : 
+                var bLayoutStyle = next[2];
                 var bElement = next[0];
                 if (Curry._3(NativeInterface[/* maybeUpdate */0], prev[0], node$1, bElement)) {
+                  aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
                   return /* MBuiltin */Block.__(1, [
                             bElement,
                             node$1,
-                            reconcileChildren(node$1, prev[2], next[1])
+                            reconcileChildren(node$1, prev[2], next[1]),
+                            aLayout
                           ]);
                 } else {
                   var tree = inflateTree(instantiateTree(next));
-                  Curry._2(NativeInterface[/* replaceWith */8], getNativeNode(prev), getNativeNode(tree));
+                  Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
                   return tree;
                 }
             case 0 : 
@@ -242,7 +290,7 @@ function F(NativeInterface) {
                     return /* MCustom */Block.__(2, [a]);
                   } else {
                     var tree$1 = inflateTree(instantiateTree(next));
-                    Curry._2(NativeInterface[/* replaceWith */8], getNativeNode(prev), getNativeNode(tree$1));
+                    Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
                     return tree$1;
                   }
                 } else {
@@ -261,7 +309,7 @@ function F(NativeInterface) {
     }
     if (exit === 1) {
       var tree$3 = inflateTree(instantiateTree(next));
-      Curry._2(NativeInterface[/* replaceWith */8], getNativeNode(prev), getNativeNode(tree$3));
+      Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$3));
       return tree$3;
     }
     
@@ -275,7 +323,7 @@ function F(NativeInterface) {
               ];
       } else {
         Belt_List.forEach(aChildren, (function (child) {
-                return Curry._2(NativeInterface[/* removeChild */7], parentNode, getNativeNode(child));
+                return Curry._2(NativeInterface[/* removeChild */6], parentNode, getNativeNode(child));
               }));
         return /* [] */0;
       }
@@ -292,7 +340,9 @@ function F(NativeInterface) {
     }
   };
   var mount = function (el, node) {
-    var tree = inflateTree(instantiateTree(el));
+    var instances = instantiateTree(el);
+    Layout.layout(getInstanceLayout(instances));
+    var tree = inflateTree(instances);
     return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(tree));
   };
   var useReconciler = function (data, fn, hooks, fin) {
@@ -565,6 +615,8 @@ function F(NativeInterface) {
           /* Maker */Maker,
           /* render */render,
           /* getNativeNode */getNativeNode,
+          /* getInstanceLayout */getInstanceLayout,
+          /* getMountedLayout */getMountedLayout,
           /* instantiateTree */instantiateTree,
           /* runEffect */runEffect,
           /* inflateTree */inflateTree,
@@ -580,4 +632,4 @@ export {
   F ,
   
 }
-/* Belt_List Not a pure module */
+/* Layout Not a pure module */

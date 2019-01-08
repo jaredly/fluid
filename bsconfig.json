@@ -1,14 +1,35 @@
 {
   "name": "fluid",
-  "sources": "src",
-  "bsc-flags": ["-open", "Belt"],
+  "sources": [{
+    "dir": "src",
+    "subdirs": [{
+      "dir": "native",
+      "backend": ["native", "bytecode"]
+    }, {
+      "dir": "js",
+      "backend": ["js"]
+    }]
+  }
+  ],
+  "entries": [{
+    "backend": "js",
+    "main-module": "App"
+  }, {
+    "backend": "native",
+    "main-module": "AppNative"
+  }],
+  "build-script": "build-script.re",
+  "bsc-flags": ["-g"],
   "warnings": {
     "number": "-27-45-40-26-32-44"
   },
+  "bs-dependencies": ["flex"],
   "package-specs": {
     "module": "es6",
     "in-source": true
   },
+  "c-linker-flags": ["-framework", "Cocoa"],
+  "static-libraries": ["lib/fluid.o"],
   "refmt": 3,
   "ppx-flags": ["./fluid-ppx/lib/bs/native/fluid_ppx.native"]
 }

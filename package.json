@@ -2,7 +2,9 @@
   "scripts": {
     "start": "http-server -p 4090 -c-1",
     "build": "bsb -make-world",
-    "pack": "fpack watch --development ./src/App.js"
+    "clean": "bsb -clean-world",
+    "native": "bsb -make-world -backend native",
+    "pack": "fpack watch --development ./src/js/App.js"
   },
   "dependencies": {
     "bsb-native": "^4.0.7000",
