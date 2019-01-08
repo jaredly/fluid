@@ -6,7 +6,6 @@ var Curry = require("bsb-native/lib/js/curry.js");
 var Layout = require("./Layout.js");
 var Caml_obj = require("bsb-native/lib/js/caml_obj.js");
 var Belt_List = require("bsb-native/lib/js/belt_List.js");
-var Caml_builtin_exceptions = require("bsb-native/lib/js/caml_builtin_exceptions.js");
 
 function F(NativeInterface) {
   var string = function (x) {
@@ -18,7 +17,7 @@ function F(NativeInterface) {
                 return /* WithState */[/* record */[
                           /* identity */identity,
                           /* render */render,
-                          /* hooks */undefined,
+                          /* hooks : record */[/* contents */undefined],
                           /* invalidated */false,
                           /* reconciler */undefined,
                           /* onChange */(function (param) {
@@ -54,42 +53,38 @@ function F(NativeInterface) {
   var render = function (param) {
     var component = param[0];
     var effects = /* record */[/* contents : [] */0];
-    var context_000 = /* hooks : record */[
-      /* invalidate */(function (param) {
-          component[/* invalidated */3] = true;
-          return Curry._1(component[/* onChange */5], /* () */0);
-        }),
-      /* setReconciler */(function (oldData, data, reconcile) {
-          component[/* reconciler */4] = /* tuple */[
-            oldData,
-            data,
-            reconcile
-          ];
-          return /* () */0;
-        }),
-      /* triggerEffect */(function (cleanup, fn, setCleanup) {
-          effects[/* contents */0] = /* :: */[
-            /* record */[
-              /* cleanup */cleanup,
-              /* fn */fn,
-              /* setCleanup */setCleanup
-            ],
-            effects[/* contents */0]
-          ];
-          return /* () */0;
-        }),
-      /* current */component[/* hooks */2]
-    ];
-    var context_001 = function (v) {
-      component[/* hooks */2] = v[/* current */3];
+    var hooks_000 = function (param) {
+      component[/* invalidated */3] = true;
+      return Curry._1(component[/* onChange */5], /* () */0);
+    };
+    var hooks_001 = function (oldData, data, reconcile) {
+      component[/* reconciler */4] = /* tuple */[
+        oldData,
+        data,
+        reconcile
+      ];
       return /* () */0;
     };
-    var context = /* record */[
-      context_000,
-      context_001
+    var hooks_002 = function (cleanup, fn, setCleanup) {
+      effects[/* contents */0] = /* :: */[
+        /* record */[
+          /* cleanup */cleanup,
+          /* fn */fn,
+          /* setCleanup */setCleanup
+        ],
+        effects[/* contents */0]
+      ];
+      return /* () */0;
+    };
+    var hooks_003 = /* current */component[/* hooks */2];
+    var hooks = /* record */[
+      hooks_000,
+      hooks_001,
+      hooks_002,
+      hooks_003
     ];
     component[/* invalidated */3] = false;
-    var tree = Curry._1(component[/* render */1], context);
+    var tree = Curry._1(component[/* render */1], hooks);
     return /* tuple */[
             tree,
             effects[0]
@@ -140,41 +135,30 @@ function F(NativeInterface) {
     };
   };
   var instantiateTree = function (el) {
-    if (typeof el === "number") {
-      throw [
-            Caml_builtin_exceptions.match_failure,
-            /* tuple */[
-              "FluidMaker.re",
-              267,
-              57
-            ]
-          ];
-    } else {
-      switch (el.tag | 0) {
-        case 0 : 
-            var contents = el[0];
-            return /* IString */Block.__(0, [
-                      contents,
-                      Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
-                    ]);
-        case 1 : 
-            var layout = el[2];
-            var ichildren = Belt_List.map(el[1], instantiateTree);
-            return /* IBuiltin */Block.__(1, [
-                      el[0],
-                      ichildren,
-                      Layout.createNode(Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout)), layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
-                    ]);
-        case 2 : 
-            var custom = Curry._1(el[0][/* init */0], /* () */0);
-            var match = render(custom);
-            return /* ICustom */Block.__(2, [
-                      custom,
-                      instantiateTree(match[0]),
-                      match[1]
-                    ]);
-        
-      }
+    switch (el.tag | 0) {
+      case 0 : 
+          var contents = el[0];
+          return /* IString */Block.__(0, [
+                    contents,
+                    Layout.createNodeWithMeasure(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._1(NativeInterface[/* measureText */2], contents))
+                  ]);
+      case 1 : 
+          var layout = el[2];
+          var ichildren = Belt_List.map(el[1], instantiateTree);
+          return /* IBuiltin */Block.__(1, [
+                    el[0],
+                    ichildren,
+                    Layout.createNode(Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout)), layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
+                  ]);
+      case 2 : 
+          var custom = Curry._1(el[0][/* init */0], /* () */0);
+          var match = render(custom);
+          return /* ICustom */Block.__(2, [
+                    custom,
+                    instantiateTree(match[0]),
+                    match[1]
+                  ]);
+      
     }
   };
   var runEffect = function (param) {
@@ -243,71 +227,83 @@ function F(NativeInterface) {
     var exit = 0;
     switch (prev.tag | 0) {
       case 0 : 
-          if (typeof next === "number" || next.tag) {
-            exit = 1;
-          } else {
-            var b = next[0];
-            if (prev[0] === b) {
-              return prev;
-            } else {
-              var layout = prev[2];
-              var node = prev[1];
-              Curry._2(NativeInterface[/* setTextContent */4], node, b);
-              Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layout);
-              return /* MString */Block.__(0, [
-                        b,
-                        node,
-                        layout
-                      ]);
-            }
+          var layout = prev[2];
+          var node = prev[1];
+          switch (next.tag | 0) {
+            case 0 : 
+                var b = next[0];
+                if (prev[0] === b) {
+                  return prev;
+                } else {
+                  Curry._2(NativeInterface[/* setTextContent */4], node, b);
+                  Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layout);
+                  return /* MString */Block.__(0, [
+                            b,
+                            node,
+                            layout
+                          ]);
+                }
+            case 1 : 
+            case 2 : 
+                exit = 1;
+                break;
+            
           }
           break;
       case 1 : 
-          if (typeof next === "number" || next.tag !== 1) {
-            exit = 1;
-          } else {
-            var bLayoutStyle = next[2];
-            var bElement = next[0];
-            var aLayout = prev[3];
-            var node$1 = prev[1];
-            if (Curry._3(NativeInterface[/* maybeUpdate */0], prev[0], node$1, bElement)) {
-              aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-              return /* MBuiltin */Block.__(1, [
-                        bElement,
-                        node$1,
-                        reconcileChildren(node$1, prev[2], next[1]),
-                        aLayout
-                      ]);
-            } else {
-              var tree = inflateTree(instantiateTree(next));
-              Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
-              return tree;
-            }
+          var aLayout = prev[3];
+          var node$1 = prev[1];
+          switch (next.tag | 0) {
+            case 1 : 
+                var bLayoutStyle = next[2];
+                var bElement = next[0];
+                if (Curry._3(NativeInterface[/* maybeUpdate */0], prev[0], node$1, bElement)) {
+                  aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+                  return /* MBuiltin */Block.__(1, [
+                            bElement,
+                            node$1,
+                            reconcileChildren(node$1, prev[2], next[1]),
+                            aLayout
+                          ]);
+                } else {
+                  var tree = inflateTree(instantiateTree(next));
+                  Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
+                  return tree;
+                }
+            case 0 : 
+            case 2 : 
+                exit = 1;
+                break;
+            
           }
           break;
       case 2 : 
-          if (typeof next === "number" || next.tag !== 2) {
-            exit = 1;
-          } else {
-            var a = prev[0];
-            var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
-            if (typeof match === "number") {
-              if (match >= 925282182) {
-                return /* MCustom */Block.__(2, [a]);
-              } else {
-                var tree$1 = inflateTree(instantiateTree(next));
-                Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
-                return tree$1;
-              }
-            } else {
-              var custom = match[1];
-              var match$1 = render(custom);
-              var tree$2 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
-              a[/* custom */0] = custom;
-              a[/* mountedTree */1] = tree$2;
-              Belt_List.forEach(match$1[1], runEffect);
-              return /* MCustom */Block.__(2, [a]);
-            }
+          var a = prev[0];
+          switch (next.tag | 0) {
+            case 0 : 
+            case 1 : 
+                exit = 1;
+                break;
+            case 2 : 
+                var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
+                if (typeof match === "number") {
+                  if (match >= 925282182) {
+                    return /* MCustom */Block.__(2, [a]);
+                  } else {
+                    var tree$1 = inflateTree(instantiateTree(next));
+                    Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
+                    return tree$1;
+                  }
+                } else {
+                  var custom = match[1];
+                  var match$1 = render(custom);
+                  var tree$2 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
+                  a[/* custom */0] = custom;
+                  a[/* mountedTree */1] = tree$2;
+                  Belt_List.forEach(match$1[1], runEffect);
+                  return /* MCustom */Block.__(2, [a]);
+                }
+            
           }
           break;
       
@@ -351,148 +347,94 @@ function F(NativeInterface) {
     var tree = inflateTree(instances);
     return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(tree));
   };
-  var useReconciler = function (data, fn, hooks, fin) {
-    var match = hooks[/* current */3];
+  var useReconciler = function (data, fn, hooks) {
+    var match = hooks[/* current */3][0];
+    var hooks$1;
+    if (match !== undefined) {
+      var match$1 = match;
+      Curry._3(hooks[/* setReconciler */1], match$1[0], data, fn);
+      hooks$1 = /* record */[
+        /* invalidate */hooks[/* invalidate */0],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
+        /* current */match$1[1]
+      ];
+    } else {
+      var next = /* record */[/* contents */undefined];
+      hooks[/* current */3][0] = /* tuple */[
+        data,
+        next
+      ];
+      hooks$1 = /* record */[
+        /* invalidate */hooks[/* invalidate */0],
+        /* setReconciler */hooks[/* setReconciler */1],
+        /* triggerEffect */hooks[/* triggerEffect */2],
+        /* current */next
+      ];
+    }
+    return /* tuple */[
+            /* () */0,
+            hooks$1
+          ];
+  };
+  var useState = function (initial, hooks) {
+    var match = hooks[/* current */3][0];
     var match$1;
     if (match !== undefined) {
       var match$2 = match;
-      Curry._3(hooks[/* setReconciler */1], match$2[1], data, fn);
+      var state = match$2[0];
+      console.log("HAve", state);
       match$1 = /* tuple */[
-        data,
-        /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */match$2[0]
-        ]
+        state,
+        match$2[1]
       ];
     } else {
+      var next = /* record */[/* contents */undefined];
+      hooks[/* current */3][0] = /* tuple */[
+        initial,
+        next
+      ];
+      console.log("INiting", initial);
       match$1 = /* tuple */[
-        data,
-        /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */undefined
-        ]
+        initial,
+        next
       ];
     }
-    var match$3 = Curry._2(fin, /* () */0, match$1[1]);
-    var hooks$1 = match$3[1];
+    var next$1 = match$1[1];
     return /* tuple */[
-            match$3[0],
+            /* tuple */[
+              match$1[0],
+              (function (v) {
+                  hooks[/* current */3][0] = /* tuple */[
+                    v,
+                    next$1
+                  ];
+                  console.log("New", v, hooks[/* current */3]);
+                  return Curry._1(hooks[/* invalidate */0], /* () */0);
+                })
+            ],
             /* record */[
-              /* invalidate */hooks$1[/* invalidate */0],
-              /* setReconciler */hooks$1[/* setReconciler */1],
-              /* triggerEffect */hooks$1[/* triggerEffect */2],
-              /* current *//* tuple */[
-                hooks$1[/* current */3],
-                match$1[0]
-              ]
+              /* invalidate */hooks[/* invalidate */0],
+              /* setReconciler */hooks[/* setReconciler */1],
+              /* triggerEffect */hooks[/* triggerEffect */2],
+              /* current */next$1
             ]
           ];
   };
-  var useRef = function (initial, hooks, fin) {
-    var match = hooks[/* current */3];
-    var match$1;
-    if (match !== undefined) {
-      var match$2 = match;
-      match$1 = /* tuple */[
-        match$2[1],
-        /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */match$2[0]
-        ]
-      ];
-    } else {
-      match$1 = /* tuple */[
-        /* record */[/* contents */initial],
-        /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */undefined
-        ]
-      ];
-    }
-    var r = match$1[0];
-    var match$3 = Curry._2(fin, r, match$1[1]);
-    var hooks$1 = match$3[1];
-    return /* tuple */[
-            match$3[0],
-            /* record */[
-              /* invalidate */hooks$1[/* invalidate */0],
-              /* setReconciler */hooks$1[/* setReconciler */1],
-              /* triggerEffect */hooks$1[/* triggerEffect */2],
-              /* current *//* tuple */[
-                hooks$1[/* current */3],
-                r
-              ]
-            ]
-          ];
-  };
-  var useState = function (initial, hooks, fin) {
-    var match = hooks[/* current */3];
-    var match$1;
-    if (match !== undefined) {
-      var match$2 = match;
-      match$1 = /* tuple */[
-        match$2[1],
-        /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */match$2[0]
-        ]
-      ];
-    } else {
-      var st = /* record */[/* contents */initial];
-      match$1 = /* tuple */[
-        st,
-        /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */undefined
-        ]
-      ];
-    }
-    var hooks$1 = match$1[1];
+  var useReducer = function (initial, reducer, hooks) {
+    var match = useState(initial, hooks);
+    var match$1 = match[0];
+    var setState = match$1[1];
     var state = match$1[0];
-    var match$3 = Curry._2(fin, /* tuple */[
-          state[/* contents */0],
-          (function (v) {
-              state[/* contents */0] = v;
-              return Curry._1(hooks$1[/* invalidate */0], /* () */0);
-            })
-        ], hooks$1);
-    var hooks$2 = match$3[1];
     return /* tuple */[
-            match$3[0],
-            /* record */[
-              /* invalidate */hooks$2[/* invalidate */0],
-              /* setReconciler */hooks$2[/* setReconciler */1],
-              /* triggerEffect */hooks$2[/* triggerEffect */2],
-              /* current *//* tuple */[
-                hooks$2[/* current */3],
-                state
-              ]
-            ]
+            /* tuple */[
+              state,
+              (function (action) {
+                  return Curry._1(setState, Curry._2(reducer, state, action));
+                })
+            ],
+            match[1]
           ];
-  };
-  var useReducer = function (initial, reducer, hooks, fin) {
-    return useState(initial, hooks, (function (param, hooks) {
-                  var setState = param[1];
-                  var state = param[0];
-                  return Curry._2(fin, /* tuple */[
-                              state,
-                              (function (action) {
-                                  return Curry._1(setState, Curry._2(reducer, state, action));
-                                })
-                            ], hooks);
-                }));
   };
   var newEffect = function (fn, args) {
     return /* record */[
@@ -501,11 +443,12 @@ function F(NativeInterface) {
             /* fn */fn
           ];
   };
-  var useEffect = function (fn, args, hooks, fin) {
-    var match = hooks[/* current */3];
+  var useEffect = function (fn, args, hooks) {
+    var match = hooks[/* current */3][0];
+    var match$1;
     if (match !== undefined) {
-      var match$1 = match;
-      var effect = match$1[1];
+      var match$2 = match;
+      var effect = match$2[0];
       var effect$1 = Caml_obj.caml_notequal(effect[/* args */0], args) ? (Curry._3(hooks[/* triggerEffect */2], effect[/* cleanup */1][/* contents */0], fn, (function (v) {
                   effect[/* cleanup */1][/* contents */0] = v;
                   return /* () */0;
@@ -514,102 +457,80 @@ function F(NativeInterface) {
             /* cleanup */effect[/* cleanup */1],
             /* fn */fn
           ]) : effect;
-      var match$2 = Curry._2(fin, /* () */0, /* record */[
-            /* invalidate */hooks[/* invalidate */0],
-            /* setReconciler */hooks[/* setReconciler */1],
-            /* triggerEffect */hooks[/* triggerEffect */2],
-            /* current */match$1[0]
-          ]);
-      var hooks$1 = match$2[1];
-      return /* tuple */[
-              match$2[0],
-              /* record */[
-                /* invalidate */hooks$1[/* invalidate */0],
-                /* setReconciler */hooks$1[/* setReconciler */1],
-                /* triggerEffect */hooks$1[/* triggerEffect */2],
-                /* current *//* tuple */[
-                  hooks$1[/* current */3],
-                  effect$1
-                ]
-              ]
-            ];
+      match$1 = /* tuple */[
+        effect$1,
+        match$2[1]
+      ];
     } else {
       var effect$2 = newEffect(fn, args);
       Curry._3(hooks[/* triggerEffect */2], effect$2[/* cleanup */1][/* contents */0], fn, (function (v) {
               effect$2[/* cleanup */1][/* contents */0] = v;
               return /* () */0;
             }));
-      var match$3 = Curry._2(fin, /* () */0, /* record */[
-            /* invalidate */hooks[/* invalidate */0],
-            /* setReconciler */hooks[/* setReconciler */1],
-            /* triggerEffect */hooks[/* triggerEffect */2],
-            /* current */undefined
-          ]);
-      var hooks$2 = match$3[1];
-      return /* tuple */[
-              match$3[0],
-              /* record */[
-                /* invalidate */hooks$2[/* invalidate */0],
-                /* setReconciler */hooks$2[/* setReconciler */1],
-                /* triggerEffect */hooks$2[/* triggerEffect */2],
-                /* current *//* tuple */[
-                  hooks$2[/* current */3],
-                  effect$2
-                ]
-              ]
-            ];
+      match$1 = /* tuple */[
+        effect$2,
+        /* record */[/* contents */undefined]
+      ];
     }
+    var next = match$1[1];
+    hooks[/* current */3][0] = /* tuple */[
+      match$1[0],
+      next
+    ];
+    return /* tuple */[
+            /* () */0,
+            /* record */[
+              /* invalidate */hooks[/* invalidate */0],
+              /* setReconciler */hooks[/* setReconciler */1],
+              /* triggerEffect */hooks[/* triggerEffect */2],
+              /* current */next
+            ]
+          ];
   };
-  var useMemo = function (fn, args, hooks, fin) {
-    var match = hooks[/* current */3];
+  var useMemo = function (fn, args, hooks) {
+    var match = hooks[/* current */3][0];
     var match$1;
     if (match !== undefined) {
       var match$2 = match;
-      var match$3 = match$2[1];
+      var match$3 = match$2[0];
       var match$4 = Caml_obj.caml_equal(match$3[1], args);
       var value = match$4 ? match$3[0] : Curry._1(fn, /* () */0);
       match$1 = /* tuple */[
         value,
-        match$2[0]
+        match$2[1]
       ];
     } else {
       match$1 = /* tuple */[
         Curry._1(fn, /* () */0),
-        undefined
+        /* record */[/* contents */undefined]
       ];
     }
+    var next = match$1[1];
     var value$1 = match$1[0];
-    var match$5 = Curry._2(fin, value$1, /* record */[
-          /* invalidate */hooks[/* invalidate */0],
-          /* setReconciler */hooks[/* setReconciler */1],
-          /* triggerEffect */hooks[/* triggerEffect */2],
-          /* current */match$1[1]
-        ]);
-    var hooks$1 = match$5[1];
+    hooks[/* current */3][0] = /* tuple */[
+      /* tuple */[
+        value$1,
+        args
+      ],
+      next
+    ];
     return /* tuple */[
-            match$5[0],
+            value$1,
             /* record */[
-              /* invalidate */hooks$1[/* invalidate */0],
-              /* setReconciler */hooks$1[/* setReconciler */1],
-              /* triggerEffect */hooks$1[/* triggerEffect */2],
-              /* current *//* tuple */[
-                hooks$1[/* current */3],
-                /* tuple */[
-                  value$1,
-                  args
-                ]
-              ]
+              /* invalidate */hooks[/* invalidate */0],
+              /* setReconciler */hooks[/* setReconciler */1],
+              /* triggerEffect */hooks[/* triggerEffect */2],
+              /* current */next
             ]
           ];
   };
-  var useCallback = function (fn, args, hooks, fin) {
+  var useCallback = function (fn, args, hooks) {
     return useMemo((function (param) {
                   return fn;
-                }), args, hooks, fin);
+                }), args, hooks);
   };
   var Hooks = /* module */[
     /* useReconciler */useReconciler,
-    /* useRef */useRef,
     /* useState */useState,
     /* useReducer */useReducer,
     /* newEffect */newEffect,

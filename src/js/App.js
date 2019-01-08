@@ -35,81 +35,75 @@ function fade(node, out) {
               }));
 }
 
-function toggle(on, off, ctx) {
-  var match = Curry._3(FluidDom.Fluid[/* Hooks */14][/* useState */2], false, ctx[/* hooks */0], (function (param, __hooks) {
-          var setOn = param[1];
-          var isOn = param[0];
-          return Curry._4(FluidDom.Fluid[/* Hooks */14][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
-                        console.log("reconciling I guess", oldState, newState);
-                        var exit = 0;
-                        if (oldState) {
-                          if (newState) {
-                            return mountedTree;
-                          } else {
-                            exit = 1;
-                          }
-                        } else if (newState) {
-                          exit = 1;
-                        } else {
-                          return mountedTree;
-                        }
-                        if (exit === 1) {
-                          var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], mountedTree);
-                          var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */9], Curry._1(FluidDom.Fluid[/* instantiateTree */7], newTree));
-                          var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], newTree$1);
-                          translate(nativeNode, newState ? -30 : 30, 0);
-                          fade(nativeNode, true);
-                          translate(newNativeNode, newState ? -30 : 30, newState ? 30 : -30);
-                          fade(newNativeNode, false);
-                          nativeNode.parentNode.insertBefore(newNativeNode, nativeNode);
-                          return newTree$1;
-                        }
-                        
-                      }), __hooks, (function (param, __hooks) {
-                        return /* tuple */[
-                                (console.log("Is On", isOn), isOn ? Curry._1(on, (function (param) {
-                                            return Curry._1(setOn, false);
-                                          })) : Curry._1(off, (function (param) {
-                                            return Curry._1(setOn, true);
-                                          }))),
-                                __hooks
-                              ];
-                      }));
-        }));
-  Curry._1(ctx[/* finish */1], match[1]);
-  return match[0];
+function toggle(on, off, hooks) {
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */14][/* useState */1], false, hooks);
+  var match$1 = match[0];
+  var setOn = match$1[1];
+  var isOn = match$1[0];
+  Curry._3(FluidDom.Fluid[/* Hooks */14][/* useReconciler */0], isOn, (function (oldState, newState, mountedTree, newTree) {
+          console.log("reconciling I guess", oldState, newState);
+          var exit = 0;
+          if (oldState) {
+            if (newState) {
+              return mountedTree;
+            } else {
+              exit = 1;
+            }
+          } else if (newState) {
+            exit = 1;
+          } else {
+            return mountedTree;
+          }
+          if (exit === 1) {
+            var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], mountedTree);
+            var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */9], Curry._1(FluidDom.Fluid[/* instantiateTree */7], newTree));
+            var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], newTree$1);
+            translate(nativeNode, newState ? -30 : 30, 0);
+            fade(nativeNode, true);
+            translate(newNativeNode, newState ? -30 : 30, newState ? 30 : -30);
+            fade(newNativeNode, false);
+            nativeNode.parentNode.insertBefore(newNativeNode, nativeNode);
+            return newTree$1;
+          }
+          
+        }), match[1]);
+  console.log("Is On", isOn);
+  if (isOn) {
+    return Curry._1(on, (function (param) {
+                  return Curry._1(setOn, false);
+                }));
+  } else {
+    return Curry._1(off, (function (param) {
+                  return Curry._1(setOn, true);
+                }));
+  }
 }
 
-function awesomeComponent(value, toString, ctx) {
-  var match = Curry._3(FluidDom.Fluid[/* Hooks */14][/* useState */2], "Awesome", ctx[/* hooks */0], (function (param, __hooks) {
-          var setState = param[1];
-          var state = param[0];
-          return /* tuple */[
-                  /* Builtin */Block.__(1, [
-                      Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                      /* :: */[
-                        /* Builtin */Block.__(1, [
-                            Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, (function (_evt) {
-                                    return Curry._1(setState, state + "1");
-                                  }), undefined, /* () */0),
-                            /* :: */[
-                              /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
-                              /* [] */0
-                            ],
-                            undefined
-                          ]),
-                        /* [] */0
-                      ],
-                      undefined
-                    ]),
-                  __hooks
-                ];
-        }));
-  Curry._1(ctx[/* finish */1], match[1]);
-  return match[0];
+function awesomeComponent(value, toString, hooks) {
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */14][/* useState */1], "Awesome", hooks);
+  var match$1 = match[0];
+  var setState = match$1[1];
+  var state = match$1[0];
+  return /* Builtin */Block.__(1, [
+            Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+            /* :: */[
+              /* Builtin */Block.__(1, [
+                  Curry._7(FluidDom.Fluid[/* Native */15][/* div */0], undefined, undefined, undefined, undefined, (function (_evt) {
+                          return Curry._1(setState, state + "1");
+                        }), undefined, /* () */0),
+                  /* :: */[
+                    /* String */Block.__(0, ["Folkx " + (Curry._1(toString, value) + (" " + state))]),
+                    /* [] */0
+                  ],
+                  undefined
+                ]),
+              /* [] */0
+            ],
+            undefined
+          ]);
 }
 
-function button(text, style, onClick, ctx) {
+function button(text, style, onClick, hooks) {
   return /* Builtin */Block.__(1, [
             Curry._7(FluidDom.Fluid[/* Native */15][/* button */1], undefined, undefined, undefined, undefined, (function (_evt) {
                     return Curry._1(onClick, /* () */0);
@@ -252,7 +246,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          147,
+          148,
           12
         ]
       ];

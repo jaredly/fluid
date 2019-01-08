@@ -28,7 +28,7 @@ module Fluid = {
   let finish = x => ();
 };
 
-let awesome = (~name, ~age, ctx) => ();
+let awesome = (~name, ~age, hooks) => ();
 
 let x = <div id=10>
   {Fluid.String("Hello")}
@@ -37,18 +37,17 @@ let x = <div id=10>
   <span id="Hello">{Fluid.String("Things")}</span>
 </div>;
 
-let useState = (v, hooks, fn) => {
-  let (a, b) = fn((v, a => ()), hooks);
-  (a, b)
+let useState = (v, hooks) => {
+  ((v, a => ()), hooks)
 }
 
-let awesome = (awesome, ctx) => {
+let awesome = (awesome, hooks) => {
   let%hook (x, _) = useState(10);
   let%hook (y, _) = useState(10);
   15 + x + y
 };
 
-let myComponent = (~some, ~prop, ctx) => {
+let myComponent = (~some, ~prop, hooks) => {
   Js.log("Here");
   /* let%hook (state, dispatch) = useReducer(None, action => switch action {
     | `Awesome => Some(10)

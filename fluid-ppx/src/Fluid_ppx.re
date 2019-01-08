@@ -50,121 +50,27 @@ let unCapitalize = text => {
 
 open Parsetree;
 
-let isHook = expr =>
-  switch (expr.pexp_desc) {
-  | Pexp_extension(({txt: "hook", loc}, _)) => true
-  | _ => false
-  };
-
-let rec hasAnotherHook = expr => isHook(expr) || switch (expr.pexp_desc) {
-  | Pexp_open(_, _, exp) => hasAnotherHook(exp)
-  | Pexp_sequence(one, two) => hasAnotherHook(two)
-  | Pexp_let(_, _, rest) => hasAnotherHook(rest)
-  | _ => false
-};
-
-let hooksMapper = backup => Parsetree.{
-  ...Ast_mapper.default_mapper,
-  expr: (mapper, expr) => switch (expr.pexp_desc) {
-  | Pexp_extension(({txt: "hook", loc},
-  PStr([{pstr_desc: Pstr_eval({pexp_desc: Pexp_let(Nonrecursive, [{
-    pvb_pat, pvb_expr: {pexp_desc: Pexp_apply(target, args)}
-  }], continuation)}, attributes)}]))) => {
-    Exp.apply(target, args @ [
-      ("", [%expr __hooks]),
-      ("", Exp.fun_("", None, pvb_pat, Exp.fun_("", None, [%pat? __hooks],
-      if (hasAnotherHook(continuation)) {
-        mapper.expr(mapper, continuation)
-      } else {
-        [%expr ([%e mapper.expr(mapper, continuation)], __hooks)]
-      }
-      )))
-    ])
-  }
-  | _ => backup.Ast_mapper.expr(mapper, expr)
-  }
-};
-
-let firstHookMapper = (ctx, backup) => {
-  let hooks = hooksMapper(backup);
-  let ctx = Exp.ident(Location.mknoloc(Lident(ctx)));
-  Parsetree.{
-    ...Ast_mapper.default_mapper,
-    expr: (mapper, expr) =>
-      switch (expr.pexp_desc) {
-      | Pexp_extension((
-          {txt: "hook", loc},
-          PStr([
-            {
-              pstr_desc:
-                Pstr_eval(
-                  {
-                    pexp_desc:
-                      Pexp_let(
-                        Nonrecursive,
-                        [
-                          {
-                            pvb_pat,
-                            pvb_expr: {pexp_desc: Pexp_apply(target, args)},
-                          },
-                        ],
-                        continuation,
-                      ),
-                  },
-                  attributes,
-                ),
-            },
-          ]),
-        )) =>
-        let%expr (res, hooks) = [%e
-          Exp.apply(
-            target,
-            args
-            @ [
-              ("", [%expr [%e ctx].Fluid.hooks]),
-              (
-                "",
-                Exp.fun_(
-                  "",
-                  None,
-                  pvb_pat,
-                  Exp.fun_(
-                    "",
-                    None,
-                    [%pat? __hooks],
-      if (hasAnotherHook(continuation)) {
-        hooks.expr(hooks, continuation)
-      } else {
-        [%expr ([%e backup.expr(backup, continuation)], __hooks)]
-      }
-
-                    /* hooks.expr(hooks, continuation), */
-                  ),
-                ),
-              ),
-            ],
-          )
-        ];
-        [%e ctx].Fluid.finish(hooks);
-        res;
-      | _ => backup.Ast_mapper.expr(mapper, expr)
-      },
-  };
-};
-
-let mapFunBody = (mapper, ctx, body) => {
-  let self = firstHookMapper(ctx, mapper);
-  self.expr(self, body)
-};
-
 let mapper = _argv =>
   Parsetree.{
     ...Ast_mapper.default_mapper,
     expr: (mapper, expr) => {
       switch expr {
-        | {pexp_desc: Pexp_fun("", None, {ppat_desc: Ppat_var({txt})} as pat, body)} => {
-          ...expr,
-          pexp_desc: Pexp_fun("", None, pat, hasAnotherHook(body) ? mapFunBody(mapper, txt, body) : mapper.expr(mapper, body))}
+        | {pexp_desc: Pexp_extension((
+            {txt: "hook", loc},
+            PStr([{ pstr_desc: Pstr_eval({pexp_loc, pexp_desc: Pexp_let(Nonrecursive, [{
+              pvb_pat, pvb_loc, pvb_expr: {pexp_loc: apploc, pexp_desc: Pexp_apply(target, args)}
+            }], continuation)}, attributes)}])
+          ))} =>
+          Exp.let_(
+            ~loc=pexp_loc,
+            Nonrecursive,
+            [Vb.mk(~loc=pvb_loc,
+              Pat.tuple(~loc=pvb_loc, [pvb_pat, [%pat? hooks]]),
+              Exp.apply(~loc=apploc, target, args @ [("", Exp.ident(~loc=loc, Location.mkloc(Lident("hooks"), loc)))])
+            )],
+            mapper.expr(mapper, continuation)
+          )
+
         | {
           pexp_attributes: [({txt: "JSX"}, Parsetree.PStr([]))],
           pexp_desc: Pexp_apply(target, args)
@@ -202,8 +108,8 @@ let mapper = _argv =>
                   /* TODO auto-up strings */
                   children,
                   switch layout {
-                    | None => [%expr None]
-                    | Some(prop) => [%expr Some([%e prop])]
+                    | None => Exp.construct(Location.mkloc(Lident("None"), loc), None)
+                    | Some(prop) => Exp.construct(Location.mkloc(Lident("Some"), loc), Some(prop))
                   }
                 ]))
               )

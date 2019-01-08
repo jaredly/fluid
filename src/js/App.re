@@ -23,6 +23,7 @@ let translate = (node, dx, offset) => {
   )
 };
 
+
 /* let abs: NativeInterface.nativeNode => unit = [%bs.raw {|
 function(node) {
   const box = node.getBoundingClientRect();
@@ -52,7 +53,7 @@ let fade = (node, ~out) => {
   )
 };
 
-let toggle = (~on, ~off, ctx) => {
+let toggle = (~on, ~off, hooks) => {
   open Fluid.Hooks;
   let%hook (isOn, setOn) = useState(false);
 
@@ -90,7 +91,7 @@ let toggle = (~on, ~off, ctx) => {
 
 
 /* [@memo] */
-let awesomeComponent = (~value, ~toString, ctx) => {
+let awesomeComponent = (~value, ~toString, hooks) => {
   let%hook (state, setState) = Fluid.Hooks.useState("Awesome");
   <div>
     <div onclick={_evt => setState(state ++ "1")}>
@@ -99,7 +100,7 @@ let awesomeComponent = (~value, ~toString, ctx) => {
   </div>
 };
 
-let button = (~text, ~style, ~onClick, ctx) => {
+let button = (~text, ~style, ~onClick, hooks) => {
   <button style onclick={_evt => onClick()}>(String(text))</button>
 };
 
