@@ -343,7 +343,10 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       /* TODO flush layout changes */
       MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
     } else {
-      let tree = inflateTree(instantiateTree(next));
+      let instances = instantiateTree(next);
+      let instanceLayout = getInstanceLayout(instances);
+      Layout.layout(instanceLayout);
+      let tree = inflateTree(instances);
       /* unmount prev nodes */
       NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
       tree
@@ -360,13 +363,19 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
         MCustom(a)
       | `Different =>
         /* Js.log3("different", a, b); */
-        let tree = inflateTree(instantiateTree(next));
+        let instances = instantiateTree(next);
+        let instanceLayout = getInstanceLayout(instances);
+        Layout.layout(instanceLayout);
+        let tree = inflateTree(instances);
         /* unmount prev nodes */
         NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
         tree
     }
   | _ =>
-    let tree = inflateTree(instantiateTree(next));
+    let instances = instantiateTree(next);
+    let instanceLayout = getInstanceLayout(instances);
+    Layout.layout(instanceLayout);
+    let tree = inflateTree(instances);
     /* unmount prev nodes */
     NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
     tree

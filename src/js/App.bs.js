@@ -58,7 +58,9 @@ function toggle(on, off, hooks) {
           }
           if (exit === 1) {
             var nativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], mountedTree);
-            var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */9], Curry._1(FluidDom.Fluid[/* instantiateTree */7], newTree));
+            var newInst = Curry._1(FluidDom.Fluid[/* instantiateTree */7], newTree);
+            Layout.layout(Curry._1(FluidDom.Fluid[/* getInstanceLayout */5], newInst));
+            var newTree$1 = Curry._1(FluidDom.Fluid[/* inflateTree */9], newInst);
             var newNativeNode = Curry._1(FluidDom.Fluid[/* getNativeNode */4], newTree$1);
             translate(nativeNode, newState ? -30 : 30, 0);
             fade(nativeNode, true);
@@ -118,12 +120,22 @@ function awesomeComponent(value, toString, hooks) {
 }
 
 function button(text, style, onClick, hooks) {
-  return Curry._8(FluidDom.Fluid[/* Native */15][/* button */1], undefined, /* :: */[
-              Curry._3(str, undefined, undefined, text),
-              /* [] */0
-            ], undefined, undefined, undefined, (function (_evt) {
-                return Curry._1(onClick, /* () */0);
-              }), style, /* () */0);
+  return Curry.app(FluidDom.Fluid[/* Native */15][/* button */1], [
+              undefined,
+              /* :: */[
+                Curry._3(str, undefined, undefined, text),
+                /* [] */0
+              ],
+              Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 4, 8, undefined, undefined, undefined, undefined, /* () */0),
+              undefined,
+              undefined,
+              undefined,
+              (function (_evt) {
+                  return Curry._1(onClick, /* () */0);
+                }),
+              style,
+              /* () */0
+            ]);
 }
 
 var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
@@ -150,7 +162,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                       ]),
                   /* [] */0
                 ],
-                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 undefined,
                 undefined,
                 undefined,
@@ -161,7 +173,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
           /* [] */0
         ]
       ],
-      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
       undefined,
       undefined,
       undefined,
@@ -194,7 +206,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                       ]),
                   /* [] */0
                 ],
-                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 undefined,
                 undefined,
                 undefined,
@@ -216,7 +228,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                                                       /* [] */0
                                                     ]
                                                   ],
-                                                  undefined,
+                                                  Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                                   undefined,
                                                   undefined,
                                                   undefined,
@@ -236,7 +248,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
                                                       /* [] */0
                                                     ]
                                                   ],
-                                                  undefined,
+                                                  Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                                   undefined,
                                                   undefined,
                                                   undefined,
@@ -280,7 +292,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */15][/* div */0], [
           ]
         ]
       ],
-      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
       undefined,
       undefined,
       undefined,
@@ -298,7 +310,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          150,
+          152,
           12
         ]
       ];

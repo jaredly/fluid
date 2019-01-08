@@ -48,12 +48,17 @@ var measureWithCanvas = (
   function() {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
+    var cache = {};
     document.body.appendChild(canvas);
     return function (text, font) {
+      const key = `${text}:${font[0]}:${font[1]}`;
+      if (cache[key]) {
+        return cache[key]
+      }
       context.font = font[1] + 'px ' + font[0]
       const dims = context.measureText(text);
-      console.log(dims)
-      return [dims.width, font[1] * 1.2]
+      cache[key] = [dims.width, font[1] * 1.2]
+      return cache[key]
     }
   }()
   );
@@ -161,7 +166,7 @@ function div(id, $staropt$star, layout, _type, width, height, onclick, style, pa
           ]);
 }
 
-function button(id, children, _type, width, height, onclick, style, param) {
+function button(id, children, layout, _type, width, height, onclick, style, param) {
   var tmp = { };
   if (id !== undefined) {
     tmp.id = Js_primitive.valFromOption(id);
@@ -187,7 +192,7 @@ function button(id, children, _type, width, height, onclick, style, param) {
               /* props */tmp
             ],
             children,
-            undefined,
+            layout,
             undefined
           ]);
 }

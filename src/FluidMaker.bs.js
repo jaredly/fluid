@@ -146,7 +146,7 @@ function F(NativeInterface) {
           var contents = el[0];
           return /* IString */Block.__(0, [
                     contents,
-                    Layout.createNodeWithMeasure(/* array */[], layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._2(NativeInterface[/* measureText */2], contents, font)),
+                    Layout.createNodeWithMeasure(/* array */[], layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._2(NativeInterface[/* measureText */2], contents, font)),
                     font
                   ]);
       case 1 : 
@@ -154,7 +154,7 @@ function F(NativeInterface) {
           var layout$1 = el[2];
           var ichildren = Belt_List.map(el[1], instantiateTree);
           var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
-          var style = layout$1 !== undefined ? layout$1 : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+          var style = layout$1 !== undefined ? layout$1 : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
           return /* IBuiltin */Block.__(1, [
                     el[0],
                     ichildren,
@@ -249,7 +249,7 @@ function F(NativeInterface) {
                 var blayout = next[1];
                 var b = next[0];
                 if (a === b && Caml_obj.caml_equal(font, bfont)) {
-                  layoutNode[/* style */1] = blayout !== undefined ? blayout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+                  layoutNode[/* style */1] = blayout !== undefined ? blayout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
                   return /* MString */Block.__(0, [
                             a,
                             node,
@@ -281,7 +281,7 @@ function F(NativeInterface) {
                 var bLayoutStyle = next[2];
                 var bElement = next[0];
                 if (Curry._3(NativeInterface[/* maybeUpdate */0], prev[0], node$1, bElement)) {
-                  aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+                  aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
                   return /* MBuiltin */Block.__(1, [
                             bElement,
                             node$1,
@@ -289,7 +289,10 @@ function F(NativeInterface) {
                             aLayout
                           ]);
                 } else {
-                  var tree = inflateTree(instantiateTree(next));
+                  var instances = instantiateTree(next);
+                  var instanceLayout = getInstanceLayout(instances);
+                  Layout.layout(instanceLayout);
+                  var tree = inflateTree(instances);
                   Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
                   return tree;
                 }
@@ -313,7 +316,10 @@ function F(NativeInterface) {
                   if (match >= 925282182) {
                     return /* MCustom */Block.__(2, [a$1]);
                   } else {
-                    var tree$1 = inflateTree(instantiateTree(next));
+                    var instances$1 = instantiateTree(next);
+                    var instanceLayout$1 = getInstanceLayout(instances$1);
+                    Layout.layout(instanceLayout$1);
+                    var tree$1 = inflateTree(instances$1);
                     Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$1));
                     return tree$1;
                   }
@@ -332,7 +338,10 @@ function F(NativeInterface) {
       
     }
     if (exit === 1) {
-      var tree$3 = inflateTree(instantiateTree(next));
+      var instances$2 = instantiateTree(next);
+      var instanceLayout$2 = getInstanceLayout(instances$2);
+      Layout.layout(instanceLayout$2);
+      var tree$3 = inflateTree(instances$2);
       Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$3));
       return tree$3;
     }

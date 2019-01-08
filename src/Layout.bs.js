@@ -2,7 +2,6 @@
 'use strict';
 
 var Curry = require("bsb-native/lib/js/curry.js");
-var Caml_array = require("bsb-native/lib/js/caml_array.js");
 var Layout$Flex = require("/Users/jared/clone/explorations/fluid/node_modules/flex/src/lib/Layout.js");
 var FloatEncoding$Flex = require("/Users/jared/clone/explorations/fluid/node_modules/flex/src/lib/FloatEncoding.js");
 
@@ -44,7 +43,7 @@ function layout(layoutNode) {
   return Curry._4(Layout[/* layoutNode */24], layoutNode, FloatEncoding$Flex.cssUndefined, FloatEncoding$Flex.cssUndefined, /* Ltr */2);
 }
 
-function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, $staropt$star$6, $staropt$star$7, $staropt$star$8, $staropt$star$9, $staropt$star$10, $staropt$star$11, $staropt$star$12, $staropt$star$13, $staropt$star$14, $staropt$star$15, $staropt$star$16, $staropt$star$17, $staropt$star$18, $staropt$star$19, $staropt$star$20, param) {
+function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, $staropt$star$6, $staropt$star$7, $staropt$star$8, $staropt$star$9, $staropt$star$10, $staropt$star$11, $staropt$star$12, $staropt$star$13, $staropt$star$14, $staropt$star$15, $staropt$star$16, $staropt$star$17, $staropt$star$18, $staropt$star$19, $staropt$star$20, $staropt$star$21, $staropt$star$22, $staropt$star$23, $staropt$star$24, $staropt$star$25, $staropt$star$26, $staropt$star$27, param) {
   var width = $staropt$star !== undefined ? $staropt$star : FloatEncoding$Flex.cssUndefined;
   var height = $staropt$star$1 !== undefined ? $staropt$star$1 : FloatEncoding$Flex.cssUndefined;
   var flexBasis = $staropt$star$2 !== undefined ? $staropt$star$2 : FloatEncoding$Flex.cssUndefined;
@@ -66,29 +65,71 @@ function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3,
   var margin = $staropt$star$18 !== undefined ? $staropt$star$18 : FloatEncoding$Flex.cssUndefined;
   var marginVertical = $staropt$star$19 !== undefined ? $staropt$star$19 : FloatEncoding$Flex.cssUndefined;
   var marginHorizontal = $staropt$star$20 !== undefined ? $staropt$star$20 : FloatEncoding$Flex.cssUndefined;
-  var newrecord = Caml_array.caml_array_dup(Layout[/* LayoutSupport */0][/* defaultStyle */26]);
-  newrecord[/* flexDirection */1] = flexDirection;
-  newrecord[/* justifyContent */2] = justifyContent;
-  newrecord[/* alignItems */4] = alignItems;
-  newrecord[/* alignSelf */5] = alignSelf;
-  newrecord[/* positionType */6] = position;
-  newrecord[/* flexGrow */10] = flexGrow;
-  newrecord[/* flexShrink */11] = flexShrink;
-  newrecord[/* flexBasis */12] = flexBasis;
-  newrecord[/* marginLeft */13] = marginLeft;
-  newrecord[/* marginTop */14] = marginTop;
-  newrecord[/* marginRight */15] = marginRight;
-  newrecord[/* marginBottom */16] = marginBottom;
-  newrecord[/* marginHorizontal */19] = marginHorizontal;
-  newrecord[/* marginVertical */20] = marginVertical;
-  newrecord[/* margin */21] = margin;
-  newrecord[/* width */22] = width;
-  newrecord[/* height */23] = height;
-  newrecord[/* left */28] = left;
-  newrecord[/* top */29] = top;
-  newrecord[/* right */30] = right;
-  newrecord[/* bottom */31] = bottom;
-  return newrecord;
+  var padding = $staropt$star$21 !== undefined ? $staropt$star$21 : FloatEncoding$Flex.cssUndefined;
+  var paddingVertical = $staropt$star$22 !== undefined ? $staropt$star$22 : FloatEncoding$Flex.cssUndefined;
+  var paddingHorizontal = $staropt$star$23 !== undefined ? $staropt$star$23 : FloatEncoding$Flex.cssUndefined;
+  var paddingTop = $staropt$star$24 !== undefined ? $staropt$star$24 : FloatEncoding$Flex.cssUndefined;
+  var paddingLeft = $staropt$star$25 !== undefined ? $staropt$star$25 : FloatEncoding$Flex.cssUndefined;
+  var paddingRight = $staropt$star$26 !== undefined ? $staropt$star$26 : FloatEncoding$Flex.cssUndefined;
+  var paddingBottom = $staropt$star$27 !== undefined ? $staropt$star$27 : FloatEncoding$Flex.cssUndefined;
+  var init = Layout[/* LayoutSupport */0][/* defaultStyle */26];
+  return /* record */[
+          /* direction */init[/* direction */0],
+          /* flexDirection */flexDirection,
+          /* justifyContent */justifyContent,
+          /* alignContent */init[/* alignContent */3],
+          /* alignItems */alignItems,
+          /* alignSelf */alignSelf,
+          /* positionType */position,
+          /* flexWrap */init[/* flexWrap */7],
+          /* overflow */init[/* overflow */8],
+          /* flex */init[/* flex */9],
+          /* flexGrow */flexGrow,
+          /* flexShrink */flexShrink,
+          /* flexBasis */flexBasis,
+          /* marginLeft */marginLeft,
+          /* marginTop */marginTop,
+          /* marginRight */marginRight,
+          /* marginBottom */marginBottom,
+          /* marginStart */init[/* marginStart */17],
+          /* marginEnd */init[/* marginEnd */18],
+          /* marginHorizontal */marginHorizontal,
+          /* marginVertical */marginVertical,
+          /* margin */margin,
+          /* width */width,
+          /* height */height,
+          /* minWidth */init[/* minWidth */24],
+          /* minHeight */init[/* minHeight */25],
+          /* maxWidth */init[/* maxWidth */26],
+          /* maxHeight */init[/* maxHeight */27],
+          /* left */left,
+          /* top */top,
+          /* right */right,
+          /* bottom */bottom,
+          /* start */init[/* start */32],
+          /* endd */init[/* endd */33],
+          /* horizontal */init[/* horizontal */34],
+          /* vertical */init[/* vertical */35],
+          /* position */init[/* position */36],
+          /* paddingLeft */paddingLeft,
+          /* paddingTop */paddingTop,
+          /* paddingRight */paddingRight,
+          /* paddingBottom */paddingBottom,
+          /* paddingStart */init[/* paddingStart */41],
+          /* paddingEnd */init[/* paddingEnd */42],
+          /* paddingHorizontal */paddingHorizontal,
+          /* paddingVertical */paddingVertical,
+          /* padding */padding,
+          /* borderLeft */init[/* borderLeft */46],
+          /* borderTop */init[/* borderTop */47],
+          /* borderRight */init[/* borderRight */48],
+          /* borderBottom */init[/* borderBottom */49],
+          /* borderStart */init[/* borderStart */50],
+          /* borderEnd */init[/* borderEnd */51],
+          /* borderHorizontal */init[/* borderHorizontal */52],
+          /* borderVertical */init[/* borderVertical */53],
+          /* border */init[/* border */54]
+        ];
 }
 
 var Encoding = 0;

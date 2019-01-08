@@ -69,8 +69,15 @@ let style =
       ~margin=Encoding.cssUndefined,
       ~marginVertical=Encoding.cssUndefined,
       ~marginHorizontal=Encoding.cssUndefined,
+      ~padding=Encoding.cssUndefined,
+      ~paddingVertical=Encoding.cssUndefined,
+      ~paddingHorizontal=Encoding.cssUndefined,
+      ~paddingTop=Encoding.cssUndefined,
+      ~paddingLeft=Encoding.cssUndefined,
+      ~paddingRight=Encoding.cssUndefined,
+      ~paddingBottom=Encoding.cssUndefined,
       ()
-    ) => {
+    ) => { 
   let ret: LayoutTypes.cssStyle = {
     ...LayoutSupport.defaultStyle,
     positionType: position,
@@ -94,6 +101,13 @@ let style =
     margin,
     marginVertical,
     marginHorizontal,
+    padding,
+    paddingVertical,
+    paddingHorizontal,
+    paddingTop,
+    paddingLeft,
+    paddingRight,
+    paddingBottom,
   };
 
   ret;

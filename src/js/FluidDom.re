@@ -71,12 +71,17 @@ module NativeInterface = {
   function() {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
+    var cache = {};
     document.body.appendChild(canvas);
     return function (text, font) {
+      const key = `${text}:${font[0]}:${font[1]}`;
+      if (cache[key]) {
+        return cache[key]
+      }
       context.font = font[1] + 'px ' + font[0]
       const dims = context.measureText(text);
-      console.log(dims)
-      return [dims.width, font[1] * 1.2]
+      cache[key] = [dims.width, font[1] * 1.2]
+      return cache[key]
     }
   }()
   |}];
@@ -150,7 +155,7 @@ module Fluid = {
         ),
     }, children, layout, None);
 
-    let button = (~id=?, ~children, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
+    let button = (~id=?, ~children, ~layout=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
     Builtin({
       NativeInterface.tag: "button",
       props:
@@ -163,7 +168,7 @@ module Fluid = {
           ~style?,
           (),
         ),
-    }, children, None, None);
+    }, children, layout, None);
 
     let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()) => 
     Builtin({

@@ -66,7 +66,9 @@ let toggle = (~on, ~off, hooks) => {
       | (true, false) =>
         open Fluid;
         let nativeNode = getNativeNode(mountedTree);
-        let newTree = inflateTree(instantiateTree(newTree));
+        let newInst = instantiateTree(newTree);
+        Layout.layout(Fluid.getInstanceLayout(newInst));
+        let newTree = inflateTree(newInst);
         let newNativeNode = getNativeNode(newTree);
 
         let dist = 30.;
@@ -103,7 +105,7 @@ let awesomeComponent = (~value, ~toString, hooks) => {
 };
 
 let button = (~text, ~style, ~onClick, hooks) => {
-  <button style onclick={_evt => onClick()}>(str(text))</button>
+  <button style layout={Layout.style(~paddingVertical=4., ~paddingHorizontal=8., ())} onclick={_evt => onClick()}>(str(text))</button>
 };
 
 [@bs.get] external target: Dom.event => Dom.eventTarget = "";
@@ -126,11 +128,11 @@ let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ()
     <div>{str("What")}</div>
   </div>
   <Toggle
-    on=(onClick => <div>
+    on=(onClick => <div layout={Layout.style(~flexDirection=Row, ~alignItems=AlignCenter, ())}>
       (str("Click this to"))
       <Button style="background-color: #88ff88" onClick text="Turn Off" />
     </div>)
-    off=(onClick => <div>
+    off=(onClick => <div layout={Layout.style(~flexDirection=Row, ~alignItems=AlignCenter, ())}>
       <Button style="background-color: #ffacf0" onClick text="Turn On" />
       (str("if you want"))
     </div>)
