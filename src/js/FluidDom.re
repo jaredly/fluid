@@ -141,7 +141,7 @@ module Fluid = {
 
   module Native = {
     let div = (~id=?, ~children=[], ~layout=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
-    Builtin({
+    `Builtin({
       NativeInterface.tag: "div",
       props:
         NativeInterface.nativeProps(
@@ -156,7 +156,7 @@ module Fluid = {
     }, children, layout, None);
 
     let button = (~id=?, ~children, ~layout=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
-    Builtin({
+    `Builtin({
       NativeInterface.tag: "button",
       props:
         NativeInterface.nativeProps(
@@ -171,7 +171,7 @@ module Fluid = {
     }, children, layout, None);
 
     let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()) => 
-    Builtin({
+    `Builtin({
       NativeInterface.tag: "input",
       props:
         NativeInterface.nativeProps(

@@ -98,8 +98,9 @@ module Fluid = {
   include FluidMaker.F(NativeInterface);
 
   module Native = {
+    open NativeInterface;
     let view = (~onPress=?, ~children=[], ~layout=?, ~backgroundColor=?, ()) => 
-    Builtin(
+    `Builtin(
       View(onPress, {backgroundColor: backgroundColor}),
       children,
       layout,
@@ -108,7 +109,7 @@ module Fluid = {
       ;
 
     let button = (~onPress, ~title, ~layout=?, ()) => 
-    Builtin(
+    `Builtin(
       Button(title, onPress),
       [],
       layout,

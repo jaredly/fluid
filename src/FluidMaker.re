@@ -148,29 +148,35 @@ and hooksContainer('hooks, 'reconcileData) = {
 and reconcilerFunction('data) = ('data, 'data, mountedTree, element) => mountedTree
 and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData)) : customWithState
 
-and element =
-| String(string, option(Layout.style), option(NativeInterface.font))
-| Builtin(NativeInterface.element, list(element), option(Layout.style), option(Layout.measureType)): element
-| Custom(custom /* already contains its props & children */)
+and element = [
+| `String(string, option(Layout.style), option(NativeInterface.font))
+| `Builtin(NativeInterface.element, list(element), option(Layout.style), option(Layout.measureType))
+| `Custom(custom /* already contains its props & children */)
+| `Null
+]
 
-and instanceTree =
-| IString(string, Layout.node, option(NativeInterface.font))
-| IBuiltin(NativeInterface.element, list(instanceTree), Layout.node)
-| ICustom(customWithState, instanceTree, list(effect))
+and instanceTree = [
+| `IString(string, Layout.node, option(NativeInterface.font))
+| `IBuiltin(NativeInterface.element, list(instanceTree), Layout.node)
+| `ICustom(customWithState, instanceTree, list(effect))
+| `INull
+]
 
 and container = {
   mutable custom: customWithState,
   mutable mountedTree
 }
 
-and mountedTree =
-| MString(string, NativeInterface.nativeNode, Layout.node, option(NativeInterface.font))
-| MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node): mountedTree
-| MCustom(container)
+and mountedTree = [
+| `MString(string, NativeInterface.nativeNode, Layout.node, option(NativeInterface.font))
+| `MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node)
+| `MCustom(container)
+| `MNull
+]
 
 ;
 
-let string = (~layout=?, ~font=?, x) => String(x, layout, font);
+let string = (~layout=?, ~font=?, x) => `String(x, layout, font);
 
 module Maker = {
   let makeComponent = (identity: 'identity, render: hooksContainer('hooks, 'reconcile) => element) => {
@@ -225,9 +231,10 @@ let runRender = (WithState(component)) => {
 };
 
 let rec getNativeNode = tree => switch tree {
-  | MString(_, node, _, _)
-  | MBuiltin(_, node, _, _) => node
-  | MCustom({mountedTree}) => getNativeNode(mountedTree)
+  | `MNull => None
+  | `MString(_, node, _, _)
+  | `MBuiltin(_, node, _, _) => Some(node)
+  | `MCustom({mountedTree}) => getNativeNode(mountedTree)
 };
 
 /*
@@ -242,20 +249,23 @@ Phases of the algorithm:
  */
 
 let rec getInstanceLayout = element => switch element {
-  | IString(_, layout, _)
-  | IBuiltin(_, _, layout) => layout
-  | ICustom(_, el, _) => getInstanceLayout(el)
+  | `INull => None
+  | `IString(_, layout, _)
+  | `IBuiltin(_, _, layout) => Some(layout)
+  | `ICustom(_, el, _) => getInstanceLayout(el)
 };
 
 let rec getMountedLayout = element => switch element {
-  | MString(_, _, layout, _)
-  | MBuiltin(_, _, _, layout) => layout
-  | MCustom({mountedTree}) => getMountedLayout(mountedTree)
+  | `MNull => None
+  | `MString(_, _, layout, _)
+  | `MBuiltin(_, _, _, layout) => Some(layout)
+  | `MCustom({mountedTree}) => getMountedLayout(mountedTree)
 };
 
 let rec instantiateTree: element => instanceTree = el => switch el {
-  | String(contents, layout, font) => 
-  IString(
+  | `Null => `INull
+  | `String(contents, layout, font) => 
+  `IString(
     contents,
     Layout.createNodeWithMeasure(
       [||],
@@ -265,23 +275,23 @@ let rec instantiateTree: element => instanceTree = el => switch el {
     font
   );
 
-  | Builtin(nativeElement, children, layout, measure) =>
+  | `Builtin(nativeElement, children, layout, measure) =>
     let ichildren = children->List.map(instantiateTree);
-    let childLayouts = ichildren->List.map(getInstanceLayout)->List.toArray;
+    let childLayouts = ichildren->List.map(getInstanceLayout)->List.keepMap(x => x)->List.toArray;
     let style = switch layout {
       | None => Layout.style()
       | Some(s) => s
     };
-    IBuiltin(nativeElement, ichildren, switch measure {
+    `IBuiltin(nativeElement, ichildren, switch measure {
       | None => Layout.createNode(childLayouts, style)
       | Some(m) => Layout.createNodeWithMeasure(childLayouts, style, m)
     })
 
-  | Custom(custom) =>
+  | `Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
     let (tree, effects) = custom->runRender;
-    ICustom(custom, instantiateTree(tree), effects)
+    `ICustom(custom, instantiateTree(tree), effects)
 };
 
 let runEffect = ({cleanup, setCleanup, fn}) => {
@@ -292,23 +302,28 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
   setCleanup(fn());
 };
 
-let rec inflateTree: instanceTree => mountedTree = el => switch el {
-  | IString(contents, layout, font) => 
-    /* TODO set layout properties here... or something */
-    MString(contents, NativeInterface.createTextNode(contents, layout, font), layout, font)
+type insertPoint = FirstChild | AppendAfter;
 
-  | IBuiltin(nativeElement, children, layout) =>
+type anchor = {point: insertPoint, node: NativeInterface.nativeNode};
+
+let rec inflateTree: instanceTree => mountedTree = el => switch el {
+  | `INull => `MNull
+  | `IString(contents, layout, font) => 
+    /* TODO set layout properties here... or something */
+    `MString(contents, NativeInterface.createTextNode(contents, layout, font), layout, font)
+
+  | `IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);
     let children = children->List.map(inflateTree);
-    children->List.forEach(child => NativeInterface.appendChild(node, getNativeNode(child)));
-    MBuiltin(nativeElement, node, children, layout);
+    children->List.keepMap(getNativeNode)->List.forEach(childNode => NativeInterface.appendChild(node, childNode));
+    `MBuiltin(nativeElement, node, children, layout);
 
-  | ICustom(custom, instanceTree, effects) =>
+  | `ICustom(custom, instanceTree, effects) =>
     let mountedTree = inflateTree(instanceTree)
     let container = {custom, mountedTree};
     custom->listenForChanges(container);
     effects->List.forEach(runEffect);
-    MCustom(container)
+    `MCustom(container)
 }
 
 and listenForChanges = (WithState(contents) as component, container) => {
@@ -322,18 +337,18 @@ and listenForChanges = (WithState(contents) as component, container) => {
   }
 }
 
-and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
-  | (MString(a, node, layoutNode, font), String(b, blayout, bfont)) =>
+and reconcileTrees: (mountedTree, element, anchor) => mountedTree = (prev, next, anchor) => switch (prev, next) {
+  | (`MString(a, node, layoutNode, font), `String(b, blayout, bfont)) =>
     if (a == b && font == bfont) {
       /* TODO mark a change if layout != blayout */
       layoutNode.style = switch blayout { | None => Layout.style() | Some(l) => l };
-      MString(a, node, layoutNode, font)
+      `MString(a, node, layoutNode, font)
     } else {
       NativeInterface.setTextContent(node, b, bfont);
       Layout.LayoutSupport.markDirty(layoutNode);
-      MString(b, node, layoutNode, bfont)
+      `MString(b, node, layoutNode, bfont)
     }
-  | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
+  | (`MBuiltin(aElement, node, aChildren, aLayout), `Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
     if (NativeInterface.maybeUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
       aLayout.style = switch bLayoutStyle {
         | Some(s) => s
@@ -341,26 +356,33 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       };
       /* TODO assign the measure function */
       /* TODO flush layout changes */
-      MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
+      `MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
     } else {
       let instances = instantiateTree(next);
-      let instanceLayout = getInstanceLayout(instances);
-      Layout.layout(instanceLayout);
+      switch (getInstanceLayout(instances)) {
+        | None => ()
+        | Some(instanceLayout) => Layout.layout(instanceLayout);
+      };
       let tree = inflateTree(instances);
+      switch (getNativeNode(prev), getNativeNode(tree)) {
+        | (None, None) => ()
+        | (Some(prev), None) => NativeInterface.removeNode(prev)
+        | (None, Some(tree)) => NativeInterface.insert(anchor, tree)
+        | (Some(prev), Some(tree)) => NativeInterface.replaceWith(prev, tree);
+      };
       /* unmount prev nodes */
-      NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
       tree
     }
-  | (MCustom(a), Custom(b)) =>
+  | (`MCustom(a), `Custom(b)) =>
     switch (b.clone(a.custom)) {
-      | `Same => MCustom(a)
+      | `Same => `MCustom(a)
       | `Compatible(custom) =>
         let (newElement, effects) = custom->runRender;
-        let tree = reconcileTrees(a.mountedTree, newElement);
+        let tree = reconcileTrees(a.mountedTree, newElement, anchor);
         a.custom = custom;
         a.mountedTree = tree;
         effects->List.forEach(runEffect);
-        MCustom(a)
+        `MCustom(a)
       | `Different =>
         /* Js.log3("different", a, b); */
         let instances = instantiateTree(next);
@@ -374,12 +396,16 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
   | _ =>
     let instances = instantiateTree(next);
     let instanceLayout = getInstanceLayout(instances);
-    Layout.layout(instanceLayout);
+    switch instanceLayout {
+      | None => ()
+      | Some(instanceLayout) =>
+        Layout.layout(instanceLayout);
+    };
     let tree = inflateTree(instances);
     /* unmount prev nodes */
     NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
     tree
-} and reconcileChildren = (parentNode, aChildren, bChildren) => {
+} and reconcileChildren = (parentNode, aChildren, bChildren, anchor) => {
   switch (aChildren, bChildren) {
     | ([], []) => []
     | ([], _) =>
@@ -390,7 +416,12 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       more->List.forEach(child => NativeInterface.removeChild(parentNode, getNativeNode(child)));
       []
     | ([one, ...aRest], [two, ...bRest]) =>
-      [reconcileTrees(one, two), ...reconcileChildren(parentNode, aRest, bRest)]
+      let res = reconcileTrees(one, two, anchor);
+      let anchor = switch (getNativeNode(res)) {
+        | None => anchor
+        | Some(node) => {node, point: AppendAfter}
+      };
+      [res, ...reconcileChildren(parentNode, aRest, bRest, anchor)]
   }
 };
 
@@ -415,9 +446,6 @@ lifecycle methods or something
  */
 
   module Hooks = {
-    /* let useHook = hooks => switch (hooks.current^) {
-      | None =>
-    } */
 
     let useReconciler = (data, fn, hooks) => {
       let next = switch (hooks.current^) {
