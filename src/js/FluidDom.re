@@ -99,6 +99,7 @@ module NativeInterface = {
   };
 
   [@bs.scope "document"][@bs.val] external createTextNode: string => nativeNode = "";
+  let createNullNode = () => createTextNode("");
   [@bs.set] external setTextContent: (nativeNode, string) => unit = "textContent";
   let setTextContent = (el, text, font) => {
     let font = switch font { | None => defaultFont | Some(f) => f };

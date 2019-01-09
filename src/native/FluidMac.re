@@ -19,6 +19,8 @@ module NativeInterface = {
 
   type viewStyles = {backgroundColor: option(color)};
 
+  external createNullNode: unit => nativeNode = "fluid_create_NullNode";
+
   external createView: (
     ~onPress: option(unit => unit),
     ~pos: (float, float),

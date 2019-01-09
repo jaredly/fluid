@@ -99,11 +99,16 @@ function F(NativeInterface) {
   var getNativeNode = function (_tree) {
     while(true) {
       var tree = _tree;
-      if (tree[0] >= -165956642) {
+      var variant = tree[0];
+      if (variant !== -165956642) {
+        if (variant >= 163738996) {
+          return tree[1][0];
+        } else {
+          return tree[1][1];
+        }
+      } else {
         _tree = tree[1][/* mountedTree */1];
         continue ;
-      } else {
-        return tree[1][1];
       }
     };
   };
@@ -111,15 +116,17 @@ function F(NativeInterface) {
     while(true) {
       var element = _element;
       var variant = element[0];
-      if (variant !== 209368410) {
-        if (variant >= 560167418) {
-          return element[1][1];
+      if (variant >= 560167418) {
+        if (variant >= 1009263472) {
+          return element[1];
         } else {
-          _element = element[1][1];
-          continue ;
+          return element[1][1];
         }
-      } else {
+      } else if (variant >= 209368410) {
         return element[1][2];
+      } else {
+        _element = element[1][1];
+        continue ;
       }
     };
   };
@@ -127,61 +134,70 @@ function F(NativeInterface) {
     while(true) {
       var element = _element;
       var variant = element[0];
-      if (variant !== -247169578) {
-        if (variant >= -165956642) {
+      if (variant >= -165956642) {
+        if (variant >= 163738996) {
+          return element[1][1];
+        } else {
           _element = element[1][/* mountedTree */1];
           continue ;
-        } else {
-          return element[1][2];
         }
-      } else {
+      } else if (variant >= -247169578) {
         return element[1][3];
+      } else {
+        return element[1][2];
       }
     };
   };
   var instantiateTree = function (el) {
-    var variant = el[0];
-    if (variant !== -198771759) {
-      if (variant >= 1024993923) {
-        var match = el[1];
-        var measure = match[3];
-        var layout = match[2];
-        var ichildren = Belt_List.map(match[1], instantiateTree);
-        var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
-        var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-        return /* `IBuiltin */[
-                209368410,
-                /* tuple */[
-                  match[0],
-                  ichildren,
-                  measure !== undefined ? Layout.createNodeWithMeasure(childLayouts, style, measure) : Layout.createNode(childLayouts, style)
-                ]
-              ];
+    if (typeof el === "number") {
+      return /* `INull */[
+              1009263472,
+              Layout.createNode(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))
+            ];
+    } else {
+      var variant = el[0];
+      if (variant !== -198771759) {
+        if (variant >= 1024993923) {
+          var match = el[1];
+          var measure = match[3];
+          var layout = match[2];
+          var ichildren = Belt_List.map(match[1], instantiateTree);
+          var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
+          var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+          return /* `IBuiltin */[
+                  209368410,
+                  /* tuple */[
+                    match[0],
+                    ichildren,
+                    measure !== undefined ? Layout.createNodeWithMeasure(childLayouts, style, measure) : Layout.createNode(childLayouts, style)
+                  ]
+                ];
+        } else {
+          var match$1 = el[1];
+          var font = match$1[2];
+          var layout$1 = match$1[1];
+          var contents = match$1[0];
+          return /* `IString */[
+                  560167418,
+                  /* tuple */[
+                    contents,
+                    Layout.createNodeWithMeasure(/* array */[], layout$1 !== undefined ? layout$1 : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._2(NativeInterface[/* measureText */2], contents, font)),
+                    font
+                  ]
+                ];
+        }
       } else {
-        var match$1 = el[1];
-        var font = match$1[2];
-        var layout$1 = match$1[1];
-        var contents = match$1[0];
-        return /* `IString */[
-                560167418,
+        var custom = Curry._1(el[1][/* init */0], /* () */0);
+        var match$2 = runRender(custom);
+        return /* `ICustom */[
+                -809117478,
                 /* tuple */[
-                  contents,
-                  Layout.createNodeWithMeasure(/* array */[], layout$1 !== undefined ? layout$1 : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), Curry._2(NativeInterface[/* measureText */2], contents, font)),
-                  font
+                  custom,
+                  instantiateTree(match$2[0]),
+                  match$2[1]
                 ]
               ];
       }
-    } else {
-      var custom = Curry._1(el[1][/* init */0], /* () */0);
-      var match$2 = runRender(custom);
-      return /* `ICustom */[
-              -809117478,
-              /* tuple */[
-                custom,
-                instantiateTree(match$2[0]),
-                match$2[1]
-              ]
-            ];
     }
   };
   var runEffect = function (param) {
@@ -193,8 +209,16 @@ function F(NativeInterface) {
   };
   var inflateTree = function (el) {
     var variant = el[0];
-    if (variant !== 209368410) {
-      if (variant >= 560167418) {
+    if (variant >= 560167418) {
+      if (variant >= 1009263472) {
+        return /* `MNull */[
+                163738996,
+                /* tuple */[
+                  Curry._1(NativeInterface[/* createNullNode */3], /* () */0),
+                  el[1]
+                ]
+              ];
+      } else {
         var match = el[1];
         var font = match[2];
         var layout = match[1];
@@ -203,34 +227,20 @@ function F(NativeInterface) {
                 -944155394,
                 /* tuple */[
                   contents,
-                  Curry._3(NativeInterface[/* createTextNode */3], contents, layout, font),
+                  Curry._3(NativeInterface[/* createTextNode */4], contents, layout, font),
                   layout,
                   font
                 ]
               ];
-      } else {
-        var match$1 = el[1];
-        var custom = match$1[0];
-        var mountedTree = inflateTree(match$1[1]);
-        var container = /* record */[
-          /* custom */custom,
-          /* mountedTree */mountedTree
-        ];
-        listenForChanges(custom, container);
-        Belt_List.forEach(match$1[2], runEffect);
-        return /* `MCustom */[
-                -165956642,
-                container
-              ];
       }
-    } else {
-      var match$2 = el[1];
-      var layout$1 = match$2[2];
-      var nativeElement = match$2[0];
+    } else if (variant >= 209368410) {
+      var match$1 = el[1];
+      var layout$1 = match$1[2];
+      var nativeElement = match$1[0];
       var node = Curry._2(NativeInterface[/* inflate */1], nativeElement, layout$1);
-      var children = Belt_List.map(match$2[1], inflateTree);
-      Belt_List.forEach(children, (function (child) {
-              return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(child));
+      var children = Belt_List.map(match$1[1], inflateTree);
+      Belt_List.forEach(Belt_List.map(children, getNativeNode), (function (childNode) {
+              return Curry._2(NativeInterface[/* appendChild */6], node, childNode);
             }));
       return /* `MBuiltin */[
               -247169578,
@@ -240,6 +250,20 @@ function F(NativeInterface) {
                 children,
                 layout$1
               ]
+            ];
+    } else {
+      var match$2 = el[1];
+      var custom = match$2[0];
+      var mountedTree = inflateTree(match$2[1]);
+      var container = /* record */[
+        /* custom */custom,
+        /* mountedTree */mountedTree
+      ];
+      listenForChanges(custom, container);
+      Belt_List.forEach(match$2[2], runEffect);
+      return /* `MCustom */[
+              -165956642,
+              container
             ];
     }
   };
@@ -263,105 +287,109 @@ function F(NativeInterface) {
   };
   var reconcileTrees = function (prev, next) {
     var exit = 0;
-    var variant = prev[0];
-    if (variant !== -247169578) {
-      if (variant >= -165956642) {
-        if (typeof next === "number" || next[0] !== -198771759) {
-          exit = 1;
-        } else {
-          var a = prev[1];
-          var match = Curry._1(next[1][/* clone */1], a[/* custom */0]);
-          if (typeof match === "number") {
-            if (match >= 925282182) {
+    if (typeof prev === "number") {
+      exit = 1;
+    } else {
+      var variant = prev[0];
+      if (variant !== -944155394) {
+        if (variant !== -247169578) {
+          if (variant !== -165956642 || typeof next === "number" || next[0] !== -198771759) {
+            exit = 1;
+          } else {
+            var a = prev[1];
+            var match = Curry._1(next[1][/* clone */1], a[/* custom */0]);
+            if (typeof match === "number") {
+              if (match >= 925282182) {
+                return /* `MCustom */[
+                        -165956642,
+                        a
+                      ];
+              } else {
+                var instances = instantiateTree(next);
+                var instanceLayout = getInstanceLayout(instances);
+                Layout.layout(instanceLayout);
+                var tree = inflateTree(instances);
+                Curry._2(NativeInterface[/* replaceWith */8], getNativeNode(prev), getNativeNode(tree));
+                return tree;
+              }
+            } else {
+              var custom = match[1];
+              var match$1 = runRender(custom);
+              var tree$1 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
+              a[/* custom */0] = custom;
+              a[/* mountedTree */1] = tree$1;
+              Belt_List.forEach(match$1[1], runEffect);
               return /* `MCustom */[
                       -165956642,
                       a
                     ];
-            } else {
-              var instances = instantiateTree(next);
-              var instanceLayout = getInstanceLayout(instances);
-              Layout.layout(instanceLayout);
-              var tree = inflateTree(instances);
-              Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree));
-              return tree;
             }
-          } else {
-            var custom = match[1];
-            var match$1 = runRender(custom);
-            var tree$1 = reconcileTrees(a[/* mountedTree */1], match$1[0]);
-            a[/* custom */0] = custom;
-            a[/* mountedTree */1] = tree$1;
-            Belt_List.forEach(match$1[1], runEffect);
-            return /* `MCustom */[
-                    -165956642,
-                    a
+          }
+        } else if (typeof next === "number" || next[0] !== 1024993923) {
+          exit = 1;
+        } else {
+          var match$2 = next[1];
+          var bLayoutStyle = match$2[2];
+          var bElement = match$2[0];
+          var match$3 = prev[1];
+          var aLayout = match$3[3];
+          var node = match$3[1];
+          if (Curry._3(NativeInterface[/* maybeUpdate */0], match$3[0], node, bElement)) {
+            aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+            return /* `MBuiltin */[
+                    -247169578,
+                    /* tuple */[
+                      bElement,
+                      node,
+                      reconcileChildren(node, match$3[2], match$2[1]),
+                      aLayout
+                    ]
                   ];
+          } else {
+            var instances$1 = instantiateTree(next);
+            var instanceLayout$1 = getInstanceLayout(instances$1);
+            Layout.layout(instanceLayout$1);
+            var tree$2 = inflateTree(instances$1);
+            Curry._2(NativeInterface[/* replaceWith */8], getNativeNode(prev), getNativeNode(tree$2));
+            return tree$2;
           }
         }
       } else if (typeof next === "number" || next[0] !== -976970511) {
         exit = 1;
       } else {
-        var match$2 = next[1];
-        var bfont = match$2[2];
-        var blayout = match$2[1];
-        var b = match$2[0];
-        var match$3 = prev[1];
-        var font = match$3[3];
-        var layoutNode = match$3[2];
-        var node = match$3[1];
-        var a$1 = match$3[0];
+        var match$4 = next[1];
+        var bfont = match$4[2];
+        var blayout = match$4[1];
+        var b = match$4[0];
+        var match$5 = prev[1];
+        var font = match$5[3];
+        var layoutNode = match$5[2];
+        var node$1 = match$5[1];
+        var a$1 = match$5[0];
         if (a$1 === b && Caml_obj.caml_equal(font, bfont)) {
           layoutNode[/* style */1] = blayout !== undefined ? blayout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
           return /* `MString */[
                   -944155394,
                   /* tuple */[
                     a$1,
-                    node,
+                    node$1,
                     layoutNode,
                     font
                   ]
                 ];
         } else {
-          Curry._3(NativeInterface[/* setTextContent */4], node, b, bfont);
+          Curry._3(NativeInterface[/* setTextContent */5], node$1, b, bfont);
           Curry._1(Layout.Layout[/* LayoutSupport */0][/* markDirty */48], layoutNode);
           return /* `MString */[
                   -944155394,
                   /* tuple */[
                     b,
-                    node,
+                    node$1,
                     layoutNode,
                     bfont
                   ]
                 ];
         }
-      }
-    } else if (typeof next === "number" || next[0] !== 1024993923) {
-      exit = 1;
-    } else {
-      var match$4 = next[1];
-      var bLayoutStyle = match$4[2];
-      var bElement = match$4[0];
-      var match$5 = prev[1];
-      var aLayout = match$5[3];
-      var node$1 = match$5[1];
-      if (Curry._3(NativeInterface[/* maybeUpdate */0], match$5[0], node$1, bElement)) {
-        aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-        return /* `MBuiltin */[
-                -247169578,
-                /* tuple */[
-                  bElement,
-                  node$1,
-                  reconcileChildren(node$1, match$5[2], match$4[1]),
-                  aLayout
-                ]
-              ];
-      } else {
-        var instances$1 = instantiateTree(next);
-        var instanceLayout$1 = getInstanceLayout(instances$1);
-        Layout.layout(instanceLayout$1);
-        var tree$2 = inflateTree(instances$1);
-        Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$2));
-        return tree$2;
       }
     }
     if (exit === 1) {
@@ -369,7 +397,7 @@ function F(NativeInterface) {
       var instanceLayout$2 = getInstanceLayout(instances$2);
       Layout.layout(instanceLayout$2);
       var tree$3 = inflateTree(instances$2);
-      Curry._2(NativeInterface[/* replaceWith */7], getNativeNode(prev), getNativeNode(tree$3));
+      Curry._2(NativeInterface[/* replaceWith */8], getNativeNode(prev), getNativeNode(tree$3));
       return tree$3;
     }
     
@@ -383,7 +411,7 @@ function F(NativeInterface) {
               ];
       } else {
         Belt_List.forEach(aChildren, (function (child) {
-                return Curry._2(NativeInterface[/* removeChild */6], parentNode, getNativeNode(child));
+                return Curry._2(NativeInterface[/* removeChild */7], parentNode, getNativeNode(child));
               }));
         return /* [] */0;
       }
@@ -392,7 +420,7 @@ function F(NativeInterface) {
               return inflateTree(instantiateTree(child));
             }));
       Belt_List.forEach(more, (function (child) {
-              return Curry._2(NativeInterface[/* appendChild */5], parentNode, getNativeNode(child));
+              return Curry._2(NativeInterface[/* appendChild */6], parentNode, getNativeNode(child));
             }));
       return more;
     } else {
@@ -404,7 +432,7 @@ function F(NativeInterface) {
     var instanceLayout = getInstanceLayout(instances);
     Layout.layout(instanceLayout);
     var tree = inflateTree(instances);
-    return Curry._2(NativeInterface[/* appendChild */5], node, getNativeNode(tree));
+    return Curry._2(NativeInterface[/* appendChild */6], node, getNativeNode(tree));
   };
   var useReconciler = function (data, fn, hooks) {
     var match = hooks[/* current */3][0];

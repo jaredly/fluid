@@ -502,6 +502,14 @@ CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, v
   CAMLreturn((value) view);
 }
 
+CAMLprim value fluid_create_NullNode() {
+  CAMLparam0();
+
+  NSView* view = [[FlippedView alloc] initWithFrame:CGRectZero];
+
+  CAMLreturn((value) view);
+}
+
 void fluid_set_NSTextView_textContent(value text_v, value contents_v, value font_v) {
   CAMLparam3(text_v, contents_v, font_v);
   printf("set text contents\n");

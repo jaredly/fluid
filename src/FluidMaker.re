@@ -15,6 +15,7 @@ module type NativeInterface = {
 
   let measureText: (string, option(font)) => Layout.measureType;
 
+  let createNullNode: unit => nativeNode;
   let createTextNode: (string, Layout.node, option(font)) => nativeNode;
   let setTextContent: (nativeNode, string, option(font)) => unit;
   let appendChild: (nativeNode, nativeNode) => unit;
@@ -263,7 +264,7 @@ let rec getMountedLayout = element => switch element {
 };
 
 let rec instantiateTree: element => instanceTree = el => switch el {
-  | `Null => `INull
+  | `Null => `INull(Layout.createNode([||], Layout.style()))
   | `String(contents, layout, font) => 
   `IString(
     contents,
@@ -302,12 +303,8 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
   setCleanup(fn());
 };
 
-type insertPoint = FirstChild | AppendAfter;
-
-type anchor = {point: insertPoint, node: NativeInterface.nativeNode};
-
 let rec inflateTree: instanceTree => mountedTree = el => switch el {
-  | `INull => `MNull
+  | `INull(layout) => `MNull(NativeInterface.createNullNode(), layout)
   | `IString(contents, layout, font) => 
     /* TODO set layout properties here... or something */
     `MString(contents, NativeInterface.createTextNode(contents, layout, font), layout, font)
@@ -315,7 +312,7 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
   | `IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);
     let children = children->List.map(inflateTree);
-    children->List.keepMap(getNativeNode)->List.forEach(childNode => NativeInterface.appendChild(node, childNode));
+    children->List.map(getNativeNode)->List.forEach(childNode => NativeInterface.appendChild(node, childNode));
     `MBuiltin(nativeElement, node, children, layout);
 
   | `ICustom(custom, instanceTree, effects) =>
@@ -337,7 +334,7 @@ and listenForChanges = (WithState(contents) as component, container) => {
   }
 }
 
-and reconcileTrees: (mountedTree, element, anchor) => mountedTree = (prev, next, anchor) => switch (prev, next) {
+and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
   | (`MString(a, node, layoutNode, font), `String(b, blayout, bfont)) =>
     if (a == b && font == bfont) {
       /* TODO mark a change if layout != blayout */
@@ -371,7 +368,7 @@ and reconcileTrees: (mountedTree, element, anchor) => mountedTree = (prev, next,
       | `Same => `MCustom(a)
       | `Compatible(custom) =>
         let (newElement, effects) = custom->runRender;
-        let tree = reconcileTrees(a.mountedTree, newElement, anchor);
+        let tree = reconcileTrees(a.mountedTree, newElement);
         a.custom = custom;
         a.mountedTree = tree;
         effects->List.forEach(runEffect);
@@ -389,16 +386,12 @@ and reconcileTrees: (mountedTree, element, anchor) => mountedTree = (prev, next,
   | _ =>
     let instances = instantiateTree(next);
     let instanceLayout = getInstanceLayout(instances);
-    switch instanceLayout {
-      | None => ()
-      | Some(instanceLayout) =>
-        Layout.layout(instanceLayout);
-    };
+    Layout.layout(instanceLayout);
     let tree = inflateTree(instances);
     /* unmount prev nodes */
     NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
     tree
-} and reconcileChildren = (parentNode, aChildren, bChildren, anchor) => {
+} and reconcileChildren = (parentNode, aChildren, bChildren) => {
   switch (aChildren, bChildren) {
     | ([], []) => []
     | ([], _) =>
@@ -409,12 +402,7 @@ and reconcileTrees: (mountedTree, element, anchor) => mountedTree = (prev, next,
       more->List.forEach(child => NativeInterface.removeChild(parentNode, getNativeNode(child)));
       []
     | ([one, ...aRest], [two, ...bRest]) =>
-      let res = reconcileTrees(one, two, anchor);
-      let anchor = switch (getNativeNode(res)) {
-        | None => anchor
-        | Some(node) => {node, point: AppendAfter}
-      };
-      [res, ...reconcileChildren(parentNode, aRest, bRest, anchor)]
+      [reconcileTrees(one, two), ...reconcileChildren(parentNode, aRest, bRest)]
   }
 };
 

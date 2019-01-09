@@ -67,6 +67,10 @@ function measureText(text, font, _node, width, widthMode, height, heightMode) {
   return measureWithCanvas(text, font$1);
 }
 
+function createNullNode(param) {
+  return document.createTextNode("");
+}
+
 function setTextContent(el, text, font) {
   var font$1 = font !== undefined ? font : defaultFont;
   el.textContent = text;
@@ -106,6 +110,7 @@ var NativeInterface = /* module */[
   /* defaultFont */defaultFont,
   /* measureWithCanvas */measureWithCanvas,
   /* measureText */measureText,
+  /* createNullNode */createNullNode,
   /* setTextContent */setTextContent,
   /* createTextNode */createTextNode,
   /* updateNativeProps */updateNativeProps,
@@ -117,6 +122,7 @@ var include = FluidMaker.F([
       maybeUpdate,
       inflate,
       measureText,
+      createNullNode,
       createTextNode,
       setTextContent,
       (function (prim, prim$1) {
