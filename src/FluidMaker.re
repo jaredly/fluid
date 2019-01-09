@@ -18,8 +18,8 @@ module type NativeInterface = {
   let measureText: (string, option(font)) => Layout.measureType;
 
   let createNullNode: unit => nativeNode;
-  let createTextNode: (string, Layout.node, option(font)) => nativeNode;
-  let setTextContent: (nativeNode, string, option(font)) => unit;
+  /* let createTextNode: (string, Layout.node, option(font)) => nativeNode; */
+  /* let setTextContent: (nativeNode, string, option(font)) => unit; */
   let appendChild: (nativeNode, nativeNode) => unit;
   /* let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit; */
   let removeChild: (nativeNode, nativeNode) => unit;
@@ -152,14 +152,12 @@ and reconcilerFunction('data) = ('data, 'data, mountedTree, element) => mountedT
 and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData)) : customWithState
 
 and element = [
-| `String(string, option(Layout.style), option(NativeInterface.font))
 | `Builtin(NativeInterface.element, list(element), option(Layout.style), option(Layout.measureType))
 | `Custom(custom /* already contains its props & children */)
 | `Null
 ]
 
 and instanceTree = [
-| `IString(string, Layout.node, option(NativeInterface.font))
 | `IBuiltin(NativeInterface.element, list(instanceTree), Layout.node)
 | `ICustom(customWithState, instanceTree, list(effect))
 | `INull(Layout.node)
@@ -171,7 +169,6 @@ and container = {
 }
 
 and mountedTree = [
-| `MString(string, NativeInterface.nativeNode, Layout.node, option(NativeInterface.font))
 | `MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node)
 | `MCustom(container)
 | `MNull(NativeInterface.nativeNode, Layout.node)
@@ -179,7 +176,7 @@ and mountedTree = [
 
 ;
 
-let string = (~layout=?, ~font=?, x) => `String(x, layout, font);
+/* let string = (~layout=?, ~font=?, x) => `String(x, layout, font); */
 
 module Maker = {
   let makeComponent = (identity: 'identity, render: hooksContainer('hooks, 'reconcile) => element) => {
@@ -235,7 +232,6 @@ let runRender = (WithState(component)) => {
 
 let rec getNativeNode = tree => switch tree {
   | `MNull(node, _)
-  | `MString(_, node, _, _)
   | `MBuiltin(_, node, _, _) => node
   | `MCustom({mountedTree}) => getNativeNode(mountedTree)
 };
@@ -253,30 +249,18 @@ Phases of the algorithm:
 
 let rec getInstanceLayout = element => switch element {
   | `INull(layout)
-  | `IString(_, layout, _)
   | `IBuiltin(_, _, layout) => layout
   | `ICustom(_, el, _) => getInstanceLayout(el)
 };
 
 let rec getMountedLayout = element => switch element {
   | `MNull(_, layout)
-  | `MString(_, _, layout, _)
   | `MBuiltin(_, _, _, layout) => layout
   | `MCustom({mountedTree}) => getMountedLayout(mountedTree)
 };
 
 let rec instantiateTree: element => instanceTree = el => switch el {
   | `Null => `INull(Layout.createNode([||], Layout.style()))
-  | `String(contents, layout, font) => 
-  `IString(
-    contents,
-    Layout.createNodeWithMeasure(
-      [||],
-      switch layout { | None => Layout.style() | Some(l) => l },
-      NativeInterface.measureText(contents, font),
-    ),
-    font
-  );
 
   | `Builtin(nativeElement, children, layout, measure) =>
     let ichildren = children->List.map(instantiateTree);
@@ -316,9 +300,6 @@ type root = {
 
 let rec inflateTree: (container => unit, instanceTree) => mountedTree = (enqueue, el) => switch el {
   | `INull(layout) => `MNull(NativeInterface.createNullNode(), layout)
-  | `IString(contents, layout, font) => 
-    /* TODO set layout properties here... or something */
-    `MString(contents, NativeInterface.createTextNode(contents, layout, font), layout, font)
 
   | `IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);
@@ -347,16 +328,6 @@ and listenForChanges = (WithState(contents) as component, container, enqueue) =>
 }
 
 and reconcileTrees: (container => unit, mountedTree, element) => mountedTree = (enqueue, prev, next) => switch (prev, next) {
-  | (`MString(a, node, layoutNode, font), `String(b, blayout, bfont)) =>
-    if (a == b && font == bfont) {
-      /* TODO mark a change if layout != blayout */
-      layoutNode.style = switch blayout { | None => Layout.style() | Some(l) => l };
-      `MString(a, node, layoutNode, font)
-    } else {
-      NativeInterface.setTextContent(node, b, bfont);
-      Layout.LayoutSupport.markDirty(layoutNode);
-      `MString(b, node, layoutNode, bfont)
-    }
   | (`MBuiltin(aElement, node, aChildren, aLayout), `Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
     if (NativeInterface.maybeUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
       aLayout.style = switch bLayoutStyle {

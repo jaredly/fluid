@@ -62,7 +62,8 @@ module NativeInterface = {
 
   type element =
     | View(option(unit => unit), viewStyles)
-    | Button(string, unit => unit);
+    | Button(string, unit => unit)
+    | String(string, option(font));
 
   let maybeUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
@@ -78,14 +79,20 @@ module NativeInterface = {
         };
         true
 
+      | (String(atext, afont), String(btext, bfont)) => 
+        if (atext != btext || afont != bfont) {
+          setTextContent(mountPoint, btext, bfont)
+        };
+        true
+
       | _ => false
     }
   };
 
-  let createTextNode = (text, {Layout.LayoutTypes.layout: {top, left, width, height}}, font) => {
+  /* let createTextNode = (text, {Layout.LayoutTypes.layout: {top, left, width, height}}, font) => {
     let font = switch font { | None => defaultFont | Some(f) => f};
     createTextNode(text, ~pos=(top, left), ~size=(width, height), ~font);
-  }
+  } */
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | View(onPress, style) => 
@@ -93,6 +100,9 @@ module NativeInterface = {
     createView(~onPress, ~pos=(top, left), ~size=(width, height), ~style)
     | Button(title, onPress) =>
     createButton(~title, ~onPress, ~pos=(top, left), ~size=(width, height))
+    | String(contents, font) =>
+      let font = switch font { | None => defaultFont | Some(f) => f};
+      createTextNode(contents, ~pos=(top, left), ~size=(width, height), ~font);
   }
 };
 
@@ -123,8 +133,18 @@ module Fluid = {
       })
     );
 
+    let text = (~layout=?, ~font=?, ~contents, ()) => {
+      `Builtin(
+        String(contents, font),
+        [],
+        layout,
+        Some(NativeInterface.measureText(contents, font))
+      )
+    };
+
   }
 
+  let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
   let launchWindow = (~title: string, ~root: element) => {
     let instances = instantiateTree(Native.view(~children=[root], ()));
