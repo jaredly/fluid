@@ -15,6 +15,8 @@ module NativeInterface = {
     ~style:string=?,
     unit
     ) => nativeProps = "";
+  
+  [@bs.val] external setImmediate: (unit => unit) => unit = "";
 
   /* external opaqueProps: domProps('a) => nativeProps = "%identity"; */
   [@bs.scope "document"][@bs.val] external _createElement: string => nativeNode = "createElement";

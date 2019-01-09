@@ -5,6 +5,8 @@ module type NativeInterface = {
   type nativeNode;
   type font;
 
+  let setImmediate: (unit => unit) => unit;
+
 
   /* If it returns true, then the elements were of the same type and the mounted node was updated.
   If false, they weren't of the same type and no update happened.
@@ -303,7 +305,16 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
   setCleanup(fn());
 };
 
-let rec inflateTree: instanceTree => mountedTree = el => switch el {
+
+type root = {
+  mutable layout: Layout.node,
+  mutable node: option(NativeInterface.nativeNode),
+  mutable invalidatedElements: list(container),
+  mutable waiting: bool,
+};
+
+
+let rec inflateTree: (container => unit, instanceTree) => mountedTree = (enqueue, el) => switch el {
   | `INull(layout) => `MNull(NativeInterface.createNullNode(), layout)
   | `IString(contents, layout, font) => 
     /* TODO set layout properties here... or something */
@@ -311,30 +322,31 @@ let rec inflateTree: instanceTree => mountedTree = el => switch el {
 
   | `IBuiltin(nativeElement, children, layout) =>
     let node = NativeInterface.inflate(nativeElement, layout);
-    let children = children->List.map(inflateTree);
+    let children = children->List.map(inflateTree(enqueue));
     children->List.map(getNativeNode)->List.forEach(childNode => NativeInterface.appendChild(node, childNode));
     `MBuiltin(nativeElement, node, children, layout);
 
   | `ICustom(custom, instanceTree, effects) =>
-    let mountedTree = inflateTree(instanceTree)
+    let mountedTree = inflateTree(enqueue, instanceTree)
     let container = {custom, mountedTree};
-    custom->listenForChanges(container);
+    custom->listenForChanges(container, enqueue);
     effects->List.forEach(runEffect);
     `MCustom(container)
 }
 
-and listenForChanges = (WithState(contents) as component, container) => {
+and listenForChanges = (WithState(contents) as component, container, enqueue) => {
   contents.onChange = () => {
-    let (newElement, effects) = component->runRender;
+    enqueue(container)
+    /* let (newElement, effects) = component->runRender;
     container.mountedTree = switch (contents.reconciler) {
       | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
       | _ => reconcileTrees(container.mountedTree, newElement)
     };
-    effects->List.forEach(runEffect);
+    effects->List.forEach(runEffect); */
   }
 }
 
-and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => switch (prev, next) {
+and reconcileTrees: (container => unit, mountedTree, element) => mountedTree = (enqueue, prev, next) => switch (prev, next) {
   | (`MString(a, node, layoutNode, font), `String(b, blayout, bfont)) =>
     if (a == b && font == bfont) {
       /* TODO mark a change if layout != blayout */
@@ -353,12 +365,12 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       };
       /* TODO assign the measure function */
       /* TODO flush layout changes */
-      `MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
+      `MBuiltin(bElement, node, reconcileChildren(enqueue, node, aChildren, bChildren), aLayout);
     } else {
       let instances = instantiateTree(next);
       let instanceLayout = getInstanceLayout(instances);
       Layout.layout(instanceLayout);
-      let tree = inflateTree(instances);
+      let tree = inflateTree(enqueue, instances);
       NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
       /* unmount prev nodes */
       tree
@@ -368,7 +380,7 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
       | `Same => `MCustom(a)
       | `Compatible(custom) =>
         let (newElement, effects) = custom->runRender;
-        let tree = reconcileTrees(a.mountedTree, newElement);
+        let tree = reconcileTrees(enqueue, a.mountedTree, newElement);
         a.custom = custom;
         a.mountedTree = tree;
         effects->List.forEach(runEffect);
@@ -378,7 +390,7 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
         let instances = instantiateTree(next);
         let instanceLayout = getInstanceLayout(instances);
         Layout.layout(instanceLayout);
-        let tree = inflateTree(instances);
+        let tree = inflateTree(enqueue, instances);
         /* unmount prev nodes */
         NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
         tree
@@ -387,30 +399,68 @@ and reconcileTrees: (mountedTree, element) => mountedTree = (prev, next) => swit
     let instances = instantiateTree(next);
     let instanceLayout = getInstanceLayout(instances);
     Layout.layout(instanceLayout);
-    let tree = inflateTree(instances);
+    let tree = inflateTree(enqueue, instances);
     /* unmount prev nodes */
     NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
     tree
-} and reconcileChildren = (parentNode, aChildren, bChildren) => {
+} and reconcileChildren = (enqueue, parentNode, aChildren, bChildren) => {
   switch (aChildren, bChildren) {
     | ([], []) => []
     | ([], _) =>
-      let more = bChildren->List.map(child => inflateTree(instantiateTree(child)));
+      let more = bChildren->List.map(child => inflateTree(enqueue, instantiateTree(child)));
       more->List.forEach(child => NativeInterface.appendChild(parentNode, getNativeNode(child)));
       more
     | (more, []) => 
       more->List.forEach(child => NativeInterface.removeChild(parentNode, getNativeNode(child)));
       []
     | ([one, ...aRest], [two, ...bRest]) =>
-      [reconcileTrees(one, two), ...reconcileChildren(parentNode, aRest, bRest)]
+      [reconcileTrees(enqueue, one, two), ...reconcileChildren(enqueue, parentNode, aRest, bRest)]
   }
 };
+
+let rec enqueue = (root, custom) => {
+  root.invalidatedElements = [custom, ...root.invalidatedElements];
+  if (!root.waiting) {
+    root.waiting = true;
+    NativeInterface.setImmediate(() => {
+      root.waiting = false;
+      let elements = root.invalidatedElements;
+      root.invalidatedElements = [];
+      elements->List.forEach(({custom: WithState(contents) as component} as container) => {
+        if (contents.invalidated)  {
+          let (newElement, effects) = component->runRender;
+          container.mountedTree = switch (contents.reconciler) {
+            | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
+            | _ => reconcileTrees(enqueue(root), container.mountedTree, newElement)
+          };
+          effects->List.forEach(runEffect);
+        }
+      });
+      Layout.layout(root.layout);
+    })
+  };
+};
+
+/*
+TODO what if thre's a setState right after/during the first render?
+ */
 
 let mount = (el, node) => {
   let instances = instantiateTree(el);
   let instanceLayout = getInstanceLayout(instances);
   Layout.layout(instanceLayout);
-  let tree = inflateTree(instances);
+
+  let root = {
+    layout: instanceLayout,
+    node: None,
+    invalidatedElements: [],
+    waiting: false
+  };
+
+  let tree = inflateTree(enqueue(root), instances);
+  root.node = Some(getNativeNode(tree));
+
+
   node->NativeInterface.appendChild(getNativeNode(tree))
 };
 

@@ -302,6 +302,15 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
   CAMLreturn0;
 }
 
+void fluid_setImmediate(value callback) {
+  CAMLparam1(callback);
+  dispatch_after(DISPATCH_TIME_NOW, dispatch_get_main_queue(), ^(void){
+    caml_callback(callback, Val_unit);
+      // do work in the UI thread here
+  });
+  CAMLreturn0;
+}
+
 CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, value maxWidth_v) {
   CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);

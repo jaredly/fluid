@@ -8,6 +8,8 @@ module NativeInterface = {
 
   type font = {fontName: string, fontSize: float};
 
+  external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
+
   external createTextNode: (string, ~pos: (float, float), ~size: (float, float), ~font: font) => nativeNode = "fluid_create_NSTextView";
   external setTextContent: (nativeNode, string, font) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
@@ -54,7 +56,7 @@ module NativeInterface = {
     };
 
     let (width, height) = measureText(~text, ~font=fontName, ~fontSize, ~maxWidth);
-    Printf.printf("Text: %s -- %f x %f", text, width, height);
+    /* Printf.printf("Text: %s -- %f x %f", text, width, height); */
     {Layout.LayoutTypes.width, height}
   };
 
@@ -123,11 +125,18 @@ module Fluid = {
 
   }
 
+
   let launchWindow = (~title: string, ~root: element) => {
     let instances = instantiateTree(Native.view(~children=[root], ()));
     let instanceLayout = getInstanceLayout(instances);
     Layout.layout(instanceLayout);
-    let tree = inflateTree(instances);
+    let root = {
+      layout: instanceLayout,
+      node: None,
+      invalidatedElements: [],
+      waiting: false
+    };
+    let tree = inflateTree(enqueue(root), instances);
     let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
     NativeInterface.startApp(~title, ~size=(width, height), node => {
       node->NativeInterface.appendChild(getNativeNode(tree))
