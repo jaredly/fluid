@@ -159,7 +159,7 @@ and instanceTree = [
 | `IString(string, Layout.node, option(NativeInterface.font))
 | `IBuiltin(NativeInterface.element, list(instanceTree), Layout.node)
 | `ICustom(customWithState, instanceTree, list(effect))
-| `INull
+| `INull(Layout.node)
 ]
 
 and container = {
@@ -171,7 +171,7 @@ and mountedTree = [
 | `MString(string, NativeInterface.nativeNode, Layout.node, option(NativeInterface.font))
 | `MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node)
 | `MCustom(container)
-| `MNull
+| `MNull(NativeInterface.nativeNode, Layout.node)
 ]
 
 ;
@@ -231,9 +231,9 @@ let runRender = (WithState(component)) => {
 };
 
 let rec getNativeNode = tree => switch tree {
-  | `MNull => None
+  | `MNull(node, _)
   | `MString(_, node, _, _)
-  | `MBuiltin(_, node, _, _) => Some(node)
+  | `MBuiltin(_, node, _, _) => node
   | `MCustom({mountedTree}) => getNativeNode(mountedTree)
 };
 
@@ -249,16 +249,16 @@ Phases of the algorithm:
  */
 
 let rec getInstanceLayout = element => switch element {
-  | `INull => None
+  | `INull(layout)
   | `IString(_, layout, _)
-  | `IBuiltin(_, _, layout) => Some(layout)
+  | `IBuiltin(_, _, layout) => layout
   | `ICustom(_, el, _) => getInstanceLayout(el)
 };
 
 let rec getMountedLayout = element => switch element {
-  | `MNull => None
+  | `MNull(_, layout)
   | `MString(_, _, layout, _)
-  | `MBuiltin(_, _, _, layout) => Some(layout)
+  | `MBuiltin(_, _, _, layout) => layout
   | `MCustom({mountedTree}) => getMountedLayout(mountedTree)
 };
 
@@ -277,7 +277,7 @@ let rec instantiateTree: element => instanceTree = el => switch el {
 
   | `Builtin(nativeElement, children, layout, measure) =>
     let ichildren = children->List.map(instantiateTree);
-    let childLayouts = ichildren->List.map(getInstanceLayout)->List.keepMap(x => x)->List.toArray;
+    let childLayouts = ichildren->List.map(getInstanceLayout)->List.toArray;
     let style = switch layout {
       | None => Layout.style()
       | Some(s) => s
@@ -359,17 +359,10 @@ and reconcileTrees: (mountedTree, element, anchor) => mountedTree = (prev, next,
       `MBuiltin(bElement, node, reconcileChildren(node, aChildren, bChildren), aLayout);
     } else {
       let instances = instantiateTree(next);
-      switch (getInstanceLayout(instances)) {
-        | None => ()
-        | Some(instanceLayout) => Layout.layout(instanceLayout);
-      };
+      let instanceLayout = getInstanceLayout(instances);
+      Layout.layout(instanceLayout);
       let tree = inflateTree(instances);
-      switch (getNativeNode(prev), getNativeNode(tree)) {
-        | (None, None) => ()
-        | (Some(prev), None) => NativeInterface.removeNode(prev)
-        | (None, Some(tree)) => NativeInterface.insert(anchor, tree)
-        | (Some(prev), Some(tree)) => NativeInterface.replaceWith(prev, tree);
-      };
+      NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
       /* unmount prev nodes */
       tree
     }
