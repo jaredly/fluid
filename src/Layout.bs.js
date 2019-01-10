@@ -40,7 +40,7 @@ function createNodeWithMeasure(children, style, measure) {
 }
 
 function layout(layoutNode) {
-  return Curry._4(Layout[/* layoutNode */24], layoutNode, FloatEncoding$Flex.cssUndefined, FloatEncoding$Flex.cssUndefined, /* Ltr */2);
+  return Curry._4(Layout[/* layoutNode */26], layoutNode, FloatEncoding$Flex.cssUndefined, FloatEncoding$Flex.cssUndefined, /* Ltr */2);
 }
 
 function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, $staropt$star$6, $staropt$star$7, $staropt$star$8, $staropt$star$9, $staropt$star$10, $staropt$star$11, $staropt$star$12, $staropt$star$13, $staropt$star$14, $staropt$star$15, $staropt$star$16, $staropt$star$17, $staropt$star$18, $staropt$star$19, $staropt$star$20, $staropt$star$21, $staropt$star$22, $staropt$star$23, $staropt$star$24, $staropt$star$25, $staropt$star$26, $staropt$star$27, param) {

@@ -542,6 +542,8 @@ function F(NativeInterface) {
                             }
                             
                           }));
+                    Layout.Layout[/* gCurrentGenerationCount */2][0] = Layout.Layout[/* gCurrentGenerationCount */2][0] + 1 | 0;
+                    Curry._1(Layout.Layout[/* invalidateAllCaches */20], root[/* layout */0]);
                     Layout.layout(root[/* layout */0]);
                     return Belt_List.forEach(toUpdate, (function (param) {
                                   var container = param[0];

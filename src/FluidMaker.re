@@ -558,6 +558,8 @@ let rec enqueue = (root, custom) => {
           None
         }
       });
+      Layout.Layout.gCurrentGenerationCount := Layout.Layout.gCurrentGenerationCount^ + 1;
+      Layout.Layout.invalidateAllCaches(root.layout);
       /* TODO if something absolutely positioned, only need to do it from there */
       Layout.layout(root.layout);
       /* [%bs.debugger]; */
