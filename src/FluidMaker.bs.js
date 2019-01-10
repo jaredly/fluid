@@ -250,6 +250,7 @@ function F(NativeInterface) {
       layout$1[/* children */9] = children;
       layout$1[/* measure */7] = measure;
       layout$1[/* layout */2] = Curry._1(Layout.Layout[/* LayoutSupport */0][/* createLayout */29], /* () */0);
+      Curry._1(Layout.Layout[/* invalidateCache */19], layout$1[/* layout */2]);
       return layout$1;
     } else if (measure !== undefined) {
       return Layout.createNodeWithMeasure(children, style, measure);
@@ -305,8 +306,9 @@ function F(NativeInterface) {
           if (typeof prev === "number" || !prev.tag) {
             exit = 1;
           } else {
+            var layout = el[3];
             var node = prev[1];
-            Curry._3(NativeInterface[/* update */2], prev[0], node, $$native);
+            Curry._4(NativeInterface[/* update */2], prev[0], node, $$native, layout);
             var partial_arg = /* AppendChild */Block.__(0, [node]);
             return /* MBuiltin */Block.__(0, [
                       $$native,
@@ -314,12 +316,12 @@ function F(NativeInterface) {
                       Belt_List.map(el[2], (function (param) {
                               return mountPending(enqueue, partial_arg, param);
                             })),
-                      el[3]
+                      layout
                     ]);
           }
           if (exit === 1) {
-            var layout = el[3];
-            var node$1 = Curry._2(NativeInterface[/* inflate */3], $$native, layout);
+            var layout$1 = el[3];
+            var node$1 = Curry._2(NativeInterface[/* inflate */3], $$native, layout$1);
             var partial_arg$1 = /* AppendChild */Block.__(0, [node$1]);
             var children = Belt_List.map(el[2], (function (param) {
                     return mountPending(enqueue, partial_arg$1, param);
@@ -333,7 +335,7 @@ function F(NativeInterface) {
                       $$native,
                       node$1,
                       children,
-                      layout
+                      layout$1
                     ]);
           }
           break;

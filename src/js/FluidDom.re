@@ -124,10 +124,20 @@ module NativeInterface = {
 
   type element = {tag: string, props: nativeProps};
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => mounted.tag == newElement.tag;
-  let update = (mounted, mountPoint, newElement) => {
+  let update = (mounted, mountPoint, newElement, layout: Layout.node) => {
     if (mounted.tag == newElement.tag) {
       if (mounted.props !== newElement.props) {
         Js.log4("Updating", mounted, mountPoint, newElement);
+
+        let snode = Obj.magic(mountPoint);
+        snode##style##position #= "absolute";
+        snode##style##left #= (string_of_float(layout.layout.left) ++ "px");
+        snode##style##top #= (string_of_float(layout.layout.top) ++ "px");
+        snode##style##bottom #= (string_of_float(layout.layout.bottom) ++ "px");
+        snode##style##right #= (string_of_float(layout.layout.right) ++ "px");
+        snode##style##width #= (string_of_float(layout.layout.width) ++ "px");
+        snode##style##height #= (string_of_float(layout.layout.height) ++ "px");
+
         updateNativeProps(mountPoint, mounted.props, newElement.props);
       }
     }

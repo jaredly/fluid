@@ -13,7 +13,7 @@ module type NativeInterface = {
    */
   let canUpdate: (~mounted: element, ~mountPoint: nativeNode, ~newElement: element) => bool;
 
-  let update: (element, nativeNode, element) => unit;
+  let update: (element, nativeNode, element, Layout.node) => unit;
 
   let inflate: (element, Layout.node) => nativeNode;
 
@@ -320,6 +320,7 @@ let updateLayout = (layout: option(Layout.node), children, style, measure) => {
       layout.children = children;
       layout.measure = measure;
       layout.layout = Layout.LayoutSupport.createLayout();
+      Layout.Layout.invalidateCache(layout.layout);
       layout
   }
   /* TODO free current children? but maybe I can't because they're reused */
@@ -406,7 +407,7 @@ let rec mountPending: (container => unit, mountPoint, pendingTree) => mountedTre
     MNull(node, layout)
 
   | PBuiltin(native, Update(prevNative, node), children, layout) =>
-    NativeInterface.update(prevNative, node, native);
+    NativeInterface.update(prevNative, node, native, layout);
     MBuiltin(native, node, children->List.map(mountPending(enqueue, AppendChild(node))), layout)
 
   | PBuiltin(native, (Create | Replace(_)) as prev, children, layout) =>

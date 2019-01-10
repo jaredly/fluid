@@ -105,9 +105,16 @@ function canUpdate(mounted, mountPoint, newElement) {
   return mounted[/* tag */0] === newElement[/* tag */0];
 }
 
-function update(mounted, mountPoint, newElement) {
+function update(mounted, mountPoint, newElement, layout) {
   if (mounted[/* tag */0] === newElement[/* tag */0] && mounted[/* props */1] !== newElement[/* props */1]) {
     console.log("Updating", mounted, mountPoint, newElement);
+    mountPoint.style.position = "absolute";
+    mountPoint.style.left = string_of_float(layout[/* layout */2][/* left */0]) + "px";
+    mountPoint.style.top = string_of_float(layout[/* layout */2][/* top */1]) + "px";
+    mountPoint.style.bottom = string_of_float(layout[/* layout */2][/* bottom */3]) + "px";
+    mountPoint.style.right = string_of_float(layout[/* layout */2][/* right */2]) + "px";
+    mountPoint.style.width = string_of_float(layout[/* layout */2][/* width */4]) + "px";
+    mountPoint.style.height = string_of_float(layout[/* layout */2][/* height */5]) + "px";
     return setDomProps(mountPoint, newElement[/* props */1]);
   } else {
     return 0;
