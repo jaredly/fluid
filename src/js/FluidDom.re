@@ -16,16 +16,21 @@ module NativeInterface = {
     unit
     ) => nativeProps = "";
   
-  [@bs.val] external setImmediate: (unit => unit) => unit = "";
+  /* [@bs.val] external setImmediate: (unit => unit) => unit = ""; */
+  let setImmediate = fn => Js.Global.setTimeout(fn, 0)->ignore;
 
   /* external opaqueProps: domProps('a) => nativeProps = "%identity"; */
   [@bs.scope "document"][@bs.val] external _createElement: string => nativeNode = "createElement";
   let setDomProps: (nativeNode, nativeProps) => unit = [%bs.raw (node, props) => {|
     Object.keys(props).forEach(key => {
-      if (key === 'checked' || key === 'value') {
+      if (key === 'checked' || key === 'value' || key === 'textContent') {
         node[key] = props[key]
       } else if (typeof props[key] === 'function') {
         node[key] = props[key]
+      } else if (key === 'style' && typeof props[key] === 'object' && props[key]) {
+        Object.keys(props[key]).forEach(st => {
+          node.style[st] = props[key][st]
+        })
       } else {
         node.setAttribute(key, props[key])
       }
@@ -126,14 +131,13 @@ module NativeInterface = {
 
 
   type element = {tag: string, props: nativeProps};
-  let maybeUpdate = (~mounted, ~mountPoint, ~newElement) => {
+  let canUpdate = (~mounted, ~mountPoint, ~newElement) => mounted.tag == newElement.tag;
+  let update = (mounted, mountPoint, newElement) => {
     if (mounted.tag == newElement.tag) {
       updateNativeProps(mountPoint, mounted.props, newElement.props);
-      true
-    } else {
-      false
     }
   };
+
   let inflate = ({tag, props}, layout) => createElement(tag, props, layout);
 };
 
@@ -144,7 +148,7 @@ module Fluid = {
 
   module Native = {
     let div = (~id=?, ~children=[], ~layout=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
-    `Builtin({
+    Builtin({
       NativeInterface.tag: "div",
       props:
         NativeInterface.nativeProps(
@@ -159,7 +163,7 @@ module Fluid = {
     }, children, layout, None);
 
     let button = (~id=?, ~children, ~layout=?, ~_type=?, ~width=?, ~height=?, ~onclick=?, ~style=?, ()) => 
-    `Builtin({
+    Builtin({
       NativeInterface.tag: "button",
       props:
         NativeInterface.nativeProps(
@@ -174,7 +178,7 @@ module Fluid = {
     }, children, layout, None);
 
     let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()) => 
-    `Builtin({
+    Builtin({
       NativeInterface.tag: "input",
       props:
         NativeInterface.nativeProps(
@@ -188,5 +192,13 @@ module Fluid = {
           (),
         ),
     }, [], None, None);
-  }
+  };
+  let string = (~layout=?, ~font=?, x) => {
+    let {NativeInterface.fontName, fontSize} = switch font { 
+      | None => NativeInterface.defaultFont
+      | Some(f) => f
+    };
+    Builtin({NativeInterface.tag: "span", props:
+    Obj.magic({"textContent": x, "style": {"fontFamily": fontName, "fontSize": NativeInterface.string_of_float(fontSize) ++ "px"}})}, [], layout, Some(NativeInterface.measureText(x, font)))
+  };
 }

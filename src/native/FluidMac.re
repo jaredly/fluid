@@ -114,7 +114,7 @@ module Fluid = {
   module Native = {
     open NativeInterface;
     let view = (~onPress=?, ~children=[], ~layout=?, ~backgroundColor=?, ()) => 
-    `Builtin(
+    Builtin(
       View(onPress, {backgroundColor: backgroundColor}),
       children,
       layout,
@@ -123,7 +123,7 @@ module Fluid = {
       ;
 
     let button = (~onPress, ~title, ~layout=?, ()) => 
-    `Builtin(
+    Builtin(
       Button(title, onPress),
       [],
       layout,
@@ -134,7 +134,7 @@ module Fluid = {
     );
 
     let text = (~layout=?, ~font=?, ~contents, ()) => {
-      `Builtin(
+      Builtin(
         String(contents, font),
         [],
         layout,

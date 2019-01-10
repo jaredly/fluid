@@ -59,7 +59,7 @@ let toggle = (~on, ~off, hooks) => {
   open Fluid.Hooks;
   let%hook (isOn, setOn) = useState(false);
 
-  let%hook () = useReconciler(isOn, (oldState, newState, mountedTree, newTree) => {
+  /* let%hook () = useReconciler(isOn, (oldState, newState, mountedTree, newTree) => {
     Js.log3("reconciling I guess", oldState, newState);
     switch (oldState, newState) {
       | (false, true)
@@ -83,7 +83,7 @@ let toggle = (~on, ~off, hooks) => {
         newTree
       | _ => mountedTree
     }
-  });
+  }); */
 
   Js.log2("Is On", isOn);
   if (isOn) {

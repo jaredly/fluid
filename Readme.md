@@ -140,3 +140,105 @@ Again, the dom is forgiving, and you can add a `TextNode` in the same way you wo
 although looks like in AppKit I can use an `NSTextField`
 
 anddd maybe those can be added with abandon? Will see how far I get
+
+
+####
+
+<view>
+  <Hello />
+  <view flex=1 />
+</view>
+
+and Hello is
+
+let toggle = useState(false)
+
+<view>
+  {str(toggle ? "Hello folks" : "Hello")}
+  {toggle ? str("Yeah") : null}
+  <ExpensiveChild />
+</view>
+
+
+# element
+
+Builtin(View, [
+  Custom(hello())
+  Builtin(View, [], style(flex=1))
+  Custom(expensiveChild())
+])
+
+# instance
+
+(note how a Custom component's children get instantiated immediately after `render()` is called)
+
+IBuiltin(View, [
+  ICustom(helloWithState: {render, hooks, invalidated, reconciler, onChange}, 
+    IBuiltin(View, [
+      IBuiltin(String("Hello"), layout),
+      INull(layout)
+    ], layout)
+  )
+], layout)
+
+# mounted
+
+MBuiltin(View, [
+  MCustom({custom: helloWithState{render, hooks, invalidated, reconciler, onChange}, mountedTree:
+    MBuiltin(View, [
+      MBuiltin(String("Hello folks"), layout, nativeNode),
+      MNull(nativeNode)
+    ])
+    st
+  })
+], layout, nativeNode)
+
+# SetState!! rerender is needed
+currently I apply the change immediately, so the hooks state is now different
+(would there be a reason to wait & not change immediately? Maybe an inconsistent view on state? idk. prolly not)
+
+- the change is applied to the hook. in the state case, that's updating the ref value.
+- the component container is enqueued to be re-rendered, and `invalidated` is set to true
+- component->runRender returns an element tree:
+  Builtin(View, [
+    Builtin(String("Hello folks")),
+    Builtin(String("Yeah"))
+  ])
+
+So, in the "no custom shenanigans" case (ignoring keys for the moment), we do:
+
+reconcileTrees(
+  MBuiltin(View, [
+    MBuiltin(String("Hello folks"), layout, nativeNode),
+    MNull(nativeNode)
+  ])
+  ,
+  Builtin(View, [
+    Builtin(String("Hello folks")),
+    Builtin(String("Yeah"))
+  ])
+)
+
+
+Ok, here's how we do.
+
+a mountedTree Custom can have a pendingTree or a mountedTree
+buuut only when it's pending time... at other times it cant
+
+because what if I'm trying to reconcile and its actually not mounted
+
+hrmmm but I don't think I can have it both ways. I'll try this.
+
+
+
+
+### keys too I guess
+
+BUT lets also consider the case where there are keys involved
+
+  Builtin(View, [
+    Builtin(String("Yeah))
+    Builtin(~key="Hello", String("Hello folks")),
+  ])
+
+And so the order is different, but the node for "hello" should be re-used

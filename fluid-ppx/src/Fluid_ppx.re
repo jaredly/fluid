@@ -108,8 +108,8 @@ let mapper = _argv =>
                   | Lident(one) => Lident(unCapitalize(one))
                   | _ => assert(false)
                 }, loc));
-              Exp.variant(
-                "Custom",
+              Exp.construct(
+                Location.mkloc(Ldot(Lident("Fluid"), "Custom"), loc),
               Some(Exp.apply(
                 Exp.ident(Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Maker"), "makeComponent"), loc)),
                 [
