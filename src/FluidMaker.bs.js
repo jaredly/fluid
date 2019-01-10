@@ -448,6 +448,7 @@ function F(NativeInterface) {
                             
                           }));
                     Layout.layout(root[/* layout */0]);
+                    debugger;
                     return Belt_List.forEach(toUpdate, (function (param) {
                                   Belt_List.forEach(param[2], runEffect);
                                   param[0][/* mountedTree */1] = /* Mounted */Block.__(1, [mountPending((function (param) {

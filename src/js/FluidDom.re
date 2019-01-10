@@ -58,16 +58,6 @@ module NativeInterface = {
     snode##style##right #= (string_of_float(layout.layout.right) ++ "px");
     snode##style##width #= (string_of_float(layout.layout.width) ++ "px");
     snode##style##height #= (string_of_float(layout.layout.height) ++ "px");
-    /* Js.log2("layout", (layout.layout.width, layout.layout.height, layout.layout.top, layout.layout.left)); */
-
-    /* Js.log3("layout", [|
-      layout.layout.left,
-      layout.layout.top,
-      layout.layout.right,
-      layout.layout.bottom,
-      layout.layout.width,
-      layout.layout.height,
-    |], node); */
 
     node;
   };

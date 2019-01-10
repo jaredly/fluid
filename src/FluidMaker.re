@@ -498,6 +498,7 @@ let rec enqueue = (root, custom) => {
       });
       /* TODO if something absolutely positioned, only need to do it from there */
       Layout.layout(root.layout);
+      [%bs.debugger];
       toUpdate->List.forEach(((container, pending, effects)) => {
         effects->List.forEach(runEffect);
         container.mountedTree = Mounted(mountPending(enqueue(root), pending))
