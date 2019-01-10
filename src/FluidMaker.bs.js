@@ -398,11 +398,9 @@ function F(NativeInterface) {
           } else {
             var bLayoutStyle = next[2];
             var bElement = next[0];
-            if (false && Curry._3(NativeInterface[/* canUpdate */1], aElement, node, bElement)) {
-              aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+            if (Curry._3(NativeInterface[/* canUpdate */1], aElement, node, bElement)) {
               var children = reconcileChildren(enqueue, node, prev[2], next[1]);
-              aLayout[/* children */9] = Belt_List.toArray(Belt_List.map(children, getPendingLayout));
-              aLayout[/* layout */2] = Curry._1(Layout.Layout[/* LayoutSupport */0][/* createLayout */29], /* () */0);
+              updateLayout(aLayout, Belt_List.toArray(Belt_List.map(children, getPendingLayout)), bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), next[3]);
               return /* PBuiltin */Block.__(0, [
                         bElement,
                         /* Update */Block.__(1, [

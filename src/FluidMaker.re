@@ -447,14 +447,15 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree
   | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
     /* TODO maybe it should return... the things... ok I need a prev el or sth */
     /* TODO re-enable updating */
-    if (false && NativeInterface.canUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
-      aLayout.style = switch bLayoutStyle {
+    if (NativeInterface.canUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
+      let children = reconcileChildren(enqueue, node, aChildren, bChildren);
+      updateLayout(Some(aLayout), children->List.map(getPendingLayout)->List.toArray,
+      switch bLayoutStyle {
         | Some(s) => s
         | _ => Layout.style()
-      };
-      let children = reconcileChildren(enqueue, node, aChildren, bChildren);
-      aLayout.children = children->List.map(getPendingLayout)->List.toArray;
-      aLayout.layout = Layout.LayoutSupport.createLayout();
+      },
+      bMeasure
+      )->ignore
       /* TODO assign the measure function */
       /* TODO flush layout changes */
       PBuiltin(bElement, Update(aElement, node), children, aLayout);
