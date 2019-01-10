@@ -3,3 +3,4 @@ lib
 bundle
 .merlin
 .static_libraries
+.vscode
