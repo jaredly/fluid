@@ -46,6 +46,7 @@ module NativeInterface = {
   };
 
   let createElement = (typ, nativeProps, layout: Layout.node) => {
+    Js.log3("Creating", typ, nativeProps);
     let node = _createElement(typ);
     let snode = Obj.magic(node);
 
@@ -112,6 +113,7 @@ module NativeInterface = {
   };
   [@bs.get] external parentNode: nativeNode => nativeNode = "";
   [@bs.send] external appendChild: (nativeNode, nativeNode) => unit = "";
+  [@bs.send] external appendAfter: (nativeNode, nativeNode) => unit = "";
   [@bs.send] external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "";
   [@bs.send] external removeChild: (nativeNode, nativeNode) => unit = "";
   let updateNativeProps = (node, _oldProps, newProps) => {
@@ -124,7 +126,10 @@ module NativeInterface = {
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => mounted.tag == newElement.tag;
   let update = (mounted, mountPoint, newElement) => {
     if (mounted.tag == newElement.tag) {
-      updateNativeProps(mountPoint, mounted.props, newElement.props);
+      if (mounted.props !== newElement.props) {
+        Js.log4("Updating", mounted, mountPoint, newElement);
+        updateNativeProps(mountPoint, mounted.props, newElement.props);
+      }
     }
   };
 

@@ -23,6 +23,7 @@ module type NativeInterface = {
   /* let createTextNode: (string, Layout.node, option(font)) => nativeNode; */
   /* let setTextContent: (nativeNode, string, option(font)) => unit; */
   let appendChild: (nativeNode, nativeNode) => unit;
+  let appendAfter: (nativeNode, nativeNode) => unit;
   /* let insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit; */
   let removeChild: (nativeNode, nativeNode) => unit;
   let replaceWith: (nativeNode, nativeNode) => unit;
@@ -118,6 +119,11 @@ type effect = {
   setCleanup: (unit => unit) => unit,
 };
 
+type pending('a) =
+  | Create
+  | Replace(NativeInterface.nativeNode)
+  | Update('a, NativeInterface.nativeNode);
+
 /* also need a "compareTo" (other custom) */
 type custom = {
   init: unit => customWithState,
@@ -173,9 +179,9 @@ and container = {
 and mountedChild = Pending(pendingTree) | Mounted(mountedTree)
 
 and pendingTree =
-| PBuiltin(NativeInterface.element, option((NativeInterface.element, NativeInterface.nativeNode)), list(pendingTree), Layout.node)
+| PBuiltin(NativeInterface.element, pending(NativeInterface.element), list(pendingTree), Layout.node)
 | PCustom(container, list(effect))
-| PNull(option(NativeInterface.nativeNode), Layout.node)
+| PNull(pending(unit), Layout.node)
 
 and mountedTree = 
 | MBuiltin(NativeInterface.element, NativeInterface.nativeNode, list(mountedTree), Layout.node)
@@ -186,9 +192,15 @@ and mountedTree =
 ;
 
 let rec makePending = (inst: instanceTree) => switch inst {
-| IBuiltin(el, children, layout) => PBuiltin(el, None, children->List.map(makePending), layout)
+| IBuiltin(el, children, layout) => PBuiltin(el, Create, children->List.map(makePending), layout)
 | ICustom(custom, child, effects) => PCustom({custom, mountedTree: Pending(makePending(child))}, effects)
-| INull(layout) => PNull(None, layout)
+| INull(layout) => PNull(Create, layout)
+};
+
+let rec pendingReplace = (mounted: NativeInterface.nativeNode, inst: instanceTree) => switch inst {
+| IBuiltin(el, children, layout) => PBuiltin(el, Replace(mounted), children->List.map(makePending), layout)
+| ICustom(custom, child, effects) => PCustom({custom, mountedTree: Pending(pendingReplace(mounted, child))}, effects)
+| INull(layout) => PNull(Replace(mounted), layout)
 };
 
 /* let string = (~layout=?, ~font=?, x) => String(x, layout, font); */
@@ -245,19 +257,26 @@ let runRender = (WithState(component)) => {
   (tree, effects^);
 };
 
-let rec getNativeNode = tree => switch tree {
+let rec getNativeNode = tree =>
+  switch (tree) {
   | MNull(node, _)
   | MBuiltin(_, node, _, _) => Some(node)
-  | MCustom({mountedTree: Mounted(mounted)}) => getNativeNode(mounted)
-  | MCustom({mountedTree: Pending(pending)}) => getNativePending(pending)
-}
-and getNativePending = tree => switch tree {
-  | PNull(node, _) => node
-  | PCustom({mountedTree: Mounted(mounted)}, _) => getNativeNode(mounted)
-  | PCustom({mountedTree: Pending(pending)}, _) => getNativePending(pending)
-  | PBuiltin(_, None, _, _) => None
-  | PBuiltin(_, Some((_, node)), _, _) => Some(node)
-};
+  | MCustom({mountedTree}) => getNativePending(mountedTree)
+  }
+and getNativePending = tree =>
+  switch (tree) {
+  | Pending(tree) =>
+    switch (tree) {
+    | PNull(Create, _) => None
+    | PNull(Replace(node) | Update(_, node), _) => Some(node)
+    | PCustom({mountedTree}, _) => getNativePending(mountedTree)
+    | PBuiltin(_, Create, _, _) => None
+    | PBuiltin(_, Replace(node) | Update(_, node), _, _) => Some(node)
+    }
+  | Mounted(m) => getNativeNode(m)
+  };
+
+/* let getNative */
 
 /*
 Phases of the algorithm:
@@ -350,23 +369,50 @@ type root = {
     MCustom(container)
 }; */
 
-let rec mountPending: (container => unit, pendingTree) => mountedTree = (enqueue, el) => switch el {
-  | PNull(Some(node), layout) => MNull(node, layout)
-  | PNull(None, layout) => MNull(NativeInterface.createNullNode(), layout)
+type mountPoint = AppendChild(NativeInterface.nativeNode) | NextSibling(NativeInterface.nativeNode);
 
-  | PBuiltin(native, Some((prevNative, node)), children, layout) =>
-    NativeInterface.update(native, node, prevNative);
-    MBuiltin(native, node, children->List.map(mountPending(enqueue)), layout)
+let mountTo = (point, node) => switch point {
+  | AppendChild(prev) => NativeInterface.appendChild(prev, node)
+  /* I don't currently allow inserts, so I dont need this? */
+  | NextSibling(prev) => NativeInterface.appendAfter(prev, node)
+};
 
-  | PBuiltin(native, None, children, layout) =>
+let rec mountPending: (container => unit, mountPoint, pendingTree) => mountedTree = (enqueue, mount, el) => switch el {
+  | PNull((Create | Replace(_)) as prev, layout) =>
+    let rep = NativeInterface.createNullNode();
+    /* TODO seems like there should be a better way to model the "mountPoit" vs "pending" thing */
+    switch prev {
+      | Create => mountTo(mount, rep)
+      | Replace(prev) => NativeInterface.replaceWith(prev, rep);
+      | _ => ()
+    }
+    MNull(rep, layout)
+
+  | PNull(Update((), node), layout) =>
+    MNull(node, layout)
+
+  | PBuiltin(native, Update(prevNative, node), children, layout) =>
+    NativeInterface.update(prevNative, node, native);
+    MBuiltin(native, node, children->List.map(mountPending(enqueue, AppendChild(node))), layout)
+
+  | PBuiltin(native, (Create | Replace(_)) as prev, children, layout) =>
     let node = NativeInterface.inflate(native, layout);
-    let children = children->List.map(mountPending(enqueue));
-    children->List.map(getNativeNode)->List.forEach(childNode => {
+    let children = children->List.map(mountPending(enqueue, AppendChild(node)));
+    /* children->List.map(getNativeNode)->List.forEach(childNode => {
       switch childNode {
         | None => failwith("Inflating a tree that's still pending")
         | Some(childNode) => NativeInterface.appendChild(node, childNode)
       }
-    });
+    }); */
+    switch (prev) {
+      | Create =>
+      Js.log2("Creating", node);
+      mountTo(mount, node);
+      | Replace(prev) =>
+      Js.log3("Replacing", prev, node)
+      NativeInterface.replaceWith(prev, node)
+      | _ => ()
+    };
     MBuiltin(native, node, children, layout);
 
   | PCustom({custom, mountedTree: Mounted(mountedTree)} as container, effects) =>
@@ -376,7 +422,7 @@ let rec mountPending: (container => unit, pendingTree) => mountedTree = (enqueue
     MCustom(container)
 
   | PCustom({custom: WithState(contents) as custom, mountedTree: Pending(pendingTree)}, effects) =>
-    let mountedTree = mountPending(enqueue, pendingTree);
+    let mountedTree = mountPending(enqueue, mount, pendingTree);
     let container = {custom, mountedTree: Mounted(mountedTree)};
     contents.onChange = () => enqueue(container);
     effects->List.forEach(runEffect);
@@ -405,7 +451,7 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree
       };
       /* TODO assign the measure function */
       /* TODO flush layout changes */
-      PBuiltin(bElement, Some((aElement, node)), reconcileChildren(enqueue, node, aChildren, bChildren), aLayout);
+      PBuiltin(bElement, Update(aElement, node), reconcileChildren(enqueue, node, aChildren, bChildren), aLayout);
     } else {
       let instances = instantiateTree(next);
       /* let instanceLayout = getInstanceLayout(instances);
@@ -414,7 +460,7 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree
       NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree)); */
       /* unmount prev nodes */
       /* tree */
-      makePending(instances)
+      pendingReplace(node, instances)
     }
   | (MCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
@@ -442,11 +488,21 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree
         /* unmount prev nodes */
         NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
         tree */
-        makePending(instances)
+        switch (getNativeNode(prev)) {
+          | None =>
+          print_endline("Warning! Prev custom component was pending");
+          makePending(instances)
+          | Some(node) => pendingReplace(node, instances)
+        }
     }
   | _ =>
     let instances = instantiateTree(next);
-    makePending(instances)
+    switch (getNativeNode(prev)) {
+      | None =>
+      print_endline("Warning! Prev custom component was pending");
+      makePending(instances)
+      | Some(node) => pendingReplace(node, instances)
+    }
     /* let instances = instantiateTree(next);
     let instanceLayout = getInstanceLayout(instances);
     Layout.layout(instanceLayout);
@@ -498,10 +554,14 @@ let rec enqueue = (root, custom) => {
       });
       /* TODO if something absolutely positioned, only need to do it from there */
       Layout.layout(root.layout);
-      [%bs.debugger];
+      /* [%bs.debugger]; */
       toUpdate->List.forEach(((container, pending, effects)) => {
         effects->List.forEach(runEffect);
-        container.mountedTree = Mounted(mountPending(enqueue(root), pending))
+        let current = switch (getNativePending(container.mountedTree)) {
+          | Some(mounted) => mounted
+          | None => failwith("Current is already pending")
+        };
+        container.mountedTree = Mounted(mountPending(enqueue(root), AppendChild(current), pending))
       })
     })
   };
@@ -524,7 +584,7 @@ let mount = (el, node) => {
   };
 
 
-  let tree = mountPending(enqueue(root), makePending(instances));
+  let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
   switch (getNativeNode(tree)) {
     | None => failwith("Still pending?")
     | Some(childNode) =>

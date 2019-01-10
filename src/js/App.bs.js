@@ -12,7 +12,7 @@ var Caml_builtin_exceptions = require("bsb-native/lib/js/caml_builtin_exceptions
 
 var Style = /* module */[];
 
-var str = FluidDom.Fluid[/* string */18];
+var str = FluidDom.Fluid[/* string */20];
 
 function translate(node, dx, offset) {
   return Animate.spring(1, 10, undefined, (function (amount) {
@@ -38,7 +38,7 @@ function fade(node, out) {
 }
 
 function toggle(on, off, hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */16][/* useState */2], false, hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */18][/* useState */2], false, hooks);
   var match$1 = match[0];
   var setOn = match$1[1];
   var isOn = match$1[0];
@@ -55,14 +55,14 @@ function toggle(on, off, hooks) {
 }
 
 function awesomeComponent(value, toString, hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */16][/* useState */2], "Awesome", hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */18][/* useState */2], "Awesome", hooks);
   var match$1 = match[0];
   var setState = match$1[1];
   var state = match$1[0];
-  return Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+  return Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
               undefined,
               /* :: */[
-                Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+                Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                       undefined,
                       /* :: */[
                         str(undefined, undefined, "Folkx " + (Curry._1(toString, value) + (" " + state))),
@@ -91,7 +91,7 @@ function awesomeComponent(value, toString, hooks) {
 }
 
 function button(text, style, onClick, hooks) {
-  return Curry.app(FluidDom.Fluid[/* Native */17][/* button */1], [
+  return Curry.app(FluidDom.Fluid[/* Native */19][/* button */1], [
               undefined,
               /* :: */[
                 str(undefined, undefined, text),
@@ -109,15 +109,15 @@ function button(text, style, onClick, hooks) {
             ]);
 }
 
-var simple = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+var simple = Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
       "awesome",
       /* :: */[
         str(undefined, undefined, "Hello"),
         /* :: */[
-          Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+          Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                 "here",
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+                  Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                         undefined,
                         /* :: */[
                           str(undefined, undefined, "What"),
@@ -153,15 +153,15 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
       /* () */0
     ]);
 
-var first = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+var first = Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
       "awesome",
       /* :: */[
         str(undefined, undefined, "Hello"),
         /* :: */[
-          Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+          Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                 "here",
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+                  Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                         undefined,
                         /* :: */[
                           str(undefined, undefined, "What"),
@@ -186,14 +186,14 @@ var first = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
                 /* () */0
               ]),
           /* :: */[
-            /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], toggle, (function (param) {
+            /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], toggle, (function (param) {
                         return toggle((function (onClick) {
-                                      return Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+                                      return Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                                                   undefined,
                                                   /* :: */[
                                                     str(undefined, undefined, "Click this to"),
                                                     /* :: */[
-                                                      /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
+                                                      /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], button, (function (param) {
                                                                   return button("Turn Off", "background-color: #88ff88", onClick, param);
                                                                 }))]),
                                                       /* [] */0
@@ -208,10 +208,10 @@ var first = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
                                                   /* () */0
                                                 ]);
                                     }), (function (onClick) {
-                                      return Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+                                      return Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                                                   undefined,
                                                   /* :: */[
-                                                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], button, (function (param) {
+                                                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], button, (function (param) {
                                                                 return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                               }))]),
                                                     /* :: */[
@@ -230,19 +230,19 @@ var first = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
                                     }), param);
                       }))]),
             /* :: */[
-              /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
+              /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], awesomeComponent, (function (param) {
                           return awesomeComponent(5, (function (prim) {
                                         return String(prim);
                                       }), param);
                         }))]),
               /* :: */[
-                /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */2][/* makeComponent */0], awesomeComponent, (function (param) {
+                /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], awesomeComponent, (function (param) {
                             return awesomeComponent("Hi", (function (x) {
                                           return x;
                                         }), param);
                           }))]),
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
+                  Curry.app(FluidDom.Fluid[/* Native */19][/* div */0], [
                         "Inner",
                         /* :: */[
                           str(undefined, undefined, "world"),
@@ -275,7 +275,7 @@ var first = Curry.app(FluidDom.Fluid[/* Native */17][/* div */0], [
 var match = document.getElementById("root");
 
 if (match !== undefined) {
-  Curry._2(FluidDom.Fluid[/* mount */15], first, Js_primitive.valFromOption(match));
+  Curry._2(FluidDom.Fluid[/* mount */17], first, Js_primitive.valFromOption(match));
 } else {
   throw [
         Caml_builtin_exceptions.assert_failure,

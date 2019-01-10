@@ -15,7 +15,7 @@ function F(NativeInterface) {
       case 0 : 
           return /* PBuiltin */Block.__(0, [
                     inst[0],
-                    undefined,
+                    /* Create */0,
                     Belt_List.map(inst[1], makePending),
                     inst[2]
                   ]);
@@ -29,7 +29,32 @@ function F(NativeInterface) {
                   ]);
       case 2 : 
           return /* PNull */Block.__(2, [
-                    undefined,
+                    /* Create */0,
+                    inst[0]
+                  ]);
+      
+    }
+  };
+  var pendingReplace = function (mounted, inst) {
+    switch (inst.tag | 0) {
+      case 0 : 
+          return /* PBuiltin */Block.__(0, [
+                    inst[0],
+                    /* Replace */Block.__(0, [mounted]),
+                    Belt_List.map(inst[1], makePending),
+                    inst[2]
+                  ]);
+      case 1 : 
+          return /* PCustom */Block.__(1, [
+                    /* record */[
+                      /* custom */inst[0],
+                      /* mountedTree : Pending */Block.__(0, [pendingReplace(mounted, inst[1])])
+                    ],
+                    inst[2]
+                  ]);
+      case 2 : 
+          return /* PNull */Block.__(2, [
+                    /* Replace */Block.__(0, [mounted]),
                     inst[0]
                   ]);
       
@@ -114,48 +139,52 @@ function F(NativeInterface) {
             effects[0]
           ];
   };
-  var getNativeNode = function (_tree) {
-    while(true) {
-      var tree = _tree;
-      switch (tree.tag | 0) {
-        case 0 : 
-            return Js_primitive.some(tree[1]);
-        case 1 : 
-            var match = tree[0][/* mountedTree */1];
-            if (match.tag) {
-              _tree = match[0];
-              continue ;
-            } else {
-              return getNativePending(match[0]);
-            }
-        case 2 : 
-            return Js_primitive.some(tree[0]);
-        
-      }
-    };
+  var getNativeNode = function (tree) {
+    switch (tree.tag | 0) {
+      case 0 : 
+          return Js_primitive.some(tree[1]);
+      case 1 : 
+          return getNativePending(tree[0][/* mountedTree */1]);
+      case 2 : 
+          return Js_primitive.some(tree[0]);
+      
+    }
   };
   var getNativePending = function (_tree) {
     while(true) {
       var tree = _tree;
-      switch (tree.tag | 0) {
-        case 0 : 
-            var match = tree[1];
-            if (match !== undefined) {
-              return Js_primitive.some(match[1]);
-            } else {
-              return undefined;
-            }
-        case 1 : 
-            var match$1 = tree[0][/* mountedTree */1];
-            if (match$1.tag) {
-              return getNativeNode(match$1[0]);
-            } else {
-              _tree = match$1[0];
+      if (tree.tag) {
+        return getNativeNode(tree[0]);
+      } else {
+        var tree$1 = tree[0];
+        switch (tree$1.tag | 0) {
+          case 0 : 
+              var match = tree$1[1];
+              if (typeof match === "number") {
+                return undefined;
+              } else if (match.tag) {
+                var node = match[1];
+                return Js_primitive.some(node);
+              } else {
+                var node$1 = match[0];
+                return Js_primitive.some(node$1);
+              }
+          case 1 : 
+              _tree = tree$1[0][/* mountedTree */1];
               continue ;
-            }
-        case 2 : 
-            return tree[0];
-        
+          case 2 : 
+              var match$1 = tree$1[0];
+              if (typeof match$1 === "number") {
+                return undefined;
+              } else if (match$1.tag) {
+                var node$2 = match$1[1];
+                return Js_primitive.some(node$2);
+              } else {
+                var node$3 = match$1[0];
+                return Js_primitive.some(node$3);
+              }
+          
+        }
       }
     };
   };
@@ -245,36 +274,49 @@ function F(NativeInterface) {
     }
     return Curry._1(param[/* setCleanup */2], Curry._1(param[/* fn */1], /* () */0));
   };
-  var mountPending = function (enqueue, el) {
+  var mountTo = function (point, node) {
+    if (point.tag) {
+      return Curry._2(NativeInterface[/* appendAfter */7], point[0], node);
+    } else {
+      return Curry._2(NativeInterface[/* appendChild */6], point[0], node);
+    }
+  };
+  var mountPending = function (enqueue, mount, el) {
     switch (el.tag | 0) {
       case 0 : 
-          var match = el[1];
+          var prev = el[1];
           var $$native = el[0];
-          if (match !== undefined) {
-            var match$1 = match;
-            var node = match$1[1];
-            Curry._3(NativeInterface[/* update */2], $$native, node, match$1[0]);
+          var exit = 0;
+          if (typeof prev === "number" || !prev.tag) {
+            exit = 1;
+          } else {
+            var node = prev[1];
+            Curry._3(NativeInterface[/* update */2], prev[0], node, $$native);
+            var partial_arg = /* AppendChild */Block.__(0, [node]);
             return /* MBuiltin */Block.__(0, [
                       $$native,
                       node,
                       Belt_List.map(el[2], (function (param) {
-                              return mountPending(enqueue, param);
+                              return mountPending(enqueue, partial_arg, param);
                             })),
                       el[3]
                     ]);
-          } else {
+          }
+          if (exit === 1) {
             var layout = el[3];
             var node$1 = Curry._2(NativeInterface[/* inflate */3], $$native, layout);
+            var partial_arg$1 = /* AppendChild */Block.__(0, [node$1]);
             var children = Belt_List.map(el[2], (function (param) {
-                    return mountPending(enqueue, param);
+                    return mountPending(enqueue, partial_arg$1, param);
                   }));
-            Belt_List.forEach(Belt_List.map(children, getNativeNode), (function (childNode) {
-                    if (childNode !== undefined) {
-                      return Curry._2(NativeInterface[/* appendChild */6], node$1, Js_primitive.valFromOption(childNode));
-                    } else {
-                      return Pervasives.failwith("Inflating a tree that's still pending");
-                    }
-                  }));
+            if (typeof prev === "number") {
+              console.log("Creating", node$1);
+              mountTo(mount, node$1);
+            } else if (!prev.tag) {
+              var prev$1 = prev[0];
+              console.log("Replacing", prev$1, node$1);
+              Curry._2(NativeInterface[/* replaceWith */9], prev$1, node$1);
+            }
             return /* MBuiltin */Block.__(0, [
                       $$native,
                       node$1,
@@ -282,18 +324,19 @@ function F(NativeInterface) {
                       layout
                     ]);
           }
+          break;
       case 1 : 
           var container = el[0];
           var custom = container[/* custom */0];
-          var match$2 = container[/* mountedTree */1];
-          if (match$2.tag) {
+          var match = container[/* mountedTree */1];
+          if (match.tag) {
             if (el[1] !== /* [] */0) {
               console.log("Warning: Unchagned node had effects");
             }
             return /* MCustom */Block.__(1, [container]);
           } else {
-            var match$3 = container[/* mountedTree */1];
-            var mountedTree = mountPending(enqueue, match$3[0]);
+            var match$1 = container[/* mountedTree */1];
+            var mountedTree = mountPending(enqueue, mount, match$1[0]);
             var container$1 = /* record */[
               /* custom */custom,
               /* mountedTree : Mounted */Block.__(1, [mountedTree])
@@ -305,29 +348,41 @@ function F(NativeInterface) {
             return /* MCustom */Block.__(1, [container$1]);
           }
       case 2 : 
-          var match$4 = el[0];
-          if (match$4 !== undefined) {
-            return /* MNull */Block.__(2, [
-                      Js_primitive.valFromOption(match$4),
-                      el[1]
-                    ]);
+          var prev$2 = el[0];
+          var exit$1 = 0;
+          if (typeof prev$2 === "number" || !prev$2.tag) {
+            exit$1 = 1;
           } else {
             return /* MNull */Block.__(2, [
-                      Curry._1(NativeInterface[/* createNullNode */5], /* () */0),
+                      prev$2[1],
                       el[1]
                     ]);
           }
+          if (exit$1 === 1) {
+            var rep = Curry._1(NativeInterface[/* createNullNode */5], /* () */0);
+            if (typeof prev$2 === "number") {
+              mountTo(mount, rep);
+            } else if (!prev$2.tag) {
+              Curry._2(NativeInterface[/* replaceWith */9], prev$2[0], rep);
+            }
+            return /* MNull */Block.__(2, [
+                      rep,
+                      el[1]
+                    ]);
+          }
+          break;
       
     }
   };
   var reconcileTrees = function (enqueue, prev, next) {
+    var exit = 0;
     switch (prev.tag | 0) {
       case 0 : 
           var aLayout = prev[3];
           var node = prev[1];
           var aElement = prev[0];
           if (typeof next === "number" || next.tag) {
-            return makePending(instantiateTree(next));
+            exit = 1;
           } else {
             var bLayoutStyle = next[2];
             var bElement = next[0];
@@ -335,21 +390,23 @@ function F(NativeInterface) {
               aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
               return /* PBuiltin */Block.__(0, [
                         bElement,
-                        /* tuple */[
-                          aElement,
-                          node
-                        ],
+                        /* Update */Block.__(1, [
+                            aElement,
+                            node
+                          ]),
                         reconcileChildren(enqueue, node, prev[2], next[1]),
                         aLayout
                       ]);
             } else {
-              return makePending(instantiateTree(next));
+              var instances = instantiateTree(next);
+              return pendingReplace(node, instances);
             }
           }
+          break;
       case 1 : 
           var a = prev[0];
           if (typeof next === "number" || !next.tag) {
-            return makePending(instantiateTree(next));
+            exit = 1;
           } else {
             var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
             if (typeof match === "number") {
@@ -359,30 +416,50 @@ function F(NativeInterface) {
                           /* [] */0
                         ]);
               } else {
-                return makePending(instantiateTree(next));
+                var instances$1 = instantiateTree(next);
+                var match$1 = getNativeNode(prev);
+                if (match$1 !== undefined) {
+                  return pendingReplace(Js_primitive.valFromOption(match$1), instances$1);
+                } else {
+                  console.log("Warning! Prev custom component was pending");
+                  return makePending(instances$1);
+                }
               }
             } else {
               var custom = match[1];
-              var match$1 = runRender(custom);
-              var match$2 = a[/* mountedTree */1];
-              if (match$2.tag) {
-                var tree = reconcileTrees(enqueue, match$2[0], match$1[0]);
+              var match$2 = runRender(custom);
+              var match$3 = a[/* mountedTree */1];
+              if (match$3.tag) {
+                var tree = reconcileTrees(enqueue, match$3[0], match$2[0]);
                 return /* PCustom */Block.__(1, [
                           /* record */[
                             /* custom */custom,
                             /* mountedTree : Pending */Block.__(0, [tree])
                           ],
-                          match$1[1]
+                          match$2[1]
                         ]);
               } else {
                 return Pervasives.failwith("Reconciling a componenet that's still pending.");
               }
             }
           }
+          break;
       case 2 : 
-          return makePending(instantiateTree(next));
+          exit = 1;
+          break;
       
     }
+    if (exit === 1) {
+      var instances$2 = instantiateTree(next);
+      var match$4 = getNativeNode(prev);
+      if (match$4 !== undefined) {
+        return pendingReplace(Js_primitive.valFromOption(match$4), instances$2);
+      } else {
+        console.log("Warning! Prev custom component was pending");
+        return makePending(instances$2);
+      }
+    }
+    
   };
   var reconcileChildren = function (enqueue, parentNode, aChildren, bChildren) {
     if (aChildren) {
@@ -392,7 +469,7 @@ function F(NativeInterface) {
                 reconcileChildren(enqueue, parentNode, aChildren[1], bChildren[1])
               ];
       } else {
-        Belt_List.forEach(Belt_List.keepMap(aChildren, getNativeNode), Curry._1(NativeInterface[/* removeChild */7], parentNode));
+        Belt_List.forEach(Belt_List.keepMap(aChildren, getNativeNode), Curry._1(NativeInterface[/* removeChild */8], parentNode));
         return /* [] */0;
       }
     } else if (bChildren) {
@@ -448,12 +525,14 @@ function F(NativeInterface) {
                             
                           }));
                     Layout.layout(root[/* layout */0]);
-                    debugger;
                     return Belt_List.forEach(toUpdate, (function (param) {
+                                  var container = param[0];
                                   Belt_List.forEach(param[2], runEffect);
-                                  param[0][/* mountedTree */1] = /* Mounted */Block.__(1, [mountPending((function (param) {
+                                  var match = getNativePending(container[/* mountedTree */1]);
+                                  var current = match !== undefined ? Js_primitive.valFromOption(match) : Pervasives.failwith("Current is already pending");
+                                  container[/* mountedTree */1] = /* Mounted */Block.__(1, [mountPending((function (param) {
                                               return enqueue(root, param);
-                                            }), param[1])]);
+                                            }), /* AppendChild */Block.__(0, [current]), param[1])]);
                                   return /* () */0;
                                 }));
                   }));
@@ -471,7 +550,7 @@ function F(NativeInterface) {
     ];
     var tree = mountPending((function (param) {
             return enqueue(root, param);
-          }), makePending(instances));
+          }), /* AppendChild */Block.__(0, [node]), makePending(instances));
     var match = getNativeNode(tree);
     if (match !== undefined) {
       var childNode = Js_primitive.valFromOption(match);
@@ -691,6 +770,7 @@ function F(NativeInterface) {
   ];
   return /* module */[
           /* makePending */makePending,
+          /* pendingReplace */pendingReplace,
           /* Maker */Maker,
           /* runRender */runRender,
           /* getNativeNode */getNativeNode,
@@ -700,6 +780,7 @@ function F(NativeInterface) {
           /* getPendingLayout */getPendingLayout,
           /* instantiateTree */instantiateTree,
           /* runEffect */runEffect,
+          /* mountTo */mountTo,
           /* mountPending */mountPending,
           /* reconcileTrees */reconcileTrees,
           /* reconcileChildren */reconcileChildren,

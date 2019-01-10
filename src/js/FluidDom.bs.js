@@ -36,6 +36,7 @@ function string_of_float(f) {
 }
 
 function createElement(typ, nativeProps, layout) {
+  console.log("Creating", typ, nativeProps);
   var node = document.createElement(typ);
   setDomProps(node, nativeProps);
   node.style.position = "absolute";
@@ -105,7 +106,8 @@ function canUpdate(mounted, mountPoint, newElement) {
 }
 
 function update(mounted, mountPoint, newElement) {
-  if (mounted[/* tag */0] === newElement[/* tag */0]) {
+  if (mounted[/* tag */0] === newElement[/* tag */0] && mounted[/* props */1] !== newElement[/* props */1]) {
+    console.log("Updating", mounted, mountPoint, newElement);
     return setDomProps(mountPoint, newElement[/* props */1]);
   } else {
     return 0;
@@ -142,6 +144,10 @@ var include = FluidMaker.F([
       createNullNode,
       (function (prim, prim$1) {
           prim.appendChild(prim$1);
+          return /* () */0;
+        }),
+      (function (prim, prim$1) {
+          prim.appendAfter(prim$1);
           return /* () */0;
         }),
       (function (prim, prim$1) {
@@ -280,35 +286,39 @@ function string(layout, font, x) {
 
 var Fluid_001 = /* makePending */include[0];
 
-var Fluid_002 = /* Maker */include[1];
+var Fluid_002 = /* pendingReplace */include[1];
 
-var Fluid_003 = /* runRender */include[2];
+var Fluid_003 = /* Maker */include[2];
 
-var Fluid_004 = /* getNativeNode */include[3];
+var Fluid_004 = /* runRender */include[3];
 
-var Fluid_005 = /* getNativePending */include[4];
+var Fluid_005 = /* getNativeNode */include[4];
 
-var Fluid_006 = /* getInstanceLayout */include[5];
+var Fluid_006 = /* getNativePending */include[5];
 
-var Fluid_007 = /* getMountedLayout */include[6];
+var Fluid_007 = /* getInstanceLayout */include[6];
 
-var Fluid_008 = /* getPendingLayout */include[7];
+var Fluid_008 = /* getMountedLayout */include[7];
 
-var Fluid_009 = /* instantiateTree */include[8];
+var Fluid_009 = /* getPendingLayout */include[8];
 
-var Fluid_010 = /* runEffect */include[9];
+var Fluid_010 = /* instantiateTree */include[9];
 
-var Fluid_011 = /* mountPending */include[10];
+var Fluid_011 = /* runEffect */include[10];
 
-var Fluid_012 = /* reconcileTrees */include[11];
+var Fluid_012 = /* mountTo */include[11];
 
-var Fluid_013 = /* reconcileChildren */include[12];
+var Fluid_013 = /* mountPending */include[12];
 
-var Fluid_014 = /* enqueue */include[13];
+var Fluid_014 = /* reconcileTrees */include[13];
 
-var Fluid_015 = /* mount */include[14];
+var Fluid_015 = /* reconcileChildren */include[14];
 
-var Fluid_016 = /* Hooks */include[15];
+var Fluid_016 = /* enqueue */include[15];
+
+var Fluid_017 = /* mount */include[16];
+
+var Fluid_018 = /* Hooks */include[17];
 
 var Fluid = /* module */[
   /* NativeInterface */0,
@@ -328,6 +338,8 @@ var Fluid = /* module */[
   Fluid_014,
   Fluid_015,
   Fluid_016,
+  Fluid_017,
+  Fluid_018,
   /* Native */Native,
   /* string */string
 ];
