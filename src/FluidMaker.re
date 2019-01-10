@@ -450,24 +450,19 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree
     /* TODO re-enable updating */
     if (NativeInterface.canUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
       let children = reconcileChildren(enqueue, node, aChildren, bChildren);
-      updateLayout(Some(aLayout), children->List.map(getPendingLayout)->List.toArray,
-      switch bLayoutStyle {
+      updateLayout(
+        Some(aLayout),
+        children->List.map(getPendingLayout)->List.toArray,
+        switch (bLayoutStyle) {
         | Some(s) => s
         | _ => Layout.style()
-      },
-      bMeasure
-      )->ignore
-      /* TODO assign the measure function */
-      /* TODO flush layout changes */
+        },
+        bMeasure,
+      )
+      ->ignore;
       PBuiltin(bElement, Update(aElement, node), children, aLayout);
     } else {
       let instances = instantiateTree(~withLayout=aLayout, next);
-      /* let instanceLayout = getInstanceLayout(instances);
-      Layout.layout(instanceLayout);
-      let tree = inflateTree(enqueue, instances);
-      NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree)); */
-      /* unmount prev nodes */
-      /* tree */
       pendingReplace(node, instances)
     }
   | (MCustom(a), Custom(b)) =>
@@ -480,51 +475,30 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree
           | Pending(_) => failwith("Reconciling a componenet that's still pending.")
           | Mounted(mountedTree) =>
             let tree = reconcileTrees(enqueue, mountedTree, newElement);
-            /* 
-            a.custom = custom;
-            a.mountedTree = tree;
-            effects->List.forEach(runEffect); */
-            /* MCustom(a) */
             PCustom({custom, mountedTree: Pending(tree)}, effects)
         }
       | `Different =>
-        /* Js.log3("different", a, b); */
         let instances = instantiateTree(next);
-        /* let instanceLayout = getInstanceLayout(instances);
-        Layout.layout(instanceLayout);
-        let tree = inflateTree(enqueue, instances);
-        /* unmount prev nodes */
-        NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
-        tree */
         switch (getNativeNode(prev)) {
-          | None =>
+        | None =>
           print_endline("Warning! Prev custom component was pending");
-          makePending(instances)
-          | Some(node) => pendingReplace(node, instances)
-        }
+          makePending(instances);
+        | Some(node) => pendingReplace(node, instances)
+        };
     }
   | _ =>
     let instances = instantiateTree(next);
     switch (getNativeNode(prev)) {
-      | None =>
+    | None =>
       print_endline("Warning! Prev custom component was pending");
-      makePending(instances)
-      | Some(node) => pendingReplace(node, instances)
-    }
-    /* let instances = instantiateTree(next);
-    let instanceLayout = getInstanceLayout(instances);
-    Layout.layout(instanceLayout);
-    let tree = inflateTree(enqueue, instances);
-    /* unmount prev nodes */
-    NativeInterface.replaceWith(getNativeNode(prev), getNativeNode(tree));
-    tree */
+      makePending(instances);
+    | Some(node) => pendingReplace(node, instances)
+    };
 } and reconcileChildren = (enqueue, parentNode, aChildren, bChildren) => {
   switch (aChildren, bChildren) {
     | ([], []) => []
     | ([], _) =>
       let more = bChildren->List.map(child => makePending(instantiateTree(child)));
-      /* let more = bChildren->List.map(child => inflateTree(enqueue, instantiateTree(child)));
-      more->List.forEach(child => NativeInterface.appendChild(parentNode, getNativeNode(child))); */
       more
     | (more, []) => 
       /* TODO is this the right place for that? */
