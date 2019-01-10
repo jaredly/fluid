@@ -325,12 +325,9 @@ function F(NativeInterface) {
                     return mountPending(enqueue, partial_arg$1, param);
                   }));
             if (typeof prev === "number") {
-              console.log("Creating", node$1);
               mountTo(mount, node$1);
             } else if (!prev.tag) {
-              var prev$1 = prev[0];
-              console.log("Replacing", prev$1, node$1);
-              Curry._2(NativeInterface[/* replaceWith */9], prev$1, node$1);
+              Curry._2(NativeInterface[/* replaceWith */9], prev[0], node$1);
             }
             return /* MBuiltin */Block.__(0, [
                       $$native,
@@ -363,22 +360,22 @@ function F(NativeInterface) {
             return /* MCustom */Block.__(1, [container$1]);
           }
       case 2 : 
-          var prev$2 = el[0];
+          var prev$1 = el[0];
           var exit$1 = 0;
-          if (typeof prev$2 === "number" || !prev$2.tag) {
+          if (typeof prev$1 === "number" || !prev$1.tag) {
             exit$1 = 1;
           } else {
             return /* MNull */Block.__(2, [
-                      prev$2[1],
+                      prev$1[1],
                       el[1]
                     ]);
           }
           if (exit$1 === 1) {
             var rep = Curry._1(NativeInterface[/* createNullNode */5], /* () */0);
-            if (typeof prev$2 === "number") {
+            if (typeof prev$1 === "number") {
               mountTo(mount, rep);
-            } else if (!prev$2.tag) {
-              Curry._2(NativeInterface[/* replaceWith */9], prev$2[0], rep);
+            } else if (!prev$1.tag) {
+              Curry._2(NativeInterface[/* replaceWith */9], prev$1[0], rep);
             }
             return /* MNull */Block.__(2, [
                       rep,

@@ -65,4 +65,5 @@ let first = hooks => {
   let%hook (count, setCount) = useState(0);
 }; */
 
-Fluid.launchWindow(~title="Hello Fluid", ~root=<First />);
+/* Fluid.launchWindow(~title="Hello Fluid", ~root=<First />); */
+Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />);

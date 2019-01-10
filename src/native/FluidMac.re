@@ -23,6 +23,8 @@ module NativeInterface = {
 
   external createNullNode: unit => nativeNode = "fluid_create_NullNode";
 
+  let appendAfter = (one, two) => failwith("appendAfter not impl");
+
   external createView: (
     ~onPress: option(unit => unit),
     ~pos: (float, float),
@@ -65,27 +67,39 @@ module NativeInterface = {
     | Button(string, unit => unit)
     | String(string, option(font));
 
-  let maybeUpdate = (~mounted, ~mountPoint, ~newElement) => {
+  let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
+    switch (mounted, newElement) {
+      | (View(aPress, aStyle), View(onPress, style)) => 
+        true
+
+      | (Button(atitle, apress), Button(btitle, bpress)) =>
+        true
+
+      | (String(atext, afont), String(btext, bfont)) => 
+        true
+
+      | _ => false
+    }
+  };
+
+  let update = (mounted, mountPoint, newElement) => {
     switch (mounted, newElement) {
       | (View(aPress, aStyle), View(onPress, style)) => 
         if (aPress != onPress || aStyle != style) {
           updateView(mountPoint, onPress, style)
         };
-        true
 
       | (Button(atitle, apress), Button(btitle, bpress)) =>
         if (atitle != btitle || apress !== bpress) {
           updateButton(mountPoint, btitle, bpress)
         };
-        true
 
       | (String(atext, afont), String(btext, bfont)) => 
         if (atext != btext || afont != bfont) {
           setTextContent(mountPoint, btext, bfont)
         };
-        true
 
-      | _ => false
+      | _ => ()
     }
   };
 
@@ -156,10 +170,16 @@ module Fluid = {
       invalidatedElements: [],
       waiting: false
     };
-    let tree = inflateTree(enqueue(root), instances);
+
     let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
     NativeInterface.startApp(~title, ~size=(width, height), node => {
-      node->NativeInterface.appendChild(getNativeNode(tree))
+      let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
+      switch (getNativeNode(tree)) {
+        | None => failwith("Still pending?")
+        | Some(childNode) =>
+          root.node = Some(childNode);
+          node->NativeInterface.appendChild(childNode)
+      }
     });
   };
 }

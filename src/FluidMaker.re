@@ -420,10 +420,10 @@ let rec mountPending: (container => unit, mountPoint, pendingTree) => mountedTre
     }); */
     switch (prev) {
       | Create =>
-      Js.log2("Creating", node);
+      /* Js.log2("Creating", node); */
       mountTo(mount, node);
       | Replace(prev) =>
-      Js.log3("Replacing", prev, node)
+      /* Js.log3("Replacing", prev, node) */
       NativeInterface.replaceWith(prev, node)
       | _ => ()
     };

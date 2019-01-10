@@ -119,7 +119,7 @@ let showHistory = (prev, h) => {
     | Some((s, _, op)) => s ++ opString(op)
     | None =>
   switch h {
-  | [] => "Hi..........."
+  | [] => "0."
   | [(str, restr, _), ..._] => str == restr ? str : (str ++ "=" ++ restr)
 };
   }
