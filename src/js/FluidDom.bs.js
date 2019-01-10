@@ -302,23 +302,25 @@ var Fluid_008 = /* getMountedLayout */include[7];
 
 var Fluid_009 = /* getPendingLayout */include[8];
 
-var Fluid_010 = /* instantiateTree */include[9];
+var Fluid_010 = /* updateLayout */include[9];
 
-var Fluid_011 = /* runEffect */include[10];
+var Fluid_011 = /* instantiateTree */include[10];
 
-var Fluid_012 = /* mountTo */include[11];
+var Fluid_012 = /* runEffect */include[11];
 
-var Fluid_013 = /* mountPending */include[12];
+var Fluid_013 = /* mountTo */include[12];
 
-var Fluid_014 = /* reconcileTrees */include[13];
+var Fluid_014 = /* mountPending */include[13];
 
-var Fluid_015 = /* reconcileChildren */include[14];
+var Fluid_015 = /* reconcileTrees */include[14];
 
-var Fluid_016 = /* enqueue */include[15];
+var Fluid_016 = /* reconcileChildren */include[15];
 
-var Fluid_017 = /* mount */include[16];
+var Fluid_017 = /* enqueue */include[16];
 
-var Fluid_018 = /* Hooks */include[17];
+var Fluid_018 = /* mount */include[17];
+
+var Fluid_019 = /* Hooks */include[18];
 
 var Fluid = /* module */[
   /* NativeInterface */0,
@@ -340,6 +342,7 @@ var Fluid = /* module */[
   Fluid_016,
   Fluid_017,
   Fluid_018,
+  Fluid_019,
   /* Native */Native,
   /* string */string
 ];

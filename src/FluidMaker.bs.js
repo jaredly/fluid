@@ -243,27 +243,42 @@ function F(NativeInterface) {
       }
     };
   };
-  var instantiateTree = function (el) {
+  var updateLayout = function (layout, children, style, measure) {
+    if (layout !== undefined) {
+      var layout$1 = layout;
+      layout$1[/* style */1] = style;
+      layout$1[/* children */9] = children;
+      layout$1[/* measure */7] = measure;
+      layout$1[/* layout */2] = Curry._1(Layout.Layout[/* LayoutSupport */0][/* createLayout */29], /* () */0);
+      return layout$1;
+    } else if (measure !== undefined) {
+      return Layout.createNodeWithMeasure(children, style, measure);
+    } else {
+      return Layout.createNode(children, style);
+    }
+  };
+  var instantiateTree = function (withLayout, el) {
     if (typeof el === "number") {
-      return /* INull */Block.__(2, [Layout.createNode(/* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0))]);
+      return /* INull */Block.__(2, [updateLayout(withLayout, /* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), undefined)]);
     } else if (el.tag) {
       var custom = Curry._1(el[0][/* init */0], /* () */0);
       var match = runRender(custom);
       return /* ICustom */Block.__(1, [
                 custom,
-                instantiateTree(match[0]),
+                instantiateTree(undefined, match[0]),
                 match[1]
               ]);
     } else {
-      var measure = el[3];
       var layout = el[2];
-      var ichildren = Belt_List.map(el[1], instantiateTree);
+      var ichildren = Belt_List.map(el[1], (function (eta) {
+              return instantiateTree(undefined, eta);
+            }));
       var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
       var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
       return /* IBuiltin */Block.__(0, [
                 el[0],
                 ichildren,
-                measure !== undefined ? Layout.createNodeWithMeasure(childLayouts, style, measure) : Layout.createNode(childLayouts, style)
+                updateLayout(withLayout, childLayouts, style, el[3])
               ]);
     }
   };
@@ -386,19 +401,22 @@ function F(NativeInterface) {
           } else {
             var bLayoutStyle = next[2];
             var bElement = next[0];
-            if (Curry._3(NativeInterface[/* canUpdate */1], aElement, node, bElement)) {
+            if (false && Curry._3(NativeInterface[/* canUpdate */1], aElement, node, bElement)) {
               aLayout[/* style */1] = bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+              var children = reconcileChildren(enqueue, node, prev[2], next[1]);
+              aLayout[/* children */9] = Belt_List.toArray(Belt_List.map(children, getPendingLayout));
+              aLayout[/* layout */2] = Curry._1(Layout.Layout[/* LayoutSupport */0][/* createLayout */29], /* () */0);
               return /* PBuiltin */Block.__(0, [
                         bElement,
                         /* Update */Block.__(1, [
                             aElement,
                             node
                           ]),
-                        reconcileChildren(enqueue, node, prev[2], next[1]),
+                        children,
                         aLayout
                       ]);
             } else {
-              var instances = instantiateTree(next);
+              var instances = instantiateTree(aLayout, next);
               return pendingReplace(node, instances);
             }
           }
@@ -416,7 +434,7 @@ function F(NativeInterface) {
                           /* [] */0
                         ]);
               } else {
-                var instances$1 = instantiateTree(next);
+                var instances$1 = instantiateTree(undefined, next);
                 var match$1 = getNativeNode(prev);
                 if (match$1 !== undefined) {
                   return pendingReplace(Js_primitive.valFromOption(match$1), instances$1);
@@ -450,7 +468,7 @@ function F(NativeInterface) {
       
     }
     if (exit === 1) {
-      var instances$2 = instantiateTree(next);
+      var instances$2 = instantiateTree(undefined, next);
       var match$4 = getNativeNode(prev);
       if (match$4 !== undefined) {
         return pendingReplace(Js_primitive.valFromOption(match$4), instances$2);
@@ -474,7 +492,7 @@ function F(NativeInterface) {
       }
     } else if (bChildren) {
       return Belt_List.map(bChildren, (function (child) {
-                    return makePending(instantiateTree(child));
+                    return makePending(instantiateTree(undefined, child));
                   }));
     } else {
       return /* [] */0;
@@ -539,7 +557,7 @@ function F(NativeInterface) {
     }
   };
   var mount = function (el, node) {
-    var instances = instantiateTree(el);
+    var instances = instantiateTree(undefined, el);
     var instanceLayout = getInstanceLayout(instances);
     Layout.layout(instanceLayout);
     var root = /* record */[
@@ -778,6 +796,7 @@ function F(NativeInterface) {
           /* getInstanceLayout */getInstanceLayout,
           /* getMountedLayout */getMountedLayout,
           /* getPendingLayout */getPendingLayout,
+          /* updateLayout */updateLayout,
           /* instantiateTree */instantiateTree,
           /* runEffect */runEffect,
           /* mountTo */mountTo,

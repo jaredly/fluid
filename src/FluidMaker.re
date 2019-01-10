@@ -308,8 +308,25 @@ and getPendingLayout = element => switch element {
   | PCustom({mountedTree: Pending(pending)}, _) => getPendingLayout(pending)
 };
 
-let rec instantiateTree: element => instanceTree = el => switch el {
-  | Null => INull(Layout.createNode([||], Layout.style()))
+let updateLayout = (layout: option(Layout.node), children, style, measure) => {
+  switch layout {
+    | None => 
+    switch measure { 
+      | None => Layout.createNode(children, style)
+      | Some(m) => Layout.createNodeWithMeasure(children, style, m)
+    }
+    | Some(layout) =>
+      layout.style = style;
+      layout.children = children;
+      layout.measure = measure;
+      layout.layout = Layout.LayoutSupport.createLayout();
+      layout
+  }
+  /* TODO free current children? but maybe I can't because they're reused */
+};
+
+let rec instantiateTree = (~withLayout=?, el: element) => switch el {
+  | Null => INull(updateLayout(withLayout, [||], Layout.style(), None))
 
   | Builtin(nativeElement, children, layout, measure) =>
     let ichildren = children->List.map(instantiateTree);
@@ -318,10 +335,7 @@ let rec instantiateTree: element => instanceTree = el => switch el {
       | None => Layout.style()
       | Some(s) => s
     };
-    IBuiltin(nativeElement, ichildren, switch measure {
-      | None => Layout.createNode(childLayouts, style)
-      | Some(m) => Layout.createNodeWithMeasure(childLayouts, style, m)
-    })
+    IBuiltin(nativeElement, ichildren, updateLayout(withLayout, childLayouts, style, measure))
 
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
@@ -429,31 +443,23 @@ let rec mountPending: (container => unit, mountPoint, pendingTree) => mountedTre
     MCustom(container)
 };
 
-/* and listenForChanges = (WithState(contents) as component, container, enqueue) => {
-  contents.onChange = () => {
-    enqueue(container)
-    /* let (newElement, effects) = component->runRender;
-    container.mountedTree = switch (contents.reconciler) {
-      | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, container.mountedTree, newElement)
-      | _ => reconcileTrees(container.mountedTree, newElement)
-    };
-    effects->List.forEach(runEffect); */
-  }
-}; */
-
 let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree = (enqueue, prev, next) => switch (prev, next) {
   | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
-    /* TODO should be "canUpdate"... or maybe it should return... the things... ok I need a prev el or sth */
-    if (NativeInterface.canUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
+    /* TODO maybe it should return... the things... ok I need a prev el or sth */
+    /* TODO re-enable updating */
+    if (false && NativeInterface.canUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
       aLayout.style = switch bLayoutStyle {
         | Some(s) => s
         | _ => Layout.style()
       };
+      let children = reconcileChildren(enqueue, node, aChildren, bChildren);
+      aLayout.children = children->List.map(getPendingLayout)->List.toArray;
+      aLayout.layout = Layout.LayoutSupport.createLayout();
       /* TODO assign the measure function */
       /* TODO flush layout changes */
-      PBuiltin(bElement, Update(aElement, node), reconcileChildren(enqueue, node, aChildren, bChildren), aLayout);
+      PBuiltin(bElement, Update(aElement, node), children, aLayout);
     } else {
-      let instances = instantiateTree(next);
+      let instances = instantiateTree(~withLayout=aLayout, next);
       /* let instanceLayout = getInstanceLayout(instances);
       Layout.layout(instanceLayout);
       let tree = inflateTree(enqueue, instances);
