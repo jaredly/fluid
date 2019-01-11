@@ -4,8 +4,9 @@
 
 void fluid_NSView_appendChild(value view_v, value child_v) {
   CAMLparam2(view_v, child_v);
-  NSView* view = (NSView*) view_v;
-  NSView* child = (NSView*) child_v;
+  log("Append child view\n");
+  NSView* view = (NSView*) Unwrap(view_v);
+  NSView* child = (NSView*) Unwrap(child_v);
 
   NSView* last = view.subviews.lastObject;
   if (last != nil) {
@@ -19,8 +20,9 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
 
 void fluid_NSView_removeChild(value view_v, value child_v) {
   CAMLparam2(view_v, child_v);
-  NSView* view = (NSView*) view;
-  NSView* child = (NSView*) child;
+  log("Remove child view\n");
+  NSView* view = (NSView*) Unwrap(view_v);
+  NSView* child = (NSView*) Unwrap(child_v);
 
   if (child.superview == view) {
     [child removeFromSuperview];
@@ -31,6 +33,7 @@ void fluid_NSView_removeChild(value view_v, value child_v) {
 
 void fluid_NSView_replaceWith(value view_v, value replace_v) {
   CAMLparam2(view_v, replace_v);
+  log("Replace view\n");
   NSView* view = (NSView*) view_v;
   NSView* replace = (NSView*) replace_v;
 
@@ -43,15 +46,17 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
 
 void fluid_setImmediate(value callback) {
   CAMLparam1(callback);
-  dispatch_after(DISPATCH_TIME_NOW, dispatch_get_main_queue(), ^(void){
+  log("Set immediate\n");
+  // dispatch_after(DISPATCH_TIME_NOW, dispatch_get_main_queue(), ^(void){
     caml_callback(callback, Val_unit);
-  });
+  // });
   CAMLreturn0;
 }
 
 CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, value maxWidth_v) {
   CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);
+  log("Measure text\n");
 
   NSSize textSize;
 
@@ -98,8 +103,9 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 void fluid_update_NSButton(value button_v, value title_v, value onPress_v) {
   CAMLparam3(button_v, title_v, onPress_v);
+  log("Update button\n");
 
-  FluidButton* button = (FluidButton*)button_v;
+  FluidButton* button = (FluidButton*)Unwrap(button_v);
   NSString *title = NSString_val(title_v);
 
   button.title = title;
@@ -116,6 +122,8 @@ void fluid_update_NSButton(value button_v, value title_v, value onPress_v) {
 
 CAMLprim value fluid_create_NSButton(value title_v, value onPress_v, value pos_v, value size_v) {
   CAMLparam4(title_v, onPress_v, pos_v, size_v);
+  CAMLlocal1(button_v);
+  log("Create button\n");
 
   NSString *title = NSString_val(title_v);
 
@@ -126,11 +134,14 @@ CAMLprim value fluid_create_NSButton(value title_v, value onPress_v, value pos_v
 
   [button setFrameOrigin:NSMakePoint(left, top)];
 
-  CAMLreturn((value) button);
+  Wrap(button_v, button);
+  CAMLreturn(button_v);
 }
 
 CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v) {
   CAMLparam3(contents_v, dims_v, font_v);
+  CAMLlocal1(text_v);
+  log("Create text view\n");
 
   NSString *contents = NSString_val(contents_v);
   NSTextField* text;
@@ -155,15 +166,16 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
 
   // text.wantsLayer = true;
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
+  Wrap(text_v, text);
 
-  CAMLreturn((value) text);
+  CAMLreturn(text_v);
 }
 
 void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v) {
   CAMLparam4(text_v, contents_v, dims, font_v);
-  printf("set text contents\n");
+  log("Update text view\n");
 
-  NSTextField* text = (NSTextField*)text_v;
+  NSTextField* text = (NSTextField*)Unwrap(text_v);
   NSString *contents = NSString_val(contents_v);
 
   NSString *fontName = NSString_val(Field(font_v, 0));
@@ -187,10 +199,10 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   CAMLreturn0;
 }
 
-CAMLprim value fluid_update_NSView(value view_v, value onPress_v, value style_v) {
+void fluid_update_NSView(value view_v, value onPress_v, value style_v) {
   CAMLparam3(view_v, onPress_v, style_v);
 
-  NSView* view = (NSView*)view_v;
+  NSView* view = (NSView*)Unwrap(view_v);
   printf("Update view\n");
 
   value backgroundColor = Field(style_v, 0);
@@ -205,12 +217,13 @@ CAMLprim value fluid_update_NSView(value view_v, value onPress_v, value style_v)
     view.wantsLayer = false;
   }
 
-  CAMLreturn((value) view);
+  CAMLreturn0;
 }
 
 
 CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, value style_v) {
   CAMLparam4(onPress_v, pos_v, size_v, style_v);
+  CAMLlocal1(view_v);
 
   Double_pair(pos_v, top, left);
   Double_pair(size_v, width, height);
@@ -227,7 +240,8 @@ CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, v
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
   }
 
-  CAMLreturn((value) view);
+  Wrap(view_v, view);
+  CAMLreturn(view_v);
 }
 
 CAMLprim value fluid_create_NullNode() {

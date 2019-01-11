@@ -31,7 +31,9 @@
 }
 
 - (void)onPress {
+  log("> Button onPress\n");
   caml_callback(onPress_v, Val_unit);
+  log("< Button pressed\n");
 }
 
 @end
