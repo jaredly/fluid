@@ -12,20 +12,22 @@
 }
 @end
 
-// @interface MLButtonDelegate : NSObject
-// @end
-
-@implementation MLButtonDelegate
+@implementation FluidButton
 {
   value onPress_v;
 }
 
-- (instancetype)initWithOnPress:(value)onPressv
++ (FluidButton*)createWithTitle:(NSString*)title onPress:(value)onPressv
 {
-  if (self = [super init]) {
-    onPress_v = onPressv;
-  }
-  return self;
+  FluidButton* button = [super buttonWithTitle:title target:NULL action:@selector(onPress)];
+  button.target = button;
+  [button setOnPress:onPressv];
+  return button;
+}
+
+- (void)setOnPress:(value)onPressv
+{
+  onPress_v = onPressv;
 }
 
 - (void)onPress {
