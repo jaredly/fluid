@@ -129,8 +129,8 @@ CAMLprim value fluid_create_NSButton(value title_v, value onPress_v, value pos_v
   CAMLreturn((value) button);
 }
 
-CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size_v, value font_v) {
-  CAMLparam4(contents_v, pos_v, size_v, font_v);
+CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v) {
+  CAMLparam3(contents_v, dims_v, font_v);
 
   NSString *contents = NSString_val(contents_v);
   NSTextField* text;
@@ -148,8 +148,7 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size
     text = [NSTextField labelWithString:contents];
   }
 
-  Double_pair(pos_v, top, left);
-  Double_pair(size_v, width, height);
+  Unpack_record4_double(dims_v, left, top, width, height);
 
   [text setFrameOrigin:NSMakePoint(left, top + 5.0)];
   [text setFrameSize:NSMakeSize(width, height)];
@@ -158,6 +157,34 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value pos_v, value size
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
 
   CAMLreturn((value) text);
+}
+
+void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v) {
+  CAMLparam4(text_v, contents_v, dims, font_v);
+  printf("set text contents\n");
+
+  NSTextField* text = (NSTextField*)text_v;
+  NSString *contents = NSString_val(contents_v);
+
+  NSString *fontName = NSString_val(Field(font_v, 0));
+  double fontSize = Double_val(Field(font_v, 1));
+
+  NSFont *nsFont = [NSFont fontWithName:fontName size:fontSize];
+  if (nsFont != nil) {
+    NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
+    NSDictionary *attributes = @{ NSFontAttributeName : nsFont };
+    [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
+    text.attributedStringValue = attrstr;
+  } else {
+    text.stringValue = contents;
+  }
+
+  Unpack_record4_double(dims, left, top, width, height);
+
+  [text setFrameOrigin:NSMakePoint(left, top + 5.0)];
+  [text setFrameSize:NSMakeSize(width, height)];
+
+  CAMLreturn0;
 }
 
 CAMLprim value fluid_update_NSView(value view_v, value onPress_v, value style_v) {
@@ -169,11 +196,11 @@ CAMLprim value fluid_update_NSView(value view_v, value onPress_v, value style_v)
   value backgroundColor = Field(style_v, 0);
   if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
     value color = Field(backgroundColor, 0);
-    Double_record4(color, r, g, b, a);
+    Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
-    [view.layer setNeedsDisplay];
-    printf("r %f\n", r);
+    // [view.layer setNeedsDisplay];
+    // printf("r %f\n", r);
   } else {
     view.wantsLayer = false;
   }
@@ -195,7 +222,7 @@ CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, v
   value backgroundColor = Field(style_v, 0);
   if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
     value color = Field(backgroundColor, 0);
-    Double_record4(color, r, g, b, a);
+    Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
   }
@@ -207,27 +234,4 @@ CAMLprim value fluid_create_NullNode() {
   CAMLparam0();
   NSView* view = [[FlippedView alloc] initWithFrame:CGRectZero];
   CAMLreturn((value) view);
-}
-
-void fluid_set_NSTextView_textContent(value text_v, value contents_v, value font_v) {
-  CAMLparam3(text_v, contents_v, font_v);
-  printf("set text contents\n");
-
-  NSTextField* text = (NSTextField*)text_v;
-  NSString *contents = NSString_val(contents_v);
-
-  NSString *fontName = NSString_val(Field(font_v, 0));
-  double fontSize = Double_val(Field(font_v, 1));
-
-  NSFont *nsFont = [NSFont fontWithName:fontName size:fontSize];
-  if (nsFont != nil) {
-    NSMutableAttributedString *attrstr = [[NSMutableAttributedString alloc] initWithString:contents];
-    NSDictionary *attributes = @{ NSFontAttributeName : nsFont };
-    [attrstr setAttributes:attributes range:NSMakeRange(0, contents.length)];
-    text.attributedStringValue = attrstr;
-  } else {
-    text.stringValue = contents;
-  }
-
-  CAMLreturn0;
 }

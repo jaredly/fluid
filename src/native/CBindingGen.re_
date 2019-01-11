@@ -8,6 +8,20 @@ let updateNSButton = (~button: nativeNode, ~title: string, ~onPress: unit => uni
   MLButtonDelegate* delegate = [[MLButtonDelegate alloc] initWithOnPress:onPress_v];
 |};
 
+[@external]
+let createNSView = (
+  onPress: unit => unit,
+  (x, y): (float, float),
+  (width, height): (float, float),
+  style: viewStyle
+) => {|
+  Record1(style, backgroundColor);
+  Check_optional(backgroundColor);
+  if (backgroundColor_isPresent) {
+    Double_record4(backgroundColor_contents, r, g, b, a);
+  }
+|};
+
 
 
 

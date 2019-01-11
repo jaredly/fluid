@@ -13,10 +13,29 @@
 #include <caml/alloc.h>
 
 #define NSString_val(v) [NSString stringWithUTF8String:String_val(v)]
-#define Double_pair(c, a, b) float a = Double_val(Field(c, 0)); float b = Double_val(Field(c, 1))
-#define Create_double_pair(c, a, b) c = caml_alloc_tuple(2); Store_field(c, 0, caml_copy_double(a)); Store_field(c, 1, caml_copy_double(b))
-#define Double_record4(source, a, b, c, d) float a = Double_field(source, 0); float b = Double_field(source, 1); float c = Double_field(source, 2); float d = Double_field(source, 3)
-#define Double_record2(source, a, b) float a = Double_field(source, 0); float b = Double_field(source, 1)
+
+#define Double_pair(c, a, b) \
+  float a = Double_val(Field(c, 0)); \
+  float b = Double_val(Field(c, 1))
+
+#define Create_double_pair(c, a, b) \
+  c = caml_alloc_tuple(2); \
+  Store_field(c, 0, caml_copy_double(a)); \
+  Store_field(c, 1, caml_copy_double(b))
+
+#define Unpack_record2_double(source, a, b) \
+  float a = Double_field(source, 0); \
+  float b = Double_field(source, 1)
+
+#define Unpack_record4_double(source, a, b, c, d) \
+  float a = Double_field(source, 0); \
+  float b = Double_field(source, 1); \
+  float c = Double_field(source, 2); \
+  float d = Double_field(source, 3)
+
+// #define Unpack_record4_double(source, a, b, c, d) float a = Double_field(source, 0); float b = Double_field(source, 1); float c = Double_field(source, 2); float d = Double_field(source, 3)
+#define Check_optional(source) Is_block(source) && Tag_val(source) == 0
+#define Unpack_optional(source) Field(source, 0)
 
 @interface FlippedView : NSView
 - (BOOL)isFlipped;

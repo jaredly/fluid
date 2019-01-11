@@ -2,6 +2,7 @@
 module M = Flex.Layout;
 
 type color = {r: float, g: float, b: float, a: float};
+type dims = {left: float, top: float, width: float, height: float};
 
 module NativeInterface = {
   type nativeNode;
@@ -10,8 +11,8 @@ module NativeInterface = {
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
-  external createTextNode: (string, ~pos: (float, float), ~size: (float, float), ~font: font) => nativeNode = "fluid_create_NSTextView";
-  external setTextContent: (nativeNode, string, font) => unit = "fluid_set_NSTextView_textContent";
+  external createTextNode: (string, ~dims: dims, ~font: font) => nativeNode = "fluid_create_NSTextView";
+  external updateTextView: (nativeNode, string, dims, font) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
   external appendChild: (nativeNode, nativeNode) => unit = "fluid_NSView_appendChild";
   /* external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "fluid_NSView_insertBefore"; */
@@ -46,9 +47,9 @@ module NativeInterface = {
   external measureText: (~text: string, ~font: string, ~fontSize: float, ~maxWidth: option(float)) => (float, float) = "fluid_measureText";
 
   let defaultFont = {fontName: "Lucida Grande", fontSize: 12.};
-  let setTextContent = (node, text, font) => {
+  let updateTextView = (node, text, dims, font) => {
     let font = switch font { | None => defaultFont | Some(f) => f};
-    setTextContent(node, text, font);
+    updateTextView(node, text, dims, font);
   };
   let measureText = (text, font, _, width, widthMode, _, _) => {
     let {fontName, fontSize} = switch font { | None => defaultFont | Some(f) => f};
@@ -82,6 +83,8 @@ module NativeInterface = {
     }
   };
 
+  let dims = ({Layout.LayoutTypes.layout: {width, height, top, left}}) => {left, top, width, height};
+
   let update = (mounted, mountPoint, newElement, layout) => {
     switch (mounted, newElement) {
       | (View(aPress, aStyle), View(onPress, style)) => 
@@ -96,7 +99,7 @@ module NativeInterface = {
 
       | (String(atext, afont), String(btext, bfont)) => 
         if (atext != btext || afont != bfont) {
-          setTextContent(mountPoint, btext, bfont)
+          updateTextView(mountPoint, btext, dims(layout), bfont)
         };
 
       | _ => ()
@@ -116,7 +119,7 @@ module NativeInterface = {
     createButton(~title, ~onPress, ~pos=(top, left), ~size=(width, height))
     | String(contents, font) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      createTextNode(contents, ~pos=(top, left), ~size=(width, height), ~font);
+      createTextNode(contents, ~dims={left, top, width, height}, ~font);
   }
 };
 
