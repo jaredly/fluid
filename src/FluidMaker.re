@@ -537,6 +537,8 @@ let rec enqueue = (root, custom) => {
       Layout.Layout.gCurrentGenerationCount := Layout.Layout.gCurrentGenerationCount^ + 1;
       Layout.Layout.invalidateAllCaches(root.layout);
       /* TODO if something absolutely positioned, only need to do it from there */
+      /* TODO if I hook up layout node's `parent` attributes, I can walk up the tree
+         instead of invalidating at the root every time. */
       Layout.layout(root.layout);
       /* [%bs.debugger]; */
       toUpdate->List.forEach(((container, pending, effects)) => {
@@ -547,6 +549,8 @@ let rec enqueue = (root, custom) => {
         };
         container.mountedTree = Mounted(mountPending(enqueue(root), AppendChild(current), pending))
       })
+      /* STOPSHIP go down through the tree & update any nodes that have had their layout updated,
+         that didn't just get rerendered. yknow. */
     })
   };
 };

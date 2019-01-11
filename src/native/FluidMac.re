@@ -82,7 +82,7 @@ module NativeInterface = {
     }
   };
 
-  let update = (mounted, mountPoint, newElement) => {
+  let update = (mounted, mountPoint, newElement, layout) => {
     switch (mounted, newElement) {
       | (View(aPress, aStyle), View(onPress, style)) => 
         if (aPress != onPress || aStyle != style) {

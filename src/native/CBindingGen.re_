@@ -1,0 +1,27 @@
+
+type nativeNode;
+
+[@external]
+let updateNSButton = (~button: nativeNode, ~title: string, ~onPress: unit => unit) => {|
+  NSButton* button_v = (NSButton*)button;
+  NSString *title_v = [NSString stringWithUTF8String:String_val (title)];
+  MLButtonDelegate* delegate = [[MLButtonDelegate alloc] initWithOnPress:onPress_v];
+|};
+
+
+
+
+
+
+let startApp = (~title: string, ~size: (float, float), ~callback: 'node => unit) => {
+  let (width, height) = size;
+  let title = [%NSString title];
+  [@autoreleasepool] {
+    NSWindow.initWithContentRect(
+      _NSMakeRect(0, 0, width, height),
+      ~styleMask: (
+        _NSWindowStyleMaskClosable
+      )
+    )
+  }
+};
