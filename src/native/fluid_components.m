@@ -55,8 +55,8 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
   NSSize textSize;
 
-  NSString *textContent = [NSString stringWithUTF8String:String_val (text_v)];
-  NSString *font = [NSString stringWithUTF8String:String_val (font_v)];
+  NSString *textContent = NSString_val(text_v);
+  NSString *font = NSString_val(font_v);
   double fontSize = Double_val(fontSize_v);
 
   NSFont *nsFont = [NSFont fontWithName:font size:fontSize];
@@ -91,9 +91,7 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
     textSize = [text size];
   }
 
-  result = caml_alloc_tuple(2);
-  Store_field (result, 0, caml_copy_double(textSize.width + 5.0));
-  Store_field (result, 1, caml_copy_double(textSize.height + 5.0));
+  Create_double_pair(result, textSize.width + 5.0, textSize.height + 5.0);
 
   CAMLreturn(result);
 }
