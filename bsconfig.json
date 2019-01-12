@@ -18,6 +18,7 @@
     "backend": "native",
     "main-module": "AppNative"
   }],
+  "ocaml-flags": ["-bin-annot", "-g"],
   "build-script": "build-script.re",
   "bsc-flags": ["-g"],
   "warnings": {

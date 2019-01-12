@@ -51,7 +51,7 @@ let first = hooks => {
     <button
       onPress={
         () => {
-          print_endline("Clicked");
+          /* print_endline("Clicked"); */
           setTimes(times + 1);
         }
       }

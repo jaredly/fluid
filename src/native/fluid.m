@@ -65,12 +65,17 @@
   [appMenu addItem:quitMenuItem];
   [appMenuItem setSubmenu:appMenu];
 
-  caml_callback(onLaunch, (value) (window.contentView));
+  CAMLparam0();
+  CAMLlocal1(contentView_v);
+  Wrap(contentView_v, window.contentView);
+  caml_callback(onLaunch, contentView_v);
 
   [window makeKeyAndOrderFront:window];
   [window center];
   [window makeMainWindow];
   [NSApp unhide:nil];
+
+  CAMLreturn0;
 }
 
 @end

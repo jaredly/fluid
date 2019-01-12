@@ -7,11 +7,14 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
   log("Append child view\n");
   NSView* view = (NSView*) Unwrap(view_v);
   NSView* child = (NSView*) Unwrap(child_v);
+  // NSLog(@"- unwrapped %@\n", view);
 
   NSView* last = view.subviews.lastObject;
   if (last != nil) {
+    log("- add after\n");
     [view addSubview:child positioned:NSWindowBelow relativeTo:last];
   } else {
+    log("- add last\n");
     [view addSubview:child];
   }
 
@@ -34,8 +37,8 @@ void fluid_NSView_removeChild(value view_v, value child_v) {
 void fluid_NSView_replaceWith(value view_v, value replace_v) {
   CAMLparam2(view_v, replace_v);
   log("Replace view\n");
-  NSView* view = (NSView*) view_v;
-  NSView* replace = (NSView*) replace_v;
+  NSView* view = (NSView*) Unwrap(view_v);
+  NSView* replace = (NSView*) Unwrap(replace_v);
 
   if (view.superview != nil) {
     [view.superview replaceSubview:view with:replace];
@@ -56,7 +59,8 @@ void fluid_setImmediate(value callback) {
 CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, value maxWidth_v) {
   CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);
-  log("Measure text\n");
+  // TODO cache these values pls
+  // log("Measure text\n");
 
   NSSize textSize;
 
@@ -101,15 +105,14 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
   CAMLreturn(result);
 }
 
-void fluid_update_NSButton(value button_v, value title_v, value onPress_v) {
-  CAMLparam3(button_v, title_v, onPress_v);
+void fluid_update_NSButton(value button_v, value title_v) {
+  CAMLparam2(button_v, title_v);
   log("Update button\n");
 
   FluidButton* button = (FluidButton*)Unwrap(button_v);
   NSString *title = NSString_val(title_v);
 
   button.title = title;
-  [button setOnPress:onPress_v];
 
   // float top = Double_val(Field(pos_v, 0));
   // float left = Double_val(Field(pos_v, 1));
@@ -120,14 +123,14 @@ void fluid_update_NSButton(value button_v, value title_v, value onPress_v) {
   CAMLreturn0;
 }
 
-CAMLprim value fluid_create_NSButton(value title_v, value onPress_v, value pos_v, value size_v) {
-  CAMLparam4(title_v, onPress_v, pos_v, size_v);
+CAMLprim value fluid_create_NSButton(value title_v, value id, value pos_v, value size_v) {
+  CAMLparam4(title_v, id, pos_v, size_v);
   CAMLlocal1(button_v);
   log("Create button\n");
 
   NSString *title = NSString_val(title_v);
 
-  FluidButton* button = [FluidButton createWithTitle:title onPress:onPress_v];
+  FluidButton* button = [FluidButton createWithTitle:title id:Int_val(id)];
 
   Double_pair(pos_v, top, left);
   // Double_pair(size_v, width, height);
@@ -199,8 +202,8 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   CAMLreturn0;
 }
 
-void fluid_update_NSView(value view_v, value onPress_v, value style_v) {
-  CAMLparam3(view_v, onPress_v, style_v);
+void fluid_update_NSView(value view_v, value id, value style_v) {
+  CAMLparam3(view_v, id, style_v);
 
   NSView* view = (NSView*)Unwrap(view_v);
   printf("Update view\n");
@@ -221,8 +224,8 @@ void fluid_update_NSView(value view_v, value onPress_v, value style_v) {
 }
 
 
-CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, value style_v) {
-  CAMLparam4(onPress_v, pos_v, size_v, style_v);
+CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value style_v) {
+  CAMLparam4(id, pos_v, size_v, style_v);
   CAMLlocal1(view_v);
 
   Double_pair(pos_v, top, left);
@@ -246,6 +249,8 @@ CAMLprim value fluid_create_NSView(value onPress_v, value pos_v, value size_v, v
 
 CAMLprim value fluid_create_NullNode() {
   CAMLparam0();
+  CAMLlocal1(view_v);
   NSView* view = [[FlippedView alloc] initWithFrame:CGRectZero];
-  CAMLreturn((value) view);
+  Wrap(view_v, view);
+  CAMLreturn(view_v);
 }

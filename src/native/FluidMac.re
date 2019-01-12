@@ -1,28 +1,43 @@
 
 module M = Flex.Layout;
 
+Printexc.record_backtrace(true);
+
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
 module NativeInterface = {
-  type nativeNode;
+  type nativeInternal;
+  type nativeNode = (nativeInternal, int);
 
   type font = {fontName: string, fontSize: float};
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
-  external createTextNode: (string, ~dims: dims, ~font: font) => nativeNode = "fluid_create_NSTextView";
-  external updateTextView: (nativeNode, string, dims, font) => unit = "fluid_set_NSTextView_textContent";
+  external createTextNode: (string, ~dims: dims, ~font: font) => nativeInternal = "fluid_create_NSTextView";
+  external updateTextView: (nativeInternal, string, dims, font) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
-  external appendChild: (nativeNode, nativeNode) => unit = "fluid_NSView_appendChild";
-  /* external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "fluid_NSView_insertBefore"; */
-  external removeChild: (nativeNode, nativeNode) => unit = "fluid_NSView_removeChild";
 
-  external replaceWith: (nativeNode, nativeNode) => unit = "fluid_NSView_replaceWith";
+  external appendChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_appendChild";
+  let appendChild = (a, b) => appendChild(fst(a), fst(b));
+  /* external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "fluid_NSView_insertBefore"; */
+  external removeChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_removeChild";
+  let removeChild = (a, b) => removeChild(fst(a), fst(b));
+
+  external replaceWith: (nativeInternal, nativeInternal) => unit = "fluid_NSView_replaceWith";
+  let replaceWith = (a, b) => replaceWith(fst(a), fst(b));
 
   type viewStyles = {backgroundColor: option(color)};
 
-  external createNullNode: unit => nativeNode = "fluid_create_NullNode";
+  let lastId = ref(0);
+
+  let getNativeId = () => {
+    lastId := lastId^ + 1;
+    lastId^
+  };
+
+  external createNullNode: unit => nativeInternal = "fluid_create_NullNode";
+  let createNullNode = () => (createNullNode(), getNativeId());
 
   let appendAfter = (one, two) => failwith("appendAfter not impl");
 
@@ -31,18 +46,42 @@ module NativeInterface = {
     ~pos: (float, float),
     ~size: (float, float),
     ~style: viewStyles,
-  ) => nativeNode = "fluid_create_NSView";
+  ) => nativeInternal = "fluid_create_NSView";
   external createButton: (
     ~title: string,
-    ~onPress: unit => unit,
+    ~id: int,
+    /* ~onPress: unit => unit, */
     ~pos: (float, float),
     ~size: (float, float)
-  ) => nativeNode = "fluid_create_NSButton";
+  ) => nativeInternal = "fluid_create_NSButton";
 
-  external updateButton: (nativeNode, string, (unit => unit)) => unit = "fluid_update_NSButton";
-  external updateView: (nativeNode, option(unit => unit), viewStyles) => unit = "fluid_update_NSView";
+  let callbacks = Hashtbl.create(100);
 
-  external startApp: (~title: string, ~size: (float, float), nativeNode => unit) => unit = "fluid_startApp";
+  let onPress = id => {
+    switch (Hashtbl.find(callbacks, id)) {
+      | exception Not_found =>
+        Printf.printf("Trying to press button %d but no callback registered\n", id)
+      | cb => 
+      cb()
+    }
+  };
+
+  Callback.register("fluid_button_press", onPress);
+
+  /* let registerButtonPress = (fn) => {
+    callbacks -> Hashtbl.replace(lastId^, fn);
+  }; */
+  let setButtonPress = (id, fn) => {
+    callbacks -> Hashtbl.replace(id, fn)
+  };
+  let removeButtonPress = (id) => {
+    callbacks -> Hashtbl.remove(id);
+  };
+
+  external updateButton: (nativeInternal, string) => unit = "fluid_update_NSButton";
+  external updateView: (nativeInternal, option(unit => unit), viewStyles) => unit = "fluid_update_NSView";
+
+  external startApp: (~title: string, ~size: (float, float), nativeInternal => unit) => unit = "fluid_startApp";
 
   external measureText: (~text: string, ~font: string, ~fontSize: float, ~maxWidth: option(float)) => (float, float) = "fluid_measureText";
 
@@ -85,7 +124,7 @@ module NativeInterface = {
 
   let dims = ({Layout.LayoutTypes.layout: {width, height, top, left}}) => {left, top, width, height};
 
-  let update = (mounted, mountPoint, newElement, layout) => {
+  let update = (mounted, (mountPoint, id), newElement, layout) => {
     switch (mounted, newElement) {
       | (View(aPress, aStyle), View(onPress, style)) => 
         if (aPress != onPress || aStyle != style) {
@@ -94,7 +133,8 @@ module NativeInterface = {
 
       | (Button(atitle, apress), Button(btitle, bpress)) =>
         if (atitle != btitle || apress !== bpress) {
-          updateButton(mountPoint, btitle, bpress)
+          updateButton(mountPoint, btitle);
+          setButtonPress(id, bpress);
         };
 
       | (String(atext, afont), String(btext, bfont)) => 
@@ -113,13 +153,19 @@ module NativeInterface = {
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | View(onPress, style) => 
-    Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
-    createView(~onPress, ~pos=(top, left), ~size=(width, height), ~style)
+      Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
+      let native = createView(~onPress, ~pos=(top, left), ~size=(width, height), ~style);
+      (native, getNativeId())
     | Button(title, onPress) =>
-    createButton(~title, ~onPress, ~pos=(top, left), ~size=(width, height))
+      let id = getNativeId();
+      let native = createButton(~title, ~id, ~pos=(top, left), ~size=(width, height));
+      setButtonPress(id, onPress);
+      (native, id)
+
     | String(contents, font) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      createTextNode(contents, ~dims={left, top, width, height}, ~font);
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font);
+      (native, getNativeId())
   }
 };
 
@@ -176,6 +222,7 @@ module Fluid = {
 
     let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
     NativeInterface.startApp(~title, ~size=(width, height), node => {
+      let node = (node, NativeInterface.getNativeId());
       let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
       switch (getNativeNode(tree)) {
         | None => failwith("Still pending?")

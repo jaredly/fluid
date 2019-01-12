@@ -16,10 +16,12 @@
 
 #define Wrap(res, v) \
   res = caml_alloc(1, Abstract_tag); \
-  Store_field(res, 0, (value)v)
-
+  Store_field(res, 0, (long)v)
 #define Unwrap(value) \
-  Field(value, 0)
+  (void*)Field(value, 0)
+
+// #define Wrap(res, v) res = (value) v
+// #define Unwrap(value) value
 
 
 #define Double_pair(c, a, b) \
@@ -32,9 +34,11 @@
   Store_field(c, 1, caml_copy_double(b))
 
 #define DEBUG
-#define log(fmt) fprintf(stderr, fmt)
-#define logf(fmt, ...) \
-            do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
+// #define log(fmt) fprintf(stdout, fmt)
+// #define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
+
+#define log(fmt) (void)0
+#define logf(fmt, ...) (void)0
 
 #define Unpack_record2_double(source, a, b) \
   float a = Double_field(source, 0); \
@@ -55,6 +59,6 @@
 @end
 
 @interface FluidButton : NSButton
-+ (FluidButton*)createWithTitle:(NSString*)title onPress:(value)onPressv;
-- (void)setOnPress:(value)onPressv;
++ (FluidButton*)createWithTitle:(NSString*)title id:(int)id;
+- (void)setId:(int)id;
 @end

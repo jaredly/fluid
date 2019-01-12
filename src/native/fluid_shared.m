@@ -14,26 +14,30 @@
 
 @implementation FluidButton
 {
-  value onPress_v;
+  int id_v;
 }
 
-+ (FluidButton*)createWithTitle:(NSString*)title onPress:(value)onPressv
++ (FluidButton*)createWithTitle:(NSString*)title id:(int)id
 {
   FluidButton* button = [super buttonWithTitle:title target:NULL action:@selector(onPress)];
   button.target = button;
-  [button setOnPress:onPressv];
+  [button setId:id];
   return button;
 }
 
-- (void)setOnPress:(value)onPressv
+- (void)setId:(int)idnum
 {
-  onPress_v = onPressv;
+  id_v = idnum;
 }
 
 - (void)onPress {
-  log("> Button onPress\n");
-  caml_callback(onPress_v, Val_unit);
-  log("< Button pressed\n");
+  static value * closure_f = NULL;
+  if (closure_f == NULL) {
+    /* First time around, look up by name */
+    closure_f = caml_named_value("fluid_button_press");
+  }
+  logf("> Button press %d\n", id_v);
+  caml_callback(*closure_f, Val_int(id_v));
 }
 
 @end
