@@ -17,6 +17,7 @@ $ npm run pack # this starts the packager
 
 Then edit `src/js/App.re` to see things change.
 
+![js screenshot](./fluid-js.png)
 
 ## Trying the native demo:
 Macos only at the moment
@@ -26,4 +27,4 @@ $ npm run native
 $ ./lib/bs/native/appnative.native
 ```
 
-
+![macos screenshot](./fluid-macos.png)
