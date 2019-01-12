@@ -182,6 +182,12 @@ module Fluid = {
         ),
     }, children, layout, None);
 
+    let img = (~src, ~layout=?, ()) =>
+      Builtin({
+        NativeInterface.tag: "img",
+        props: Obj.magic({"src": src})
+      }, [], layout, None);
+
     let input = (~id=?, ~_type=?, ~width=?, ~height=?, ~onchange=?, ~oninput=?, ~style=?, ()) => 
     Builtin({
       NativeInterface.tag: "input",

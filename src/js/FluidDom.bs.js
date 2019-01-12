@@ -230,6 +230,20 @@ function button(id, children, layout, _type, width, height, onclick, style, para
           ]);
 }
 
+function img(src, layout, param) {
+  return /* Builtin */Block.__(0, [
+            /* record */[
+              /* tag */"img",
+              /* props */{
+                src: src
+              }
+            ],
+            /* [] */0,
+            layout,
+            undefined
+          ]);
+}
+
 function input(id, _type, width, height, onchange, oninput, style, param) {
   var tmp = { };
   if (id !== undefined) {
@@ -267,6 +281,7 @@ function input(id, _type, width, height, onchange, oninput, style, param) {
 var Native = /* module */[
   /* div */div,
   /* button */button,
+  /* img */img,
   /* input */input
 ];
 

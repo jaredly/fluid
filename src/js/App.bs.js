@@ -182,81 +182,84 @@ var first = Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
                 undefined,
                 undefined,
                 undefined,
-                undefined,
+                "background-color: #aaa",
                 /* () */0
               ]),
           /* :: */[
-            /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], toggle, (function (param) {
-                        return toggle((function (onClick) {
-                                      return Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
-                                                  undefined,
-                                                  /* :: */[
-                                                    str(undefined, undefined, "Click this to"),
+            Curry._3(FluidDom.Fluid[/* Native */20][/* img */2], "./fluid-macos.png", Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
+            /* :: */[
+              /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], toggle, (function (param) {
+                          return toggle((function (onClick) {
+                                        return Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
+                                                    undefined,
+                                                    /* :: */[
+                                                      str(undefined, undefined, "Click this to"),
+                                                      /* :: */[
+                                                        /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], button, (function (param) {
+                                                                    return button("Turn Off", "background-color: #88ff88", onClick, param);
+                                                                  }))]),
+                                                        /* [] */0
+                                                      ]
+                                                    ],
+                                                    Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                                    undefined,
+                                                    undefined,
+                                                    undefined,
+                                                    undefined,
+                                                    undefined,
+                                                    /* () */0
+                                                  ]);
+                                      }), (function (onClick) {
+                                        return Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
+                                                    undefined,
                                                     /* :: */[
                                                       /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], button, (function (param) {
-                                                                  return button("Turn Off", "background-color: #88ff88", onClick, param);
+                                                                  return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                                 }))]),
-                                                      /* [] */0
-                                                    ]
-                                                  ],
-                                                  Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                                                  undefined,
-                                                  undefined,
-                                                  undefined,
-                                                  undefined,
-                                                  undefined,
-                                                  /* () */0
-                                                ]);
-                                    }), (function (onClick) {
-                                      return Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
-                                                  undefined,
-                                                  /* :: */[
-                                                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], button, (function (param) {
-                                                                return button("Turn On", "background-color: #ffacf0", onClick, param);
-                                                              }))]),
-                                                    /* :: */[
-                                                      str(undefined, undefined, "if you want"),
-                                                      /* [] */0
-                                                    ]
-                                                  ],
-                                                  Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                                                  undefined,
-                                                  undefined,
-                                                  undefined,
-                                                  undefined,
-                                                  undefined,
-                                                  /* () */0
-                                                ]);
-                                    }), param);
-                      }))]),
-            /* :: */[
-              /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], awesomeComponent, (function (param) {
-                          return awesomeComponent(5, (function (prim) {
-                                        return String(prim);
+                                                      /* :: */[
+                                                        str(undefined, undefined, "if you want"),
+                                                        /* [] */0
+                                                      ]
+                                                    ],
+                                                    Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                                    undefined,
+                                                    undefined,
+                                                    undefined,
+                                                    undefined,
+                                                    undefined,
+                                                    /* () */0
+                                                  ]);
                                       }), param);
                         }))]),
               /* :: */[
                 /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], awesomeComponent, (function (param) {
-                            return awesomeComponent("Hi", (function (x) {
-                                          return x;
+                            return awesomeComponent(5, (function (prim) {
+                                          return String(prim);
                                         }), param);
                           }))]),
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
-                        "Inner",
-                        /* :: */[
-                          str(undefined, undefined, "world"),
-                          /* [] */0
-                        ],
-                        undefined,
-                        undefined,
-                        undefined,
-                        undefined,
-                        undefined,
-                        undefined,
-                        /* () */0
-                      ]),
-                  /* [] */0
+                  /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */3][/* makeComponent */0], awesomeComponent, (function (param) {
+                              return awesomeComponent("Hi", (function (x) {
+                                            return x;
+                                          }), param);
+                            }))]),
+                  /* :: */[
+                    Curry.app(FluidDom.Fluid[/* Native */20][/* div */0], [
+                          "Inner",
+                          /* :: */[
+                            str(undefined, undefined, "world"),
+                            /* [] */0
+                          ],
+                          undefined,
+                          undefined,
+                          undefined,
+                          undefined,
+                          undefined,
+                          undefined,
+                          /* () */0
+                        ]),
+                    /* [] */0
+                  ]
                 ]
               ]
             ]
@@ -281,7 +284,7 @@ if (match !== undefined) {
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          152,
+          153,
           12
         ]
       ];

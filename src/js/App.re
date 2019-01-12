@@ -124,9 +124,10 @@ let simple = <div id="awesome" layout={Layout.style(~width=500., ~height=500., (
 
 let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ())}>
   {str("Hello")}
-  <div id="here" layout={Layout.style(~width=100., ~height=50., ())}>
+  <div id="here" style="background-color: #aaa" layout={Layout.style(~width=100., ~height=50., ())}>
     <div>{str("What")}</div>
   </div>
+  <img src="./fluid-macos.png" layout={Layout.style(~width=200., ~height=200., ())} />
   <Toggle
     on=(onClick => <div layout={Layout.style(~flexDirection=Row, ~alignItems=AlignCenter, ())}>
       (str("Click this to"))

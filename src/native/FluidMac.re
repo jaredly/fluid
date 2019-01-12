@@ -85,6 +85,8 @@ module NativeInterface = {
 
   external measureText: (~text: string, ~font: string, ~fontSize: float, ~maxWidth: option(float)) => (float, float) = "fluid_measureText";
 
+  let measureCache = Hashtbl.create(100);
+
   let defaultFont = {fontName: "Lucida Grande", fontSize: 12.};
   let updateTextView = (node, text, dims, font) => {
     let font = switch font { | None => defaultFont | Some(f) => f};
@@ -92,14 +94,21 @@ module NativeInterface = {
   };
   let measureText = (text, font, _, width, widthMode, _, _) => {
     let {fontName, fontSize} = switch font { | None => defaultFont | Some(f) => f};
-    let maxWidth = switch widthMode {
-      | Layout.LayoutTypes.Exactly | AtMost => Some(width)
-      | _ => None
-    };
+    let key = (fontName, fontSize, text, width, widthMode);
+    switch (Hashtbl.find(measureCache, key)) {
+      | exception Not_found => 
+        let maxWidth = switch widthMode {
+          | Layout.LayoutTypes.Exactly | AtMost => Some(width)
+          | _ => None
+        };
 
-    let (width, height) = measureText(~text, ~font=fontName, ~fontSize, ~maxWidth);
-    /* Printf.printf("Text: %s -- %f x %f", text, width, height); */
-    {Layout.LayoutTypes.width, height}
+        let (width, height) = measureText(~text, ~font=fontName, ~fontSize, ~maxWidth);
+        /* Printf.printf("Text: %s -- %f x %f", text, width, height); */
+        let res = {Layout.LayoutTypes.width, height};
+        Hashtbl.replace(measureCache, key, res);
+        res
+    | x => x
+    }
   };
 
   type element =
