@@ -18,6 +18,8 @@ module NativeInterface = {
   external updateTextView: (nativeInternal, string, dims, font) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
+  external createImage: (~src: string, ~dims: dims) => nativeInternal = "fluid_create_NSImageView";
+
   external appendChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_appendChild";
   let appendChild = (a, b) => appendChild(fst(a), fst(b));
   /* external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "fluid_NSView_insertBefore"; */
@@ -114,7 +116,8 @@ module NativeInterface = {
   type element =
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
-    | String(string, option(font));
+    | String(string, option(font))
+    | Image(string);
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
@@ -175,6 +178,10 @@ module NativeInterface = {
       let font = switch font { | None => defaultFont | Some(f) => f};
       let native = createTextNode(contents, ~dims={left, top, width, height}, ~font);
       (native, getNativeId())
+
+    | Image(src) =>
+      let native = createImage(~src, ~dims={left, top, width, height});
+      (native, getNativeId())
   }
 };
 
@@ -193,6 +200,9 @@ module Fluid = {
       None
     )
       ;
+
+    let image = (~src, ~layout=?, ()) =>
+      Builtin(Image(src), [], layout, None);
 
     let button = (~onPress, ~title, ~layout=?, ()) => 
     Builtin(

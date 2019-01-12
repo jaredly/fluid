@@ -1,6 +1,6 @@
 #include "./fluid_shared.h"
 
-// View
+// MARK - View operations
 
 void fluid_NSView_appendChild(value view_v, value child_v) {
   CAMLparam2(view_v, child_v);
@@ -56,6 +56,76 @@ void fluid_setImmediate(value callback) {
   CAMLreturn0;
 }
 
+// MARK - Image View
+
+CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
+  CAMLparam2(src_v, dims_v);
+
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  NSRect frame = NSMakeRect(left, top, width, height);
+
+  NSView* view = [[FlippedView alloc] initWithFrame:frame];
+  NSImage* image = [[NSImage alloc] initWithContentsOfFile:NSString_val(src_v)];
+  view.wantsLayer = true;
+  if (image != nil) {
+    [view.layer setContents:image];
+  } else {
+    view.layer.backgroundColor = CGColorCreateGenericRGB(1.0, 0, 0, 1.0);
+  }
+
+  CAMLlocal1(view_v);
+  Wrap(view_v, view);
+  CAMLreturn(view_v);
+}
+
+// MARK - Plain View
+
+CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value style_v) {
+  CAMLparam4(id, pos_v, size_v, style_v);
+  CAMLlocal1(view_v);
+
+  Double_pair(pos_v, top, left);
+  Double_pair(size_v, width, height);
+  NSRect frame;
+  frame = NSMakeRect(left, top, width, height);
+
+  NSView* view = [[FlippedView alloc] initWithFrame:frame];
+
+  value backgroundColor = Field(style_v, 0);
+  if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
+    value color = Field(backgroundColor, 0);
+    Unpack_record4_double(color, r, g, b, a);
+    view.wantsLayer = true;
+    view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
+  }
+
+  Wrap(view_v, view);
+  CAMLreturn(view_v);
+}
+
+void fluid_update_NSView(value view_v, value id, value style_v) {
+  CAMLparam3(view_v, id, style_v);
+
+  NSView* view = (NSView*)Unwrap(view_v);
+  printf("Update view\n");
+
+  value backgroundColor = Field(style_v, 0);
+  if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
+    value color = Field(backgroundColor, 0);
+    Unpack_record4_double(color, r, g, b, a);
+    view.wantsLayer = true;
+    view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
+  } else {
+    view.wantsLayer = false;
+  }
+
+  CAMLreturn0;
+}
+
+
+// MARK - Text
+
 CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, value maxWidth_v) {
   CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);
@@ -103,42 +173,6 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
   Create_double_pair(result, textSize.width + 5.0, textSize.height + 5.0);
 
   CAMLreturn(result);
-}
-
-void fluid_update_NSButton(value button_v, value title_v) {
-  CAMLparam2(button_v, title_v);
-  log("Update button\n");
-
-  FluidButton* button = (FluidButton*)Unwrap(button_v);
-  NSString *title = NSString_val(title_v);
-
-  button.title = title;
-
-  // float top = Double_val(Field(pos_v, 0));
-  // float left = Double_val(Field(pos_v, 1));
-
-  // [button setFrameOrigin:NSMakePoint(left, top)];
-  // [button setFrameSize:NSMakeSize(width, height)];
-
-  CAMLreturn0;
-}
-
-CAMLprim value fluid_create_NSButton(value title_v, value id, value pos_v, value size_v) {
-  CAMLparam4(title_v, id, pos_v, size_v);
-  CAMLlocal1(button_v);
-  log("Create button\n");
-
-  NSString *title = NSString_val(title_v);
-
-  FluidButton* button = [FluidButton createWithTitle:title id:Int_val(id)];
-
-  Double_pair(pos_v, top, left);
-  // Double_pair(size_v, width, height);
-
-  [button setFrameOrigin:NSMakePoint(left, top)];
-
-  Wrap(button_v, button);
-  CAMLreturn(button_v);
 }
 
 CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v) {
@@ -202,50 +236,46 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   CAMLreturn0;
 }
 
-void fluid_update_NSView(value view_v, value id, value style_v) {
-  CAMLparam3(view_v, id, style_v);
+// MARK - Button
 
-  NSView* view = (NSView*)Unwrap(view_v);
-  printf("Update view\n");
 
-  value backgroundColor = Field(style_v, 0);
-  if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
-    value color = Field(backgroundColor, 0);
-    Unpack_record4_double(color, r, g, b, a);
-    view.wantsLayer = true;
-    view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
-    // [view.layer setNeedsDisplay];
-    // printf("r %f\n", r);
-  } else {
-    view.wantsLayer = false;
-  }
+void fluid_update_NSButton(value button_v, value title_v) {
+  CAMLparam2(button_v, title_v);
+  log("Update button\n");
+
+  FluidButton* button = (FluidButton*)Unwrap(button_v);
+  NSString *title = NSString_val(title_v);
+
+  button.title = title;
+
+  // float top = Double_val(Field(pos_v, 0));
+  // float left = Double_val(Field(pos_v, 1));
+
+  // [button setFrameOrigin:NSMakePoint(left, top)];
+  // [button setFrameSize:NSMakeSize(width, height)];
 
   CAMLreturn0;
 }
 
+CAMLprim value fluid_create_NSButton(value title_v, value id, value pos_v, value size_v) {
+  CAMLparam4(title_v, id, pos_v, size_v);
+  CAMLlocal1(button_v);
+  log("Create button\n");
 
-CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value style_v) {
-  CAMLparam4(id, pos_v, size_v, style_v);
-  CAMLlocal1(view_v);
+  NSString *title = NSString_val(title_v);
+
+  FluidButton* button = [FluidButton createWithTitle:title id:Int_val(id)];
 
   Double_pair(pos_v, top, left);
-  Double_pair(size_v, width, height);
-  NSRect frame;
-  frame = NSMakeRect(left, top, width, height);
+  // Double_pair(size_v, width, height);
 
-  NSView* view = [[FlippedView alloc] initWithFrame:frame];
+  [button setFrameOrigin:NSMakePoint(left, top)];
 
-  value backgroundColor = Field(style_v, 0);
-  if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
-    value color = Field(backgroundColor, 0);
-    Unpack_record4_double(color, r, g, b, a);
-    view.wantsLayer = true;
-    view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
-  }
-
-  Wrap(view_v, view);
-  CAMLreturn(view_v);
+  Wrap(button_v, button);
+  CAMLreturn(button_v);
 }
+
+// MARK - Null node
 
 CAMLprim value fluid_create_NullNode() {
   CAMLparam0();

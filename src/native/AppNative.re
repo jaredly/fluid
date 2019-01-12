@@ -40,6 +40,7 @@ let first = hooks => {
     {str("More world")}
     <view>
       <ColorSwitcher />
+      <image src="./fluid-js.png" layout={Layout.style(~margin=20., ~width=100., ~height=100., ())} />
       <view
         layout={Layout.style(~width=40., ~height=40., ~alignSelf=AlignCenter, ())}
         backgroundColor={r: 1., g: 0., b: 0., a: 1.}
