@@ -3,13 +3,21 @@
 
 var Block = require("bsb-native/lib/js/block.js");
 var Curry = require("bsb-native/lib/js/curry.js");
+var Js_exn = require("bsb-native/lib/js/js_exn.js");
 var Layout = require("./Layout.bs.js");
+var Hashtbl = require("bsb-native/lib/js/hashtbl.js");
 var Caml_obj = require("bsb-native/lib/js/caml_obj.js");
 var Belt_List = require("bsb-native/lib/js/belt_List.js");
 var Pervasives = require("bsb-native/lib/js/pervasives.js");
 var Js_primitive = require("bsb-native/lib/js/js_primitive.js");
+var Caml_exceptions = require("bsb-native/lib/js/caml_exceptions.js");
+var Caml_builtin_exceptions = require("bsb-native/lib/js/caml_builtin_exceptions.js");
 
 function F(NativeInterface) {
+  var NoReason = Caml_exceptions.create("FluidMaker.F(NativeInterface).NoReason");
+  var LoadingImage = Caml_exceptions.create("FluidMaker.F(NativeInterface).LoadingImage");
+  var SuspendException = Caml_exceptions.create("FluidMaker.F(NativeInterface).SuspendException");
+  var StillSuspended = Caml_exceptions.create("FluidMaker.F(NativeInterface).StillSuspended");
   var makePending = function (inst) {
     switch (inst.tag | 0) {
       case 0 : 
@@ -68,8 +76,10 @@ function F(NativeInterface) {
                           /* render */render,
                           /* hooks : record */[/* contents */undefined],
                           /* invalidated */false,
+                          /* suspense */undefined,
                           /* reconciler */undefined,
                           /* onChange */(function (param) {
+                              console.log("Ignoring onChange, happened too early");
                               return /* () */0;
                             })
                         ]];
@@ -87,8 +97,9 @@ function F(NativeInterface) {
                                 /* render */render,
                                 /* hooks */contents[/* hooks */2],
                                 /* invalidated */contents[/* invalidated */3],
-                                /* reconciler */contents[/* reconciler */4],
-                                /* onChange */contents[/* onChange */5]
+                                /* suspense */contents[/* suspense */4],
+                                /* reconciler */contents[/* reconciler */5],
+                                /* onChange */contents[/* onChange */6]
                               ]]
                           ];
                   }
@@ -99,22 +110,56 @@ function F(NativeInterface) {
           ];
   };
   var Maker = /* module */[/* makeComponent */makeComponent];
+  var mapResult = function (r, fn) {
+    switch (r.tag | 0) {
+      case 0 : 
+          return /* Good */Block.__(0, [Curry._1(fn, r[0])]);
+      case 1 : 
+          return /* Suspense */Block.__(1, [r[0]]);
+      case 2 : 
+          return /* Bad */Block.__(2, [r[0]]);
+      
+    }
+  };
+  var bindResult = function (r, fn) {
+    switch (r.tag | 0) {
+      case 0 : 
+          return Curry._1(fn, r[0]);
+      case 1 : 
+          return /* Suspense */Block.__(1, [r[0]]);
+      case 2 : 
+          return /* Bad */Block.__(2, [r[0]]);
+      
+    }
+  };
   var runRender = function (param) {
     var component = param[0];
     var effects = /* record */[/* contents : [] */0];
     var hooks_000 = function (param) {
       component[/* invalidated */3] = true;
-      return Curry._1(component[/* onChange */5], /* () */0);
+      return Curry._1(component[/* onChange */6], /* () */0);
     };
     var hooks_001 = function (oldData, data, reconcile) {
-      component[/* reconciler */4] = /* tuple */[
+      component[/* reconciler */5] = /* tuple */[
         oldData,
         data,
         reconcile
       ];
       return /* () */0;
     };
-    var hooks_002 = function (cleanup, fn, setCleanup) {
+    var hooks_002 = function (param) {
+      var match = component[/* suspense */4];
+      if (match !== undefined) {
+        var items = match[/* contents */0];
+        return Belt_List.map(items, (function (evt) {
+                      return evt[/* reason */0];
+                    }));
+      } else {
+        component[/* suspense */4] = /* record */[/* contents : [] */0];
+        return /* [] */0;
+      }
+    };
+    var hooks_003 = function (cleanup, fn, setCleanup) {
       effects[/* contents */0] = /* :: */[
         /* record */[
           /* cleanup */cleanup,
@@ -125,19 +170,33 @@ function F(NativeInterface) {
       ];
       return /* () */0;
     };
-    var hooks_003 = /* current */component[/* hooks */2];
+    var hooks_004 = /* current */component[/* hooks */2];
     var hooks = /* record */[
       hooks_000,
       hooks_001,
       hooks_002,
-      hooks_003
+      hooks_003,
+      hooks_004
     ];
     component[/* invalidated */3] = false;
-    var tree = Curry._1(component[/* render */1], hooks);
-    return /* tuple */[
-            tree,
-            effects[0]
-          ];
+    try {
+      var tree = Curry._1(component[/* render */1], hooks);
+      return /* Good */Block.__(0, [/* tuple */[
+                  tree,
+                  effects[0]
+                ]]);
+    }
+    catch (raw_exn){
+      var exn = Js_exn.internalToOCamlException(raw_exn);
+      if (exn[0] === SuspendException) {
+        return /* Suspense */Block.__(1, [/* :: */[
+                    exn[1],
+                    /* [] */0
+                  ]]);
+      } else {
+        return /* Bad */Block.__(2, [exn]);
+      }
+    }
   };
   var getNativeNode = function (tree) {
     switch (tree.tag | 0) {
@@ -260,27 +319,117 @@ function F(NativeInterface) {
   };
   var instantiateTree = function (withLayout, el) {
     if (typeof el === "number") {
-      return /* INull */Block.__(2, [updateLayout(withLayout, /* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), undefined)]);
+      return /* Good */Block.__(0, [/* INull */Block.__(2, [updateLayout(withLayout, /* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), undefined)])]);
     } else if (el.tag) {
       var custom = Curry._1(el[0][/* init */0], /* () */0);
       var match = runRender(custom);
-      return /* ICustom */Block.__(1, [
-                custom,
-                instantiateTree(undefined, match[0]),
-                match[1]
-              ]);
+      switch (match.tag | 0) {
+        case 0 : 
+            var match$1 = match[0];
+            var match$2 = instantiateTree(undefined, match$1[0]);
+            switch (match$2.tag | 0) {
+              case 0 : 
+                  return /* Good */Block.__(0, [/* ICustom */Block.__(1, [
+                                custom,
+                                match$2[0],
+                                match$1[1]
+                              ])]);
+              case 1 : 
+                  var inner = custom[0];
+                  var s = match$2[0];
+                  var suspense = inner[/* suspense */4];
+                  if (suspense !== undefined) {
+                    var holder = suspense;
+                    holder[/* contents */0] = s;
+                    var match$3 = runRender(custom);
+                    switch (match$3.tag | 0) {
+                      case 0 : 
+                          var match$4 = match$3[0];
+                          var match$5 = instantiateTree(undefined, match$4[0]);
+                          switch (match$5.tag | 0) {
+                            case 0 : 
+                                Belt_List.forEach(s, (function (item) {
+                                        return Curry._1(item[/* payload */1], (function (param) {
+                                                      console.log("Got a suspend result");
+                                                      holder[/* contents */0] = Belt_List.keep(holder[/* contents */0], (function (k) {
+                                                              return k !== item;
+                                                            }));
+                                                      inner[/* invalidated */3] = true;
+                                                      return Curry._1(inner[/* onChange */6], /* () */0);
+                                                    }));
+                                      }));
+                                return /* Good */Block.__(0, [/* ICustom */Block.__(1, [
+                                              custom,
+                                              match$5[0],
+                                              match$4[1]
+                                            ])]);
+                            case 1 : 
+                                return /* Suspense */Block.__(1, [match$5[0]]);
+                            case 2 : 
+                                return /* Bad */Block.__(2, [match$5[0]]);
+                            
+                          }
+                      case 1 : 
+                          return /* Suspense */Block.__(1, [match$3[0]]);
+                      case 2 : 
+                          return /* Bad */Block.__(2, [match$3[0]]);
+                      
+                    }
+                  } else {
+                    return /* Suspense */Block.__(1, [s]);
+                  }
+              case 2 : 
+                  return /* Bad */Block.__(2, [match$2[0]]);
+              
+            }
+        case 1 : 
+            return /* Suspense */Block.__(1, [match[0]]);
+        case 2 : 
+            return /* Bad */Block.__(2, [match[0]]);
+        
+      }
     } else {
+      var measure = el[3];
       var layout = el[2];
-      var ichildren = Belt_List.map(el[1], (function (eta) {
-              return instantiateTree(undefined, eta);
+      var nativeElement = el[0];
+      var ichildren = Belt_List.reduce(el[1], /* Good */Block.__(0, [/* [] */0]), (function (current, child) {
+              switch (current.tag | 0) {
+                case 0 : 
+                    var children = current[0];
+                    return mapResult(instantiateTree(undefined, child), (function (child) {
+                                  return /* :: */[
+                                          child,
+                                          children
+                                        ];
+                                }));
+                case 1 : 
+                    var s = current[0];
+                    var match = instantiateTree(undefined, child);
+                    switch (match.tag | 0) {
+                      case 0 : 
+                          return /* Suspense */Block.__(1, [s]);
+                      case 1 : 
+                          return /* Suspense */Block.__(1, [Pervasives.$at(s, match[0])]);
+                      case 2 : 
+                          return /* Bad */Block.__(2, [match[0]]);
+                      
+                    }
+                case 2 : 
+                    return /* Bad */Block.__(2, [current[0]]);
+                
+              }
             }));
-      var childLayouts = Belt_List.toArray(Belt_List.map(ichildren, getInstanceLayout));
-      var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
-      return /* IBuiltin */Block.__(0, [
-                el[0],
-                ichildren,
-                updateLayout(withLayout, childLayouts, style, el[3])
-              ]);
+      return mapResult(ichildren, (function (children) {
+                    console.log("instantiated children", children);
+                    var children$1 = Belt_List.reverse(children);
+                    var childLayouts = Belt_List.toArray(Belt_List.map(children$1, getInstanceLayout));
+                    var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+                    return /* IBuiltin */Block.__(0, [
+                              nativeElement,
+                              children$1,
+                              updateLayout(withLayout, childLayouts, style, measure)
+                            ]);
+                  }));
     }
   };
   var runEffect = function (param) {
@@ -292,9 +441,9 @@ function F(NativeInterface) {
   };
   var mountTo = function (point, node) {
     if (point.tag) {
-      return Curry._2(NativeInterface[/* appendAfter */7], point[0], node);
+      return Curry._2(NativeInterface[/* appendAfter */8], point[0], node);
     } else {
-      return Curry._2(NativeInterface[/* appendChild */6], point[0], node);
+      return Curry._2(NativeInterface[/* appendChild */7], point[0], node);
     }
   };
   var mountPending = function (enqueue, mount, el) {
@@ -321,7 +470,7 @@ function F(NativeInterface) {
           }
           if (exit === 1) {
             var layout$1 = el[3];
-            var node$1 = Curry._2(NativeInterface[/* inflate */3], $$native, layout$1);
+            var node$1 = Curry._2(NativeInterface[/* inflate */4], $$native, layout$1);
             var partial_arg$1 = /* AppendChild */Block.__(0, [node$1]);
             var children = Belt_List.map(el[2], (function (param) {
                     return mountPending(enqueue, partial_arg$1, param);
@@ -329,7 +478,7 @@ function F(NativeInterface) {
             if (typeof prev === "number") {
               mountTo(mount, node$1);
             } else if (!prev.tag) {
-              Curry._2(NativeInterface[/* replaceWith */9], prev[0], node$1);
+              Curry._2(NativeInterface[/* replaceWith */10], prev[0], node$1);
             }
             return /* MBuiltin */Block.__(0, [
                       $$native,
@@ -355,7 +504,7 @@ function F(NativeInterface) {
               /* custom */custom,
               /* mountedTree : Mounted */Block.__(1, [mountedTree])
             ];
-            custom[0][/* onChange */5] = (function (param) {
+            custom[0][/* onChange */6] = (function (param) {
                 return Curry._1(enqueue, container$1);
               });
             Belt_List.forEach(el[1], runEffect);
@@ -373,11 +522,11 @@ function F(NativeInterface) {
                     ]);
           }
           if (exit$1 === 1) {
-            var rep = Curry._1(NativeInterface[/* createNullNode */5], /* () */0);
+            var rep = Curry._1(NativeInterface[/* createNullNode */6], /* () */0);
             if (typeof prev$1 === "number") {
               mountTo(mount, rep);
             } else if (!prev$1.tag) {
-              Curry._2(NativeInterface[/* replaceWith */9], prev$1[0], rep);
+              Curry._2(NativeInterface[/* replaceWith */10], prev$1[0], rep);
             }
             return /* MNull */Block.__(2, [
                       rep,
@@ -398,23 +547,27 @@ function F(NativeInterface) {
           if (typeof next === "number" || next.tag) {
             exit = 1;
           } else {
+            var bMeasure = next[3];
             var bLayoutStyle = next[2];
             var bElement = next[0];
             if (Curry._3(NativeInterface[/* canUpdate */1], aElement, node, bElement)) {
-              var children = reconcileChildren(enqueue, node, prev[2], next[1]);
-              updateLayout(aLayout, Belt_List.toArray(Belt_List.map(children, getPendingLayout)), bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), next[3]);
-              return /* PBuiltin */Block.__(0, [
-                        bElement,
-                        /* Update */Block.__(1, [
-                            aElement,
-                            node
-                          ]),
-                        children,
-                        aLayout
-                      ]);
+              return mapResult(reconcileChildren(enqueue, node, prev[2], next[1]), (function (children) {
+                            updateLayout(aLayout, Belt_List.toArray(Belt_List.map(children, getPendingLayout)), bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), bMeasure);
+                            return /* PBuiltin */Block.__(0, [
+                                      bElement,
+                                      /* Update */Block.__(1, [
+                                          aElement,
+                                          node
+                                        ]),
+                                      children,
+                                      aLayout
+                                    ]);
+                          }));
             } else {
               var instances = instantiateTree(aLayout, next);
-              return pendingReplace(node, instances);
+              return mapResult(instances, (function (instances) {
+                            return pendingReplace(node, instances);
+                          }));
             }
           }
           break;
@@ -426,36 +579,42 @@ function F(NativeInterface) {
             var match = Curry._1(next[0][/* clone */1], a[/* custom */0]);
             if (typeof match === "number") {
               if (match >= 925282182) {
-                return /* PCustom */Block.__(1, [
-                          a,
-                          /* [] */0
-                        ]);
+                return /* Good */Block.__(0, [/* PCustom */Block.__(1, [
+                              a,
+                              /* [] */0
+                            ])]);
               } else {
                 var instances$1 = instantiateTree(undefined, next);
-                var match$1 = getNativeNode(prev);
-                if (match$1 !== undefined) {
-                  return pendingReplace(Js_primitive.valFromOption(match$1), instances$1);
-                } else {
-                  console.log("Warning! Prev custom component was pending");
-                  return makePending(instances$1);
-                }
+                return mapResult(instances$1, (function (instances) {
+                              var match = getNativeNode(prev);
+                              if (match !== undefined) {
+                                return pendingReplace(Js_primitive.valFromOption(match), instances);
+                              } else {
+                                console.log("Warning! Prev custom component was pending");
+                                return makePending(instances);
+                              }
+                            }));
               }
             } else {
               var custom = match[1];
-              var match$2 = runRender(custom);
-              var match$3 = a[/* mountedTree */1];
-              if (match$3.tag) {
-                var tree = reconcileTrees(enqueue, match$3[0], match$2[0]);
-                return /* PCustom */Block.__(1, [
-                          /* record */[
-                            /* custom */custom,
-                            /* mountedTree : Pending */Block.__(0, [tree])
-                          ],
-                          match$2[1]
-                        ]);
-              } else {
-                return Pervasives.failwith("Reconciling a componenet that's still pending.");
-              }
+              return bindResult(runRender(custom), (function (param) {
+                            var effects = param[1];
+                            var match = a[/* mountedTree */1];
+                            if (match.tag) {
+                              var tree = reconcileTrees(enqueue, match[0], param[0]);
+                              return mapResult(tree, (function (tree) {
+                                            return /* PCustom */Block.__(1, [
+                                                      /* record */[
+                                                        /* custom */custom,
+                                                        /* mountedTree : Pending */Block.__(0, [tree])
+                                                      ],
+                                                      effects
+                                                    ]);
+                                          }));
+                            } else {
+                              return Pervasives.failwith("Reconciling a componenet that's still pending.");
+                            }
+                          }));
             }
           }
           break;
@@ -466,33 +625,69 @@ function F(NativeInterface) {
     }
     if (exit === 1) {
       var instances$2 = instantiateTree(undefined, next);
-      var match$4 = getNativeNode(prev);
-      if (match$4 !== undefined) {
-        return pendingReplace(Js_primitive.valFromOption(match$4), instances$2);
-      } else {
-        console.log("Warning! Prev custom component was pending");
-        return makePending(instances$2);
-      }
+      return mapResult(instances$2, (function (instances) {
+                    var match = getNativeNode(prev);
+                    if (match !== undefined) {
+                      return pendingReplace(Js_primitive.valFromOption(match), instances);
+                    } else {
+                      console.log("Warning! Prev custom component was pending");
+                      return makePending(instances);
+                    }
+                  }));
     }
     
   };
   var reconcileChildren = function (enqueue, parentNode, aChildren, bChildren) {
     if (aChildren) {
       if (bChildren) {
-        return /* :: */[
-                reconcileTrees(enqueue, aChildren[0], bChildren[0]),
-                reconcileChildren(enqueue, parentNode, aChildren[1], bChildren[1])
-              ];
+        var bRest = bChildren[1];
+        var aRest = aChildren[1];
+        return bindResult(reconcileTrees(enqueue, aChildren[0], bChildren[0]), (function (child) {
+                      return mapResult(reconcileChildren(enqueue, parentNode, aRest, bRest), (function (children) {
+                                    return /* :: */[
+                                            child,
+                                            children
+                                          ];
+                                  }));
+                    }));
       } else {
-        Belt_List.forEach(Belt_List.keepMap(aChildren, getNativeNode), Curry._1(NativeInterface[/* removeChild */8], parentNode));
-        return /* [] */0;
+        Belt_List.forEach(Belt_List.keepMap(aChildren, getNativeNode), Curry._1(NativeInterface[/* removeChild */9], parentNode));
+        return /* Good */Block.__(0, [/* [] */0]);
       }
     } else if (bChildren) {
-      return Belt_List.map(bChildren, (function (child) {
-                    return makePending(instantiateTree(undefined, child));
+      var ichildren = Belt_List.reduce(bChildren, /* Good */Block.__(0, [/* [] */0]), (function (current, child) {
+              switch (current.tag | 0) {
+                case 0 : 
+                    var children = current[0];
+                    return mapResult(instantiateTree(undefined, child), (function (child) {
+                                  return /* :: */[
+                                          child,
+                                          children
+                                        ];
+                                }));
+                case 1 : 
+                    var s = current[0];
+                    var match = instantiateTree(undefined, child);
+                    switch (match.tag | 0) {
+                      case 0 : 
+                          return /* Suspense */Block.__(1, [s]);
+                      case 1 : 
+                          return /* Suspense */Block.__(1, [Pervasives.$at(s, match[0])]);
+                      case 2 : 
+                          return /* Bad */Block.__(2, [match[0]]);
+                      
+                    }
+                case 2 : 
+                    return /* Bad */Block.__(2, [current[0]]);
+                
+              }
+            }));
+      return mapResult(ichildren, (function (children) {
+                    console.log("Got extra children", Belt_List.toArray(children));
+                    return Belt_List.mapReverse(children, makePending);
                   }));
     } else {
-      return /* [] */0;
+      return /* Good */Block.__(0, [/* [] */0]);
     }
   };
   var enqueue = function (root, custom) {
@@ -512,25 +707,80 @@ function F(NativeInterface) {
                             var component = container[/* custom */0];
                             var contents = component[0];
                             if (contents[/* invalidated */3]) {
-                              var match = runRender(component);
-                              var newElement = match[0];
-                              var match$1 = container[/* mountedTree */1];
-                              if (match$1.tag) {
-                                var mountedTree = match$1[0];
-                                var match$2 = contents[/* reconciler */4];
-                                var tmp;
-                                if (match$2 !== undefined) {
-                                  var match$3 = match$2;
-                                  tmp = Curry._4(match$3[2], match$3[0], match$3[1], mountedTree, newElement);
-                                } else {
-                                  tmp = reconcileTrees((function (param) {
-                                          return enqueue(root, param);
-                                        }), mountedTree, newElement);
-                                }
+                              var match = container[/* mountedTree */1];
+                              if (match.tag) {
+                                var mountedTree = match[0];
                                 return /* tuple */[
                                         container,
-                                        tmp,
-                                        match[1]
+                                        bindResult(runRender(component), (function (param) {
+                                                var effects = param[1];
+                                                var newElement = param[0];
+                                                var match = contents[/* reconciler */5];
+                                                var pending;
+                                                if (match !== undefined) {
+                                                  var match$1 = match;
+                                                  pending = Curry._4(match$1[2], match$1[0], match$1[1], mountedTree, newElement);
+                                                } else {
+                                                  pending = reconcileTrees((function (param) {
+                                                          return enqueue(root, param);
+                                                        }), mountedTree, newElement);
+                                                }
+                                                var pending$1;
+                                                switch (pending.tag | 0) {
+                                                  case 0 : 
+                                                      pending$1 = /* Good */Block.__(0, [/* tuple */[
+                                                            pending[0],
+                                                            /* [] */0
+                                                          ]]);
+                                                      break;
+                                                  case 1 : 
+                                                      var s = pending[0];
+                                                      var match$2 = contents[/* suspense */4];
+                                                      if (match$2 !== undefined) {
+                                                        var holder = match$2;
+                                                        var match$3 = holder[/* contents */0];
+                                                        if (match$3) {
+                                                          console.log("Suspended component rendering things that suspended again");
+                                                          pending$1 = /* Suspense */Block.__(1, [s]);
+                                                        } else {
+                                                          holder[/* contents */0] = s;
+                                                          pending$1 = bindResult(runRender(component), (function (param) {
+                                                                  var newEffects = param[1];
+                                                                  var newElement = param[0];
+                                                                  var match = contents[/* reconciler */5];
+                                                                  var pending;
+                                                                  if (match !== undefined) {
+                                                                    var match$1 = match;
+                                                                    pending = Curry._4(match$1[2], match$1[0], match$1[1], mountedTree, newElement);
+                                                                  } else {
+                                                                    pending = reconcileTrees((function (param) {
+                                                                            return enqueue(root, param);
+                                                                          }), mountedTree, newElement);
+                                                                  }
+                                                                  return mapResult(pending, (function (pending) {
+                                                                                return /* tuple */[
+                                                                                        pending,
+                                                                                        newEffects
+                                                                                      ];
+                                                                              }));
+                                                                }));
+                                                        }
+                                                      } else {
+                                                        pending$1 = Pervasives.failwith("Top of the line");
+                                                      }
+                                                      break;
+                                                  case 2 : 
+                                                      pending$1 = /* Bad */Block.__(2, [pending[0]]);
+                                                      break;
+                                                  
+                                                }
+                                                return mapResult(pending$1, (function (param) {
+                                                              return /* tuple */[
+                                                                      param[0],
+                                                                      Pervasives.$at(effects, param[1])
+                                                                    ];
+                                                            }));
+                                              }))
                                       ];
                               } else {
                                 console.log("Updating a pending tree...");
@@ -543,20 +793,69 @@ function F(NativeInterface) {
                     Curry._1(Layout.Layout[/* invalidateAllCaches */20], root[/* layout */0]);
                     Layout.layout(root[/* layout */0]);
                     return Belt_List.forEach(toUpdate, (function (param) {
+                                  var result = param[1];
                                   var container = param[0];
-                                  Belt_List.forEach(param[2], runEffect);
-                                  var match = getNativePending(container[/* mountedTree */1]);
-                                  var current = match !== undefined ? Js_primitive.valFromOption(match) : Pervasives.failwith("Current is already pending");
-                                  container[/* mountedTree */1] = /* Mounted */Block.__(1, [mountPending((function (param) {
-                                              return enqueue(root, param);
-                                            }), /* AppendChild */Block.__(0, [current]), param[1])]);
-                                  return /* () */0;
+                                  switch (result.tag | 0) {
+                                    case 0 : 
+                                        var match = result[0];
+                                        Belt_List.forEach(match[1], runEffect);
+                                        var match$1 = getNativePending(container[/* mountedTree */1]);
+                                        var current = match$1 !== undefined ? Js_primitive.valFromOption(match$1) : Pervasives.failwith("Current is already pending");
+                                        var newTree = mountPending((function (param) {
+                                                return enqueue(root, param);
+                                              }), /* AppendChild */Block.__(0, [current]), match[0]);
+                                        container[/* mountedTree */1] = /* Mounted */Block.__(1, [newTree]);
+                                        var crawl = function (_el) {
+                                          while(true) {
+                                            var el = _el;
+                                            switch (el.tag | 0) {
+                                              case 0 : 
+                                                  Curry._3(NativeInterface[/* updateLayout */3], el[0], el[1], el[3]);
+                                                  return Belt_List.forEach(el[2], crawl);
+                                              case 1 : 
+                                                  var match = el[0][/* mountedTree */1];
+                                                  if (match.tag) {
+                                                    _el = match[0];
+                                                    continue ;
+                                                  } else {
+                                                    return /* () */0;
+                                                  }
+                                              case 2 : 
+                                                  return /* () */0;
+                                              
+                                            }
+                                          };
+                                        };
+                                        var match$2 = root[/* node */1];
+                                        if (match$2 !== undefined) {
+                                          return crawl(match$2[0]);
+                                        } else {
+                                          return /* () */0;
+                                        }
+                                    case 1 : 
+                                        return Pervasives.failwith("Top of the line");
+                                    case 2 : 
+                                        throw result[0];
+                                    
+                                  }
                                 }));
                   }));
     }
   };
   var mount = function (el, node) {
-    var instances = instantiateTree(undefined, el);
+    var match = instantiateTree(undefined, el);
+    var instances;
+    switch (match.tag | 0) {
+      case 0 : 
+          instances = match[0];
+          break;
+      case 1 : 
+          instances = Pervasives.failwith("useSuspense called, but no useSuspenseHandler in the tree");
+          break;
+      case 2 : 
+          throw match[0];
+      
+    }
     var instanceLayout = getInstanceLayout(instances);
     Layout.layout(instanceLayout);
     var root = /* record */[
@@ -568,27 +867,66 @@ function F(NativeInterface) {
     var tree = mountPending((function (param) {
             return enqueue(root, param);
           }), /* AppendChild */Block.__(0, [node]), makePending(instances));
-    var match = getNativeNode(tree);
-    if (match !== undefined) {
-      var childNode = Js_primitive.valFromOption(match);
-      root[/* node */1] = Js_primitive.some(childNode);
-      return Curry._2(NativeInterface[/* appendChild */6], node, childNode);
+    var match$1 = getNativeNode(tree);
+    if (match$1 !== undefined) {
+      var childNode = Js_primitive.valFromOption(match$1);
+      root[/* node */1] = /* tuple */[
+        tree,
+        childNode
+      ];
+      return Curry._2(NativeInterface[/* appendChild */7], node, childNode);
     } else {
       return Pervasives.failwith("Still pending?");
     }
   };
+  var noReason = function (param) {
+    return NoReason;
+  };
+  var Cache = function (Config) {
+    var cache = Hashtbl.create(undefined, 10);
+    var fetch = function (arg) {
+      try {
+        return Hashtbl.find(cache, arg);
+      }
+      catch (exn){
+        if (exn === Caml_builtin_exceptions.not_found) {
+          var suspendEvent_000 = /* reason */Curry._1(Config[/* reason */0], arg);
+          var suspendEvent_001 = function (fin) {
+            return Curry._2(Config[/* fetch */1], arg, (function (value) {
+                          Hashtbl.replace(cache, arg, value);
+                          return Curry._1(fin, /* () */0);
+                        }));
+          };
+          var suspendEvent = /* record */[
+            suspendEvent_000,
+            suspendEvent_001
+          ];
+          throw [
+                SuspendException,
+                suspendEvent
+              ];
+        } else {
+          throw exn;
+        }
+      }
+    };
+    return /* module */[
+            /* cache */cache,
+            /* fetch */fetch
+          ];
+  };
   var useReconciler = function (data, fn, hooks) {
-    var match = hooks[/* current */3][0];
+    var match = hooks[/* current */4][0];
     var next;
     if (match !== undefined) {
       var match$1 = match;
-      Curry._3(hooks[/* setReconciler */1], match$1[0], data, fn);
+      Curry._3(hooks[/* setReconciler */1], match$1[0][0], data, fn);
       next = match$1[1];
     } else {
       next = /* record */[/* contents */undefined];
     }
-    hooks[/* current */3][0] = /* tuple */[
-      data,
+    hooks[/* current */4][0] = /* tuple */[
+      /* Reconciler */[data],
       next
     ];
     return /* tuple */[
@@ -596,8 +934,20 @@ function F(NativeInterface) {
             hooks
           ];
   };
+  var useSuspenseHandler = function (param, hooks) {
+    var match = hooks[/* current */4][0];
+    var next = match !== undefined ? match[1] : /* record */[/* contents */undefined];
+    hooks[/* current */4][0] = /* tuple */[
+      /* SuspenseHandler */0,
+      next
+    ];
+    return /* tuple */[
+            Curry._1(hooks[/* setSuspense */2], /* () */0),
+            hooks
+          ];
+  };
   var useRef = function (initial, hooks) {
-    var match = hooks[/* current */3][0];
+    var match = hooks[/* current */4][0];
     if (match !== undefined) {
       var match$1 = match;
       return /* tuple */[
@@ -605,14 +955,15 @@ function F(NativeInterface) {
               /* record */[
                 /* invalidate */hooks[/* invalidate */0],
                 /* setReconciler */hooks[/* setReconciler */1],
-                /* triggerEffect */hooks[/* triggerEffect */2],
+                /* setSuspense */hooks[/* setSuspense */2],
+                /* triggerEffect */hooks[/* triggerEffect */3],
                 /* current */match$1[1]
               ]
             ];
     } else {
       var r = /* record */[/* contents */initial];
       var next = /* record */[/* contents */undefined];
-      hooks[/* current */3][0] = /* tuple */[
+      hooks[/* current */4][0] = /* tuple */[
         r,
         next
       ];
@@ -621,14 +972,15 @@ function F(NativeInterface) {
               /* record */[
                 /* invalidate */hooks[/* invalidate */0],
                 /* setReconciler */hooks[/* setReconciler */1],
-                /* triggerEffect */hooks[/* triggerEffect */2],
+                /* setSuspense */hooks[/* setSuspense */2],
+                /* triggerEffect */hooks[/* triggerEffect */3],
                 /* current */next
               ]
             ];
     }
   };
   var useState = function (initial, hooks) {
-    var match = hooks[/* current */3][0];
+    var match = hooks[/* current */4][0];
     var match$1;
     if (match !== undefined) {
       var match$2 = match;
@@ -638,7 +990,7 @@ function F(NativeInterface) {
       ];
     } else {
       var next = /* record */[/* contents */undefined];
-      hooks[/* current */3][0] = /* tuple */[
+      hooks[/* current */4][0] = /* tuple */[
         initial,
         next
       ];
@@ -652,7 +1004,7 @@ function F(NativeInterface) {
             /* tuple */[
               match$1[0],
               (function (v) {
-                  hooks[/* current */3][0] = /* tuple */[
+                  hooks[/* current */4][0] = /* tuple */[
                     v,
                     next$1
                   ];
@@ -662,7 +1014,8 @@ function F(NativeInterface) {
             /* record */[
               /* invalidate */hooks[/* invalidate */0],
               /* setReconciler */hooks[/* setReconciler */1],
-              /* triggerEffect */hooks[/* triggerEffect */2],
+              /* setSuspense */hooks[/* setSuspense */2],
+              /* triggerEffect */hooks[/* triggerEffect */3],
               /* current */next$1
             ]
           ];
@@ -690,12 +1043,12 @@ function F(NativeInterface) {
           ];
   };
   var useEffect = function (fn, args, hooks) {
-    var match = hooks[/* current */3][0];
+    var match = hooks[/* current */4][0];
     var match$1;
     if (match !== undefined) {
       var match$2 = match;
       var effect = match$2[0];
-      var effect$1 = Caml_obj.caml_notequal(effect[/* args */0], args) ? (Curry._3(hooks[/* triggerEffect */2], effect[/* cleanup */1][/* contents */0], fn, (function (v) {
+      var effect$1 = Caml_obj.caml_notequal(effect[/* args */0], args) ? (Curry._3(hooks[/* triggerEffect */3], effect[/* cleanup */1][/* contents */0], fn, (function (v) {
                   effect[/* cleanup */1][/* contents */0] = v;
                   return /* () */0;
                 })), /* record */[
@@ -709,7 +1062,7 @@ function F(NativeInterface) {
       ];
     } else {
       var effect$2 = newEffect(fn, args);
-      Curry._3(hooks[/* triggerEffect */2], effect$2[/* cleanup */1][/* contents */0], fn, (function (v) {
+      Curry._3(hooks[/* triggerEffect */3], effect$2[/* cleanup */1][/* contents */0], fn, (function (v) {
               effect$2[/* cleanup */1][/* contents */0] = v;
               return /* () */0;
             }));
@@ -719,7 +1072,7 @@ function F(NativeInterface) {
       ];
     }
     var next = match$1[1];
-    hooks[/* current */3][0] = /* tuple */[
+    hooks[/* current */4][0] = /* tuple */[
       match$1[0],
       next
     ];
@@ -728,13 +1081,14 @@ function F(NativeInterface) {
             /* record */[
               /* invalidate */hooks[/* invalidate */0],
               /* setReconciler */hooks[/* setReconciler */1],
-              /* triggerEffect */hooks[/* triggerEffect */2],
+              /* setSuspense */hooks[/* setSuspense */2],
+              /* triggerEffect */hooks[/* triggerEffect */3],
               /* current */next
             ]
           ];
   };
   var useMemo = function (fn, args, hooks) {
-    var match = hooks[/* current */3][0];
+    var match = hooks[/* current */4][0];
     var match$1;
     if (match !== undefined) {
       var match$2 = match;
@@ -753,7 +1107,7 @@ function F(NativeInterface) {
     }
     var next = match$1[1];
     var value$1 = match$1[0];
-    hooks[/* current */3][0] = /* tuple */[
+    hooks[/* current */4][0] = /* tuple */[
       /* tuple */[
         value$1,
         args
@@ -765,7 +1119,8 @@ function F(NativeInterface) {
             /* record */[
               /* invalidate */hooks[/* invalidate */0],
               /* setReconciler */hooks[/* setReconciler */1],
-              /* triggerEffect */hooks[/* triggerEffect */2],
+              /* setSuspense */hooks[/* setSuspense */2],
+              /* triggerEffect */hooks[/* triggerEffect */3],
               /* current */next
             ]
           ];
@@ -777,6 +1132,7 @@ function F(NativeInterface) {
   };
   var Hooks = /* module */[
     /* useReconciler */useReconciler,
+    /* useSuspenseHandler */useSuspenseHandler,
     /* useRef */useRef,
     /* useState */useState,
     /* useReducer */useReducer,
@@ -786,9 +1142,15 @@ function F(NativeInterface) {
     /* useCallback */useCallback
   ];
   return /* module */[
+          /* NoReason */NoReason,
+          /* LoadingImage */LoadingImage,
+          /* SuspendException */SuspendException,
+          /* StillSuspended */StillSuspended,
           /* makePending */makePending,
           /* pendingReplace */pendingReplace,
           /* Maker */Maker,
+          /* mapResult */mapResult,
+          /* bindResult */bindResult,
           /* runRender */runRender,
           /* getNativeNode */getNativeNode,
           /* getNativePending */getNativePending,
@@ -804,6 +1166,8 @@ function F(NativeInterface) {
           /* reconcileChildren */reconcileChildren,
           /* enqueue */enqueue,
           /* mount */mount,
+          /* noReason */noReason,
+          /* Cache */Cache,
           /* Hooks */Hooks
         ];
 }

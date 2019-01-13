@@ -14,6 +14,7 @@ module type NativeInterface = {
   let canUpdate: (~mounted: element, ~mountPoint: nativeNode, ~newElement: element) => bool;
 
   let update: (element, nativeNode, element, Layout.node) => unit;
+  let updateLayout: (element, nativeNode, Layout.node) => unit;
 
   let inflate: (element, Layout.node) => nativeNode;
 
@@ -124,6 +125,29 @@ type pending('a) =
   | Replace(NativeInterface.nativeNode)
   | Update('a, NativeInterface.nativeNode);
 
+type async('t) = ('t => unit) => unit;
+
+type suspendReason = ..;
+
+type suspendReason += NoReason;
+type suspendReason += LoadingImage(string);
+
+
+type suspendEvent = {
+  reason: suspendReason,
+  payload: async(unit)
+};
+
+exception SuspendException(suspendEvent);
+exception StillSuspended;
+
+
+type instantiateResult('contents) =
+  | Good('contents)
+  | Suspense(list(suspendEvent))
+  | Bad(exn)
+
+
 /* also need a "compareTo" (other custom) */
 type custom = {
   init: unit => customWithState,
@@ -134,7 +158,9 @@ and customContents('identity, 'hooks, 'reconcileData) = {
   identity: 'identity,
   render: hooksContainer('hooks, 'reconcileData) => element,
   hooks: ref('hooks),
+  /* mutable suspense: option() */
   mutable invalidated: bool,
+  mutable suspense: option(ref(list(suspendEvent))),
   mutable reconciler: option(
     (
 'reconcileData, 'reconcileData, reconcilerFunction('reconcileData)
@@ -146,6 +172,7 @@ and customContents('identity, 'hooks, 'reconcileData) = {
 and hooksContainer('hooks, 'reconcileData) = {
   invalidate: unit => unit,
   setReconciler: ('reconcileData, 'reconcileData, reconcilerFunction('reconcileData)) => unit,
+  setSuspense: unit => list(suspendReason),
   triggerEffect:
     (
       ~cleanup: option(unit => unit),
@@ -156,7 +183,7 @@ and hooksContainer('hooks, 'reconcileData) = {
   current: ref('hooks),
 }
 
-and reconcilerFunction('data) = ('data, 'data, mountedTree, element) => pendingTree
+and reconcilerFunction('data) = ('data, 'data, mountedTree, element) => instantiateResult(pendingTree)
 and customWithState = WithState(customContents('identity, 'hooks, 'reconcileData)) : customWithState
 
 and element = 
@@ -212,8 +239,11 @@ module Maker = {
         WithState({
           identity,
           invalidated: false,
-          onChange: () => (),
+          onChange: () => {
+            print_endline("Ignoring onChange, happened too early")
+          },
           reconciler: None,
+          suspense: None,
           hooks: ref(None),
           render,
         })
@@ -238,6 +268,17 @@ module Maker = {
   };
 };
 
+let mapResult = (r, fn) => switch r {
+  | Good(r) => Good(fn(r))
+  | Suspense(s) => Suspense(s)
+  | Bad(exn) => Bad(exn)
+};
+let bindResult = (r, fn) => switch r {
+  | Good(r) => fn(r)
+  | Suspense(s) => Suspense(s)
+  | Bad(exn) => Bad(exn)
+};
+
 let runRender = (WithState(component)) => {
   let effects = ref([]);
   let hooks = {
@@ -247,14 +288,26 @@ let runRender = (WithState(component)) => {
       /* TODO actually trigger a rerender here */
     },
     setReconciler: (oldData, data, reconcile) => component.reconciler = Some((oldData, data, reconcile)),
+    setSuspense: () => {
+      switch (component.suspense) {
+        | None => component.suspense = Some(ref([])); []
+        | Some({contents: items}) => items->List.map(evt => evt.reason)
+      }
+      /* ->List.keepMap(event => filter(event.reason) ? Some(event.reason) : None) */
+    },
     triggerEffect: (~cleanup, ~fn, ~setCleanup) => {
       effects.contents = [{cleanup, fn, setCleanup}, ...effects.contents];
     },
     current: component.hooks,
   };
   component.invalidated = false;
-  let tree = component.render(hooks);
-  (tree, effects^);
+  try {
+    let tree = component.render(hooks);
+    Good((tree, effects^));
+  } {
+    | SuspendException(evt) => Suspense([evt])
+    | exn => Bad(exn)
+  }
 };
 
 let rec getNativeNode = tree =>
@@ -327,22 +380,71 @@ let updateLayout = (layout: option(Layout.node), children, style, measure) => {
 };
 
 let rec instantiateTree = (~withLayout=?, el: element) => switch el {
-  | Null => INull(updateLayout(withLayout, [||], Layout.style(), None))
+  | Null => Good(INull(updateLayout(withLayout, [||], Layout.style(), None)))
 
   | Builtin(nativeElement, children, layout, measure) =>
-    let ichildren = children->List.map(instantiateTree);
-    let childLayouts = ichildren->List.map(getInstanceLayout)->List.toArray;
-    let style = switch layout {
-      | None => Layout.style()
-      | Some(s) => s
-    };
-    IBuiltin(nativeElement, ichildren, updateLayout(withLayout, childLayouts, style, measure))
+    let ichildren = children->List.reduce(Good([]), (current, child) => {
+      switch current {
+        | Bad(exn) => Bad(exn)
+        | Good(children) => instantiateTree(child)->mapResult(child => [child, ...children])
+        | Suspense(s) => switch (instantiateTree(child)) {
+          | Good(_) => Suspense(s)
+          | Bad(exn) => Bad(exn)
+          | Suspense(s2) => Suspense(s @ s2)
+        }
+      }
+    });
+
+    ichildren->mapResult(children => {
+      Js.log2("instantiated children", children);
+        let children = children->List.reverse;
+        let childLayouts = children->List.map(getInstanceLayout)->List.toArray;
+        let style = switch layout {
+          | None => Layout.style()
+          | Some(s) => s
+        };
+        IBuiltin(nativeElement, children, updateLayout(withLayout, childLayouts, style, measure))
+    })
 
   | Custom(custom) =>
     /* How does it trigger a reconcile on setState? */
     let custom = custom.init();
-    let (tree, effects) = custom->runRender;
-    ICustom(custom, instantiateTree(tree), effects)
+    switch (custom->runRender) {
+      | Bad(exn) => Bad(exn)
+      | Suspense(s) => Suspense(s)
+      | Good((tree, effects)) =>
+        switch (instantiateTree(tree)) {
+          | Good(tree) => Good(ICustom(custom, tree, effects))
+          | Bad(exn) => Bad(exn)
+          | Suspense(s) =>
+            let WithState({suspense} as inner) = custom;
+            switch (suspense) {
+              | None => Suspense(s)
+              | Some(holder) =>
+                holder.contents = s;
+                switch (custom->runRender) {
+                  | Bad(exn) => Bad(exn)
+                  | Suspense(s) => Suspense(s)
+                  | Good((tree, effects)) =>
+                    switch (instantiateTree(tree)) {
+                      | Good(tree) =>
+                        s->List.forEach(item => {
+                          item.payload(() => {
+                            print_endline("Got a suspend result");
+                            holder.contents = holder.contents->List.keep(k => k !== item);
+                            /* Js.log(holder.contents); */
+                            inner.invalidated = true;
+                            inner.onChange();
+                          })
+                        });
+                        Good(ICustom(custom, tree, effects))
+                      | Bad(exn) => Bad(exn)
+                      | Suspense(s) => Suspense(s)
+                    }
+                }
+            }
+        }
+    }
 };
 
 let runEffect = ({cleanup, setCleanup, fn}) => {
@@ -356,7 +458,7 @@ let runEffect = ({cleanup, setCleanup, fn}) => {
 
 type root = {
   mutable layout: Layout.node,
-  mutable node: option(NativeInterface.nativeNode),
+  mutable node: option((mountedTree, NativeInterface.nativeNode)),
   mutable invalidatedElements: list(container),
   mutable waiting: bool,
 };
@@ -444,70 +546,112 @@ let rec mountPending: (container => unit, mountPoint, pendingTree) => mountedTre
     MCustom(container)
 };
 
-let rec reconcileTrees: (container => unit, mountedTree, element) => pendingTree = (enqueue, prev, next) => switch (prev, next) {
+let rec reconcileTrees: (container => unit, mountedTree, element) => instantiateResult(pendingTree) = (enqueue, prev, next) => switch (prev, next) {
   | (MBuiltin(aElement, node, aChildren, aLayout), Builtin(bElement, bChildren, bLayoutStyle, bMeasure)) =>
     /* TODO maybe it should return... the things... ok I need a prev el or sth */
     /* TODO re-enable updating */
     if (NativeInterface.canUpdate(~mounted= aElement, ~mountPoint=node, ~newElement=bElement)) {
-      let children = reconcileChildren(enqueue, node, aChildren, bChildren);
-      updateLayout(
-        Some(aLayout),
-        children->List.map(getPendingLayout)->List.toArray,
-        switch (bLayoutStyle) {
-        | Some(s) => s
-        | _ => Layout.style()
-        },
-        bMeasure,
-      )
-      ->ignore;
-      PBuiltin(bElement, Update(aElement, node), children, aLayout);
+      reconcileChildren(enqueue, node, aChildren, bChildren)->mapResult(children => {
+        updateLayout(
+          Some(aLayout),
+          children->List.map(getPendingLayout)->List.toArray,
+          switch (bLayoutStyle) {
+          | Some(s) => s
+          | _ => Layout.style()
+          },
+          bMeasure,
+        )
+        ->ignore;
+        PBuiltin(bElement, Update(aElement, node), children, aLayout)
+      })
     } else {
       let instances = instantiateTree(~withLayout=aLayout, next);
-      pendingReplace(node, instances)
+      instances->mapResult(instances => pendingReplace(node, instances))
     }
   | (MCustom(a), Custom(b)) =>
     switch (b.clone(a.custom)) {
-      | `Same => PCustom(a, [])
+      | `Same => Good(PCustom(a, []))
       | `Compatible(custom) =>
-        let (newElement, effects) = custom->runRender;
-        /* TODO custom reconciler */
-        switch (a.mountedTree) {
-          | Pending(_) => failwith("Reconciling a componenet that's still pending.")
-          | Mounted(mountedTree) =>
-            let tree = reconcileTrees(enqueue, mountedTree, newElement);
-            PCustom({custom, mountedTree: Pending(tree)}, effects)
-        }
+        custom->runRender->bindResult(((newElement, effects)) => {
+          /* TODO custom reconciler */
+          switch (a.mountedTree) {
+            | Pending(_) => failwith("Reconciling a componenet that's still pending.")
+            | Mounted(mountedTree) =>
+              let tree = reconcileTrees(enqueue, mountedTree, newElement);
+              tree->mapResult(tree => PCustom({custom, mountedTree: Pending(tree)}, effects))
+          }
+        })
       | `Different =>
         let instances = instantiateTree(next);
-        switch (getNativeNode(prev)) {
+        instances->mapResult(instances => switch (getNativeNode(prev)) {
         | None =>
           print_endline("Warning! Prev custom component was pending");
           makePending(instances);
         | Some(node) => pendingReplace(node, instances)
-        };
+        });
     }
   | _ =>
     let instances = instantiateTree(next);
-    switch (getNativeNode(prev)) {
+    instances->mapResult(instances => switch (getNativeNode(prev)) {
     | None =>
       print_endline("Warning! Prev custom component was pending");
       makePending(instances);
     | Some(node) => pendingReplace(node, instances)
-    };
+    });
 } and reconcileChildren = (enqueue, parentNode, aChildren, bChildren) => {
   switch (aChildren, bChildren) {
-    | ([], []) => []
+    | ([], []) => Good([])
     | ([], _) =>
-      let more = bChildren->List.map(child => makePending(instantiateTree(child)));
-      more
+      let ichildren = bChildren->List.reduce(Good([]), (current, child) => {
+        switch current {
+          | Bad(exn) => Bad(exn)
+          | Good(children) => instantiateTree(child)->mapResult(child => [child, ...children])
+          | Suspense(s) => switch (instantiateTree(child)) {
+            | Good(_) => Suspense(s)
+            | Bad(exn) => Bad(exn)
+            | Suspense(s2) => Suspense(s @ s2)
+          }
+        }
+      });
+      ichildren->mapResult(children => {
+        Js.log2("Got extra children", children->List.toArray);
+        children->List.mapReverse(makePending);
+      })
     | (more, []) => 
       /* TODO is this the right place for that? */
       more->List.keepMap(getNativeNode)->List.forEach(NativeInterface.removeChild(parentNode));
-      []
+      Good([])
     | ([one, ...aRest], [two, ...bRest]) =>
-      [reconcileTrees(enqueue, one, two), ...reconcileChildren(enqueue, parentNode, aRest, bRest)]
+      reconcileTrees(enqueue, one, two)
+      ->bindResult(child =>
+          reconcileChildren(enqueue, parentNode, aRest, bRest)
+          ->mapResult(children => [child, ...children])
+        );
   }
 };
+
+/*
+Allow things like event handlers to do something like
+Fluid.enqueueRenders(() => {
+  onClick()
+})
+so that we can debounce all of them & then run them at the end.
+so enqueueRenders(()) (or gatherRenders or something)
+
+  enqueueRenders = fn => {
+    root.enqueuing = true
+    fn();
+    flushQueue(root);
+  }
+
+  enqueu = (root, custom) => {
+    if (!root.enqueueing) {
+      // do the rerender
+    } else {
+      root.queue->add(custom)
+    }
+  }
+ */
 
 let rec enqueue = (root, custom) => {
   root.invalidatedElements = [custom, ...root.invalidatedElements];
@@ -519,17 +663,40 @@ let rec enqueue = (root, custom) => {
       root.invalidatedElements = [];
       let toUpdate = elements->List.keepMap(({custom: WithState(contents) as component} as container) => {
         if (contents.invalidated)  {
-          let (newElement, effects) = component->runRender;
-          switch (container.mountedTree) {
-            | Pending(_) =>
-            print_endline("Updating a pending tree...")
-            None
-            | Mounted(mountedTree) => 
-              Some((container, switch (contents.reconciler) {
-                | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
-                | _ => reconcileTrees(enqueue(root), mountedTree, newElement)
-              }, effects))
-          }
+              switch (container.mountedTree) {
+                | Pending(_) =>
+                  print_endline("Updating a pending tree...")
+                  None
+                | Mounted(mountedTree) => 
+          Some((container, component->runRender->bindResult(((newElement, effects)) => {
+                  let pending = switch (contents.reconciler) {
+                    | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
+                    | _ => reconcileTrees(enqueue(root), mountedTree, newElement)
+                  };
+                  let pending = switch pending {
+                    | Suspense(s) => switch (contents.suspense) {
+                      | None => failwith("Top of the line")
+                      | Some({contents: []} as holder) =>
+                        holder.contents = s;
+                        /* TODO dedup this logic with the instantiate stuff */
+                        component->runRender->bindResult(((newElement, newEffects)) => {
+                          let pending = switch (contents.reconciler) {
+                            | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
+                            | _ => reconcileTrees(enqueue(root), mountedTree, newElement)
+                          };
+                          pending->mapResult(pending => (pending, newEffects))
+                        })
+                      | Some(_) =>
+                        print_endline("Suspended component rendering things that suspended again");
+                        Suspense(s)
+                    }
+                    | Good(pending) => Good((pending, []))
+                    | Bad(exn) => Bad(exn)
+                  };
+                  /* Although, should I really be persisting the original effects? idk */
+                  pending->mapResult(((pending, moreEffects)) => (pending, effects @ moreEffects))
+          })))
+              }
         } else {
           None
         }
@@ -541,13 +708,34 @@ let rec enqueue = (root, custom) => {
          instead of invalidating at the root every time. */
       Layout.layout(root.layout);
       /* [%bs.debugger]; */
-      toUpdate->List.forEach(((container, pending, effects)) => {
-        effects->List.forEach(runEffect);
-        let current = switch (getNativePending(container.mountedTree)) {
-          | Some(mounted) => mounted
-          | None => failwith("Current is already pending")
-        };
-        container.mountedTree = Mounted(mountPending(enqueue(root), AppendChild(current), pending))
+      toUpdate->List.forEach(((container, result)) => {
+        switch (result) {
+          | Good((pending, effects)) =>
+            effects->List.forEach(runEffect);
+            let current = switch (getNativePending(container.mountedTree)) {
+              | Some(mounted) => mounted
+              | None => failwith("Current is already pending")
+            };
+            let newTree = mountPending(enqueue(root), AppendChild(current), pending);
+            container.mountedTree = Mounted(newTree);
+            let rec crawl = el => switch el {
+              | MNull(_) => ()
+              | MBuiltin(el, mounted, children, layout) =>
+                /* Js.log3("Updating layout now", mounted, layout.layout); */
+                NativeInterface.updateLayout(el, mounted, layout);
+                children->List.forEach(crawl)
+              | MCustom({custom, mountedTree: Mounted(tree)}) => crawl(tree)
+              | MCustom({custom, mountedTree: Pending(_)}) => ()
+            };
+            switch (root.node) {
+              | None => ()
+              | Some((tree, _)) => crawl(tree)
+            }
+          | Bad(exn) => raise(exn)
+          | Suspense(s) =>
+            /* TODO have a `onSuspense` on the container or component object to call here */
+            failwith("Top of the line")
+        }
       })
       /* STOPSHIP go down through the tree & update any nodes that have had their layout updated,
          that didn't just get rerendered. yknow. */
@@ -560,7 +748,11 @@ TODO what if thre's a setState right after/during the first render?
  */
 
 let mount = (el, node) => {
-  let instances = instantiateTree(el);
+  let instances = switch (instantiateTree(el)) {
+    | Bad(exn) => raise(exn)
+    | Suspense(s) => failwith("useSuspense called, but no useSuspenseHandler in the tree")
+    | Good(i) => i
+  };
   let instanceLayout = getInstanceLayout(instances);
   Layout.layout(instanceLayout);
 
@@ -576,9 +768,30 @@ let mount = (el, node) => {
   switch (getNativeNode(tree)) {
     | None => failwith("Still pending?")
     | Some(childNode) =>
-      root.node = Some(childNode);
+      root.node = Some((tree, childNode));
       node->NativeInterface.appendChild(childNode)
   }
+};
+
+let noReason = (_) => NoReason;
+
+module Cache = (Config: {type arg; type result; let reason: arg => suspendReason; let fetch: (arg) => async(result)}) => {
+  let cache: Hashtbl.t(Config.arg, Config.result) = Hashtbl.create(10);
+  let fetch = arg => switch (Hashtbl.find(cache, arg)) {
+    | exception Not_found =>
+      let suspendEvent = {
+        reason: Config.reason(arg),
+        payload: fin => {
+          /* TODO dedup requests */
+          Config.fetch(arg, value => {
+            Hashtbl.replace(cache, arg, value);
+            fin()
+          })
+        }
+      }
+      raise(SuspendException(suspendEvent));
+    | value => value
+  };
 };
 
 /*
@@ -595,16 +808,40 @@ lifecycle methods or something
 
   module Hooks = {
 
+    type reconciler('data) = Reconciler('data);
+    type suspenseHandler = SuspenseHandler;
+    type exceptionHandler = ExceptionHandler;
+
     let useReconciler = (data, fn, hooks) => {
       let next = switch (hooks.current^) {
         | None => ref(None)
-        | Some((r, next)) =>
+        | Some((Reconciler(r), next)) =>
           hooks.setReconciler(r, data, fn);
           next
       };
-      hooks.current := Some((data, next));
+      hooks.current := Some((Reconciler(data), next));
       ((), hooks)
     };
+
+    let useSuspenseHandler = ((), hooks) => {
+      let next = switch (hooks.current^) {
+        | None => ref(None)
+        | Some((r, next)) =>
+          next
+      };
+      hooks.current := Some((SuspenseHandler, next));
+      (hooks.setSuspense(), hooks)
+    };
+
+    /* let useExceptionHandler = (handler, hooks) => {
+      let next = switch (hooks.current^) {
+        | None => ref(None)
+        | Some((r, next)) =>
+          next
+      };
+      hooks.current := Some((ExceptionHandler, next));
+      (hooks.handleExceptions(handler), hooks)
+    }; */
 
     let useRef = (initial, hooks) => {
       switch (hooks.current^) {
@@ -642,6 +879,41 @@ lifecycle methods or something
         {...hooks, current: next},
       )
     };
+
+    /* let _runSuspense = (reason, value, args, next, hooks) => {
+      hooks.current := Some((args, next))
+      let suspendEvent = {
+        reason,
+        payload: fin => {
+          value((), value => {
+            if (!cancelled.contents) {
+              fin();
+            }
+          })
+        }
+      }
+      raise(SuspendException(suspendEvent));
+    }; */
+
+    /* let useSus = (~reason=NoReason, ) */
+
+    /* TODO would be nice to have a `Loading | Refreshing(data) | Loaded(data)` thing in here.
+       might be too complex for a first pass tho. */
+    /* let useSuspense = (~reason=NoReason, value: unit => async('t), args, hooks) => {
+      let (value, next) = switch (hooks.current^) {
+        | None => _runSuspense(reason, value, args, ref(None), hooks)
+        | Some(((prevArgs, status), next)) =>
+          if (prevArgs != args) {
+            _runSuspense(reason, value, args, ref(None), hooks)
+            /* TODO TODO need to cancel previous */
+          };
+          switch (status^) {
+            | None => raise(StillSuspended)
+            | Some(value) => (value, next)
+          }
+      };
+      (value, {...hooks, current: next})
+    }; */
 
     /* [@hook]
     let useReducer = (reducer, initial) => {

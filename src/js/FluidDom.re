@@ -55,8 +55,8 @@ module NativeInterface = {
     snode##style##position #= "absolute";
     snode##style##left #= (string_of_float(layout.layout.left) ++ "px");
     snode##style##top #= (string_of_float(layout.layout.top) ++ "px");
-    snode##style##bottom #= (string_of_float(layout.layout.bottom) ++ "px");
-    snode##style##right #= (string_of_float(layout.layout.right) ++ "px");
+    /* snode##style##bottom #= (string_of_float(layout.layout.bottom) ++ "px");
+    snode##style##right #= (string_of_float(layout.layout.right) ++ "px"); */
     snode##style##width #= (string_of_float(layout.layout.width) ++ "px");
     snode##style##height #= (string_of_float(layout.layout.height) ++ "px");
 
@@ -124,17 +124,29 @@ module NativeInterface = {
 
   type element = {tag: string, props: nativeProps};
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => mounted.tag == newElement.tag;
+
+  let updateLayout = (mounted, mountPoint, layout: Layout.node) => {
+    let snode = Obj.magic(mountPoint);
+    snode##style##position #= "absolute";
+    snode##style##left #= (string_of_float(layout.layout.left) ++ "px");
+    snode##style##top #= (string_of_float(layout.layout.top) ++ "px");
+    /* snode##style##bottom #= (string_of_float(layout.layout.bottom) ++ "px");
+    snode##style##right #= (string_of_float(layout.layout.right) ++ "px"); */
+    snode##style##width #= (string_of_float(layout.layout.width) ++ "px");
+    snode##style##height #= (string_of_float(layout.layout.height) ++ "px");
+  };
+
   let update = (mounted, mountPoint, newElement, layout: Layout.node) => {
     if (mounted.tag == newElement.tag) {
       if (mounted.props !== newElement.props) {
-        Js.log4("Updating", mounted, mountPoint, newElement);
+        /* Js.log4("Updating", mounted, mountPoint, newElement); */
 
         let snode = Obj.magic(mountPoint);
         snode##style##position #= "absolute";
         snode##style##left #= (string_of_float(layout.layout.left) ++ "px");
         snode##style##top #= (string_of_float(layout.layout.top) ++ "px");
-        snode##style##bottom #= (string_of_float(layout.layout.bottom) ++ "px");
-        snode##style##right #= (string_of_float(layout.layout.right) ++ "px");
+        /* snode##style##bottom #= (string_of_float(layout.layout.bottom) ++ "px");
+        snode##style##right #= (string_of_float(layout.layout.right) ++ "px"); */
         snode##style##width #= (string_of_float(layout.layout.width) ++ "px");
         snode##style##height #= (string_of_float(layout.layout.height) ++ "px");
 
@@ -203,7 +215,6 @@ module Fluid = {
           (),
         ),
     }, [], None, None);
-  };
   let string = (~layout=?, ~font=?, x) => {
     let {NativeInterface.fontName, fontSize} = switch font { 
       | None => NativeInterface.defaultFont
@@ -212,4 +223,7 @@ module Fluid = {
     Builtin({NativeInterface.tag: "span", props:
     Obj.magic({"textContent": x, "style": {"fontFamily": fontName, "fontSize": NativeInterface.string_of_float(fontSize) ++ "px"}})}, [], layout, Some(NativeInterface.measureText(x, font)))
   };
+  let text = (~layout=?, ~font=?, ~contents, ()) => string(~layout?, ~font?, contents)
+  };
+  let string = Native.string;
 }

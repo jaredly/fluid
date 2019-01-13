@@ -42,8 +42,6 @@ function createElement(typ, nativeProps, layout) {
   node.style.position = "absolute";
   node.style.left = string_of_float(layout[/* layout */2][/* left */0]) + "px";
   node.style.top = string_of_float(layout[/* layout */2][/* top */1]) + "px";
-  node.style.bottom = string_of_float(layout[/* layout */2][/* bottom */3]) + "px";
-  node.style.right = string_of_float(layout[/* layout */2][/* right */2]) + "px";
   node.style.width = string_of_float(layout[/* layout */2][/* width */4]) + "px";
   node.style.height = string_of_float(layout[/* layout */2][/* height */5]) + "px";
   return node;
@@ -105,14 +103,20 @@ function canUpdate(mounted, mountPoint, newElement) {
   return mounted[/* tag */0] === newElement[/* tag */0];
 }
 
+function updateLayout(mounted, mountPoint, layout) {
+  mountPoint.style.position = "absolute";
+  mountPoint.style.left = string_of_float(layout[/* layout */2][/* left */0]) + "px";
+  mountPoint.style.top = string_of_float(layout[/* layout */2][/* top */1]) + "px";
+  mountPoint.style.width = string_of_float(layout[/* layout */2][/* width */4]) + "px";
+  mountPoint.style.height = string_of_float(layout[/* layout */2][/* height */5]) + "px";
+  return /* () */0;
+}
+
 function update(mounted, mountPoint, newElement, layout) {
   if (mounted[/* tag */0] === newElement[/* tag */0] && mounted[/* props */1] !== newElement[/* props */1]) {
-    console.log("Updating", mounted, mountPoint, newElement);
     mountPoint.style.position = "absolute";
     mountPoint.style.left = string_of_float(layout[/* layout */2][/* left */0]) + "px";
     mountPoint.style.top = string_of_float(layout[/* layout */2][/* top */1]) + "px";
-    mountPoint.style.bottom = string_of_float(layout[/* layout */2][/* bottom */3]) + "px";
-    mountPoint.style.right = string_of_float(layout[/* layout */2][/* right */2]) + "px";
     mountPoint.style.width = string_of_float(layout[/* layout */2][/* width */4]) + "px";
     mountPoint.style.height = string_of_float(layout[/* layout */2][/* height */5]) + "px";
     return setDomProps(mountPoint, newElement[/* props */1]);
@@ -138,6 +142,7 @@ var NativeInterface = /* module */[
   /* createTextNode */createTextNode,
   /* updateNativeProps */updateNativeProps,
   /* canUpdate */canUpdate,
+  /* updateLayout */updateLayout,
   /* update */update,
   /* inflate */inflate
 ];
@@ -146,6 +151,7 @@ var include = FluidMaker.F([
       $$setImmediate,
       canUpdate,
       update,
+      updateLayout,
       inflate,
       measureText,
       createNullNode,
@@ -278,13 +284,6 @@ function input(id, _type, width, height, onchange, oninput, style, param) {
           ]);
 }
 
-var Native = /* module */[
-  /* div */div,
-  /* button */button,
-  /* img */img,
-  /* input */input
-];
-
 function string(layout, font, x) {
   var match = font !== undefined ? font : defaultFont;
   return /* Builtin */Block.__(0, [
@@ -306,43 +305,72 @@ function string(layout, font, x) {
           ]);
 }
 
-var Fluid_001 = /* makePending */include[0];
+function text(layout, font, contents, param) {
+  return string(layout, font, contents);
+}
 
-var Fluid_002 = /* pendingReplace */include[1];
+var Native = /* module */[
+  /* div */div,
+  /* button */button,
+  /* img */img,
+  /* input */input,
+  /* string */string,
+  /* text */text
+];
 
-var Fluid_003 = /* Maker */include[2];
+var Fluid_001 = /* NoReason */include[0];
 
-var Fluid_004 = /* runRender */include[3];
+var Fluid_002 = /* LoadingImage */include[1];
 
-var Fluid_005 = /* getNativeNode */include[4];
+var Fluid_003 = /* SuspendException */include[2];
 
-var Fluid_006 = /* getNativePending */include[5];
+var Fluid_004 = /* StillSuspended */include[3];
 
-var Fluid_007 = /* getInstanceLayout */include[6];
+var Fluid_005 = /* makePending */include[4];
 
-var Fluid_008 = /* getMountedLayout */include[7];
+var Fluid_006 = /* pendingReplace */include[5];
 
-var Fluid_009 = /* getPendingLayout */include[8];
+var Fluid_007 = /* Maker */include[6];
 
-var Fluid_010 = /* updateLayout */include[9];
+var Fluid_008 = /* mapResult */include[7];
 
-var Fluid_011 = /* instantiateTree */include[10];
+var Fluid_009 = /* bindResult */include[8];
 
-var Fluid_012 = /* runEffect */include[11];
+var Fluid_010 = /* runRender */include[9];
 
-var Fluid_013 = /* mountTo */include[12];
+var Fluid_011 = /* getNativeNode */include[10];
 
-var Fluid_014 = /* mountPending */include[13];
+var Fluid_012 = /* getNativePending */include[11];
 
-var Fluid_015 = /* reconcileTrees */include[14];
+var Fluid_013 = /* getInstanceLayout */include[12];
 
-var Fluid_016 = /* reconcileChildren */include[15];
+var Fluid_014 = /* getMountedLayout */include[13];
 
-var Fluid_017 = /* enqueue */include[16];
+var Fluid_015 = /* getPendingLayout */include[14];
 
-var Fluid_018 = /* mount */include[17];
+var Fluid_016 = /* updateLayout */include[15];
 
-var Fluid_019 = /* Hooks */include[18];
+var Fluid_017 = /* instantiateTree */include[16];
+
+var Fluid_018 = /* runEffect */include[17];
+
+var Fluid_019 = /* mountTo */include[18];
+
+var Fluid_020 = /* mountPending */include[19];
+
+var Fluid_021 = /* reconcileTrees */include[20];
+
+var Fluid_022 = /* reconcileChildren */include[21];
+
+var Fluid_023 = /* enqueue */include[22];
+
+var Fluid_024 = /* mount */include[23];
+
+var Fluid_025 = /* noReason */include[24];
+
+var Fluid_026 = /* Cache */include[25];
+
+var Fluid_027 = /* Hooks */include[26];
 
 var Fluid = /* module */[
   /* NativeInterface */0,
@@ -365,6 +393,14 @@ var Fluid = /* module */[
   Fluid_017,
   Fluid_018,
   Fluid_019,
+  Fluid_020,
+  Fluid_021,
+  Fluid_022,
+  Fluid_023,
+  Fluid_024,
+  Fluid_025,
+  Fluid_026,
+  Fluid_027,
   /* Native */Native,
   /* string */string
 ];

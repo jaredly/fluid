@@ -33,8 +33,46 @@ let colorSwitcher = hooks => {
   </view>;
 };
 
+type async('t) = ('t => unit) => unit;
+
+type suspendReason = ..;
+
+type suspendReason += LoadingImage(string);
+
+type suspendEvent = {
+  reason: suspendReason,
+  payload: async(unit)
+};
+
+/*
+
+Because what I want is for the parent to be able to have an idea of what it's waiting on.
+
+hrmmm and I guess we don't need to track the type of the thing that's going to be returned... ok.
+
+ */
+
+/* let useSuspense = (~filter=(_) => true, (), hooks) => {
+  let next = switch (hooks.current^) {
+    | None => ref(None)
+    | Some((r, next)) =>
+      next
+  };
+  hooks.current := Some(((), Next))
+  ((), hooks)
+}; */
+
 let first = hooks => {
   let%hook (times, setTimes) = useState(0);
+
+  let%hook status = useSuspense(~filter=(reason) => switch reason {
+    | LoadingImage(string) => true
+    | _ => false
+    /*
+    I think the type of useSuspense should be
+    let useSuspense: (~filter: (list(suspendEvent)))
+     */
+  }, ());
 
   <view layout={Layout.style(~marginHorizontal=10., ())}>
     {str("More world")}

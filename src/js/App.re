@@ -1,4 +1,5 @@
 [%%debugger.chrome];
+Belt.Debug.setupChromeDebugger();
 open FluidDom;
 /* open Hooks; */
 
@@ -122,12 +123,51 @@ let simple = <div id="awesome" layout={Layout.style(~width=500., ~height=500., (
   </div>
 </div>;
 
-let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ())}>
+module ImageCache = Fluid.Cache({
+  type arg = string;
+  type result = unit;
+  let reason = Fluid.noReason;
+  let fetch = (arg, fin) => {
+    Js.Global.setTimeout(fin, 500 + 10 * Random.int(100))->ignore;
+    ()
+  }
+});
+
+let loading = (~children=[], hooks) => {
+  let%hook suspended = Fluid.Hooks.useSuspenseHandler();
+  Js.log2("Rerender", suspended);
+  if (suspended != []) {
+    <div>{str("Loading " ++ string_of_int(List.length(suspended)) ++ " items...")}</div>
+  } else {
+    Fluid.Native.div(~children, ())
+  }
+};
+
+let imageLoader = (~src, hooks) => {
+  let data = ImageCache.fetch(src);
+  
+  <div style="border: 3px solid red" layout={Layout.style(~width=200., ~height=200., ())} >
+    <img src layout={Layout.style(~width=200., ~height=200., ())} />
+  </div>
+};
+
+let first = (hooks) => {
+  <div id="awesome" layout={Layout.style(~width=500., ())}>
   {str("Hello")}
   <div id="here" style="background-color: #aaa" layout={Layout.style(~width=100., ~height=50., ())}>
     <div>{str("What")}</div>
   </div>
-  <img src="./fluid-macos.png" layout={Layout.style(~width=200., ~height=200., ())} />
+  <Loading>
+    {str("Hello")}
+    <text contents="Hei" />
+    <ImageLoader src="./fluid-macos.png" />
+    <ImageLoader src="./fluid-macos1.png" />
+    <ImageLoader src="./fluid-macos2.png" />
+    <ImageLoader src="./fluid-macos3.png" />
+    <ImageLoader src="./fluid-macos4.png" />
+    <ImageLoader src="./fluid-macos5.png" />
+  </Loading>
+  /* <img src="./fluid-macos.png" layout={Layout.style(~width=200., ~height=200., ())} /> */
   <Toggle
     on=(onClick => <div layout={Layout.style(~flexDirection=Row, ~alignItems=AlignCenter, ())}>
       (str("Click this to"))
@@ -146,10 +186,11 @@ let first = <div id="awesome" layout={Layout.style(~width=500., ~height=500., ()
     {str("world")}
   </div>
 </div>;
+};
 
 [@bs.val][@bs.scope "document"] external getElementById: string => option(NativeInterface.nativeNode) = "";
 
 switch (getElementById("root")) {
   | None => assert(false)
-  | Some(node) => Fluid.mount(first, node)
+  | Some(node) => Fluid.mount(<First />, node)
 }
