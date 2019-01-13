@@ -103,7 +103,7 @@ function button(text, style, onClick, hooks) {
                 str(undefined, undefined, text),
                 /* [] */0
               ],
-              Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 4, 8, undefined, undefined, undefined, undefined, /* () */0),
+              Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 4, 8, undefined, undefined, undefined, undefined, /* () */0),
               undefined,
               undefined,
               undefined,
@@ -139,7 +139,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
                       ]),
                   /* [] */0
                 ],
-                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 undefined,
                 undefined,
                 undefined,
@@ -150,7 +150,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
           /* [] */0
         ]
       ],
-      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
       undefined,
       undefined,
       undefined,
@@ -171,6 +171,11 @@ var ImageCache = Curry._1(FluidDom.Fluid[/* Cache */26], /* module */[
       /* fetch */fetch
     ]);
 
+function imageLoader(src, hooks) {
+  Curry._1(ImageCache[/* fetch */1], src);
+  return Curry._3(FluidDom.Fluid[/* Native */28][/* img */2], src, Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0);
+}
+
 function loading($staropt$star, hooks) {
   var children = $staropt$star !== undefined ? $staropt$star : /* [] */0;
   var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useSuspenseHandler */1], /* () */0, hooks);
@@ -180,7 +185,7 @@ function loading($staropt$star, hooks) {
     return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
                 undefined,
                 /* :: */[
-                  str(undefined, undefined, "Loading " + (String(List.length(suspended)) + " items...")),
+                  str(undefined, undefined, "Preloading " + (String(List.length(suspended)) + " images...")),
                   /* [] */0
                 ],
                 undefined,
@@ -206,61 +211,233 @@ function loading($staropt$star, hooks) {
   }
 }
 
-function imageLoader(src, hooks) {
-  Curry._1(ImageCache[/* fetch */1], src);
+function loadExample(hooks) {
+  var partial_arg = /* :: */[
+    Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+          undefined,
+          /* :: */[
+            /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
+                        return imageLoader("./fluid-macos.png", param);
+                      }))]),
+            /* :: */[
+              /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
+                          return imageLoader("./fluid-js.png", param);
+                        }))]),
+              /* [] */0
+            ]
+          ],
+          Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* CssWrap */1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          /* () */0
+        ]),
+    /* [] */0
+  ];
   return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
               undefined,
               /* :: */[
-                Curry._3(FluidDom.Fluid[/* Native */28][/* img */2], src, Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
-                /* [] */0
+                str(undefined, /* record */[
+                      /* fontName */"system-ui",
+                      /* fontSize */40
+                    ], "Suspense y'all"),
+                /* :: */[
+                  /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], loading, (function (param) {
+                              return loading(partial_arg, param);
+                            }))]),
+                  /* [] */0
+                ]
               ],
-              Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+              Layout.style(600, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 20, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
               undefined,
               undefined,
               undefined,
               undefined,
-              "border: 3px solid red",
+              undefined,
               /* () */0
             ]);
 }
 
+function fakeLoader(contents, hooks) {
+  Curry._1(ImageCache[/* fetch */1], "");
+  return contents;
+}
+
+function toggle2(hooks) {
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useState */3], false, hooks);
+  var match$1 = match[0];
+  var set = match$1[1];
+  var on = match$1[0];
+  if (on) {
+    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                undefined,
+                /* :: */[
+                  str(undefined, undefined, "Yes"),
+                  /* :: */[
+                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
+                                return button("Click me", "", (function (param) {
+                                              return Curry._1(set, !on);
+                                            }), param);
+                              }))]),
+                    /* [] */0
+                  ]
+                ],
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                /* () */0
+              ]);
+  } else {
+    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                undefined,
+                /* :: */[
+                  Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                        undefined,
+                        /* :: */[
+                          str(undefined, undefined, "Hello"),
+                          /* :: */[
+                            /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
+                                        return button("Turn on", "", (function (param) {
+                                                      return Curry._1(set, !on);
+                                                    }), param);
+                                      }))]),
+                            /* :: */[
+                              str(undefined, undefined, "On"),
+                              /* :: */[
+                                str(undefined, undefined, "More"),
+                                /* [] */0
+                              ]
+                            ]
+                          ]
+                        ],
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        /* () */0
+                      ]),
+                  /* [] */0
+                ],
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                /* () */0
+              ]);
+  }
+}
+
+function toggle3(hooks) {
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useState */3], false, hooks);
+  var match$1 = match[0];
+  var set = match$1[1];
+  var on = match$1[0];
+  if (on) {
+    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                undefined,
+                /* :: */[
+                  str(undefined, undefined, "Yes"),
+                  /* :: */[
+                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
+                                return button("Click me", "", (function (param) {
+                                              return Curry._1(set, !on);
+                                            }), param);
+                              }))]),
+                    /* [] */0
+                  ]
+                ],
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                /* () */0
+              ]);
+  } else {
+    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                undefined,
+                /* :: */[
+                  str(undefined, undefined, "Hello"),
+                  /* :: */[
+                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
+                                return button("Turn on", "", (function (param) {
+                                              return Curry._1(set, !on);
+                                            }), param);
+                              }))]),
+                    /* :: */[
+                      str(undefined, undefined, "On"),
+                      /* :: */[
+                        str(undefined, undefined, "More"),
+                        /* [] */0
+                      ]
+                    ]
+                  ]
+                ],
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                /* () */0
+              ]);
+  }
+}
+
 function first(hooks) {
   var partial_arg = /* :: */[
-    str(undefined, undefined, "Hello"),
-    /* :: */[
-      Curry._4(FluidDom.Fluid[/* Native */28][/* text */5], undefined, undefined, "Hei", /* () */0),
-      /* :: */[
-        /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
-                    return imageLoader("./fluid-macos.png", param);
-                  }))]),
-        /* :: */[
-          /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
-                      return imageLoader("./fluid-macos1.png", param);
-                    }))]),
+    Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+          undefined,
           /* :: */[
             /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
-                        return imageLoader("./fluid-macos2.png", param);
+                        return imageLoader("./fluid-macos.png", param);
                       }))]),
             /* :: */[
               /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
-                          return imageLoader("./fluid-macos3.png", param);
+                          return imageLoader("./fluid-macos1.png", param);
                         }))]),
               /* :: */[
                 /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
-                            return imageLoader("./fluid-macos4.png", param);
+                            return imageLoader("./fluid-macos2.png", param);
                           }))]),
                 /* :: */[
                   /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
-                              return imageLoader("./fluid-macos5.png", param);
+                              return imageLoader("./fluid-macos3.png", param);
                             }))]),
-                  /* [] */0
+                  /* :: */[
+                    /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
+                                return imageLoader("./fluid-macos4.png", param);
+                              }))]),
+                    /* :: */[
+                      /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
+                                  return imageLoader("./fluid-macos5.png", param);
+                                }))]),
+                      /* [] */0
+                    ]
+                  ]
                 ]
               ]
             ]
-          ]
-        ]
-      ]
-    ]
+          ],
+          Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* CssWrap */1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          /* () */0
+        ]),
+    /* [] */0
   ];
   return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
               "awesome",
@@ -286,7 +463,7 @@ function first(hooks) {
                               ]),
                           /* [] */0
                         ],
-                        Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                        Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                         undefined,
                         undefined,
                         undefined,
@@ -299,77 +476,80 @@ function first(hooks) {
                                 return loading(partial_arg, param);
                               }))]),
                     /* :: */[
-                      /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], toggle, (function (param) {
-                                  return toggle((function (onClick) {
-                                                return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
-                                                            undefined,
-                                                            /* :: */[
-                                                              str(undefined, undefined, "Click this to"),
+                      Curry._3(FluidDom.Fluid[/* Native */28][/* img */2], "./fluid-macos.png", Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
+                      /* :: */[
+                        /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], toggle, (function (param) {
+                                    return toggle((function (onClick) {
+                                                  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                                                              undefined,
+                                                              /* :: */[
+                                                                str(undefined, undefined, "Click this to"),
+                                                                /* :: */[
+                                                                  /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
+                                                                              return button("Turn Off", "background-color: #88ff88", onClick, param);
+                                                                            }))]),
+                                                                  /* [] */0
+                                                                ]
+                                                              ],
+                                                              Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                                              undefined,
+                                                              undefined,
+                                                              undefined,
+                                                              undefined,
+                                                              undefined,
+                                                              /* () */0
+                                                            ]);
+                                                }), (function (onClick) {
+                                                  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                                                              undefined,
                                                               /* :: */[
                                                                 /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
-                                                                            return button("Turn Off", "background-color: #88ff88", onClick, param);
+                                                                            return button("Turn On", "background-color: #ffacf0", onClick, param);
                                                                           }))]),
-                                                                /* [] */0
-                                                              ]
-                                                            ],
-                                                            Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                                                            undefined,
-                                                            undefined,
-                                                            undefined,
-                                                            undefined,
-                                                            undefined,
-                                                            /* () */0
-                                                          ]);
-                                              }), (function (onClick) {
-                                                return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
-                                                            undefined,
-                                                            /* :: */[
-                                                              /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
-                                                                          return button("Turn On", "background-color: #ffacf0", onClick, param);
-                                                                        }))]),
-                                                              /* :: */[
-                                                                str(undefined, undefined, "if you want"),
-                                                                /* [] */0
-                                                              ]
-                                                            ],
-                                                            Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
-                                                            undefined,
-                                                            undefined,
-                                                            undefined,
-                                                            undefined,
-                                                            undefined,
-                                                            /* () */0
-                                                          ]);
-                                              }), param);
-                                }))]),
-                      /* :: */[
-                        /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], awesomeComponent, (function (param) {
-                                    return awesomeComponent(5, (function (prim) {
-                                                  return String(prim);
+                                                                /* :: */[
+                                                                  str(undefined, undefined, "if you want"),
+                                                                  /* [] */0
+                                                                ]
+                                                              ],
+                                                              Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                                              undefined,
+                                                              undefined,
+                                                              undefined,
+                                                              undefined,
+                                                              undefined,
+                                                              /* () */0
+                                                            ]);
                                                 }), param);
                                   }))]),
                         /* :: */[
                           /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], awesomeComponent, (function (param) {
-                                      return awesomeComponent("Hi", (function (x) {
-                                                    return x;
+                                      return awesomeComponent(5, (function (prim) {
+                                                    return String(prim);
                                                   }), param);
                                     }))]),
                           /* :: */[
-                            Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
-                                  "Inner",
-                                  /* :: */[
-                                    str(undefined, undefined, "world"),
-                                    /* [] */0
-                                  ],
-                                  undefined,
-                                  undefined,
-                                  undefined,
-                                  undefined,
-                                  undefined,
-                                  undefined,
-                                  /* () */0
-                                ]),
-                            /* [] */0
+                            /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], awesomeComponent, (function (param) {
+                                        return awesomeComponent("Hi", (function (x) {
+                                                      return x;
+                                                    }), param);
+                                      }))]),
+                            /* :: */[
+                              Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                                    "Inner",
+                                    /* :: */[
+                                      str(undefined, undefined, "world"),
+                                      /* [] */0
+                                    ],
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    /* () */0
+                                  ]),
+                              /* [] */0
+                            ]
                           ]
                         ]
                       ]
@@ -377,7 +557,7 @@ function first(hooks) {
                   ]
                 ]
               ],
-              Layout.style(500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+              Layout.style(500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
               undefined,
               undefined,
               undefined,
@@ -390,13 +570,13 @@ function first(hooks) {
 var match = document.getElementById("root");
 
 if (match !== undefined) {
-  Curry._2(FluidDom.Fluid[/* mount */24], /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], first, first)]), Js_primitive.valFromOption(match));
+  Curry._2(FluidDom.Fluid[/* mount */24], /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], loadExample, loadExample)]), Js_primitive.valFromOption(match));
 } else {
   throw [
         Caml_builtin_exceptions.assert_failure,
         /* tuple */[
           "App.re",
-          194,
+          245,
           12
         ]
       ];
@@ -411,7 +591,11 @@ exports.awesomeComponent = awesomeComponent;
 exports.button = button;
 exports.simple = simple;
 exports.ImageCache = ImageCache;
-exports.loading = loading;
 exports.imageLoader = imageLoader;
+exports.loading = loading;
+exports.loadExample = loadExample;
+exports.fakeLoader = fakeLoader;
+exports.toggle2 = toggle2;
+exports.toggle3 = toggle3;
 exports.first = first;
 /*  Not a pure module */

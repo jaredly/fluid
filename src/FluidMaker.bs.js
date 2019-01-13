@@ -307,6 +307,7 @@ function F(NativeInterface) {
       var layout$1 = layout;
       layout$1[/* style */1] = style;
       layout$1[/* children */9] = children;
+      layout$1[/* childrenCount */10] = children.length;
       layout$1[/* measure */7] = measure;
       layout$1[/* layout */2] = Curry._1(Layout.Layout[/* LayoutSupport */0][/* createLayout */29], /* () */0);
       Curry._1(Layout.Layout[/* invalidateCache */19], layout$1[/* layout */2]);
@@ -319,7 +320,7 @@ function F(NativeInterface) {
   };
   var instantiateTree = function (withLayout, el) {
     if (typeof el === "number") {
-      return /* Good */Block.__(0, [/* INull */Block.__(2, [updateLayout(withLayout, /* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), undefined)])]);
+      return /* Good */Block.__(0, [/* INull */Block.__(2, [updateLayout(withLayout, /* array */[], Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), undefined)])]);
     } else if (el.tag) {
       var custom = Curry._1(el[0][/* init */0], /* () */0);
       var match = runRender(custom);
@@ -423,7 +424,7 @@ function F(NativeInterface) {
                     console.log("instantiated children", children);
                     var children$1 = Belt_List.reverse(children);
                     var childLayouts = Belt_List.toArray(Belt_List.map(children$1, getInstanceLayout));
-                    var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
+                    var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
                     return /* IBuiltin */Block.__(0, [
                               nativeElement,
                               children$1,
@@ -552,7 +553,7 @@ function F(NativeInterface) {
             var bElement = next[0];
             if (Curry._3(NativeInterface[/* canUpdate */1], aElement, node, bElement)) {
               return mapResult(reconcileChildren(enqueue, node, prev[2], next[1]), (function (children) {
-                            updateLayout(aLayout, Belt_List.toArray(Belt_List.map(children, getPendingLayout)), bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), bMeasure);
+                            updateLayout(aLayout, Belt_List.toArray(Belt_List.map(children, getPendingLayout)), bLayoutStyle !== undefined ? bLayoutStyle : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), bMeasure);
                             return /* PBuiltin */Block.__(0, [
                                       bElement,
                                       /* Update */Block.__(1, [

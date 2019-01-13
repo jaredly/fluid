@@ -133,22 +133,73 @@ module ImageCache = Fluid.Cache({
   }
 });
 
+let imageLoader = (~src, hooks) => {
+  let data = ImageCache.fetch(src);
+
+  <img src layout={Layout.style(~width=200., ~height=200., ())} />
+};
+
 let loading = (~children=[], hooks) => {
   let%hook suspended = Fluid.Hooks.useSuspenseHandler();
+
   Js.log2("Rerender", suspended);
   if (suspended != []) {
-    <div>{str("Loading " ++ string_of_int(List.length(suspended)) ++ " items...")}</div>
+    <div>{str("Preloading " ++ string_of_int(List.length(suspended)) ++ " images...")}</div>
   } else {
     Fluid.Native.div(~children, ())
   }
 };
 
-let imageLoader = (~src, hooks) => {
-  let data = ImageCache.fetch(src);
-  
-  <div style="border: 3px solid red" layout={Layout.style(~width=200., ~height=200., ())} >
-    <img src layout={Layout.style(~width=200., ~height=200., ())} />
-  </div>
+let loadExample = hooks => <div layout={Layout.style(~width=600., ~padding=20., ())}>
+  {str(~font={fontName: "system-ui", fontSize: 40.}, "Suspense y'all")}
+  <Loading>
+    <div layout={Layout.style(~flexDirection=Row, ~flexWrap=CssWrap, ())}>
+      <ImageLoader src="./fluid-macos.png" />
+      <ImageLoader src="./fluid-js.png" />
+    </div>
+  </Loading>
+</div>
+
+let fakeLoader = (~contents, hooks) => {
+  let data = ImageCache.fetch("");
+
+  contents
+};
+
+let toggle2 = hooks => {
+  let%hook (on, set) = Fluid.Hooks.useState(false);
+  if (on) {
+    <div>
+      {str("Yes")}
+      <Button style="" onClick=(() => set(!on)) text="Click me" />
+    </div>
+  } else {
+    <div>
+    <div>
+      {str("Hello")}
+      <Button style="" onClick=(() => set(!on)) text="Turn on" />
+      {str("On")}
+      {str("More")}
+      </div>
+    </div>
+  }
+};
+
+let toggle3 = hooks => {
+  let%hook (on, set) = Fluid.Hooks.useState(false);
+  if (on) {
+    <div>
+      {str("Yes")}
+      <Button style="" onClick=(() => set(!on)) text="Click me" />
+    </div>
+  } else {
+    <div>
+      {str("Hello")}
+      <Button style="" onClick=(() => set(!on)) text="Turn on" />
+      {str("On")}
+      {str("More")}
+    </div>
+  }
 };
 
 let first = (hooks) => {
@@ -158,16 +209,16 @@ let first = (hooks) => {
     <div>{str("What")}</div>
   </div>
   <Loading>
-    {str("Hello")}
-    <text contents="Hei" />
-    <ImageLoader src="./fluid-macos.png" />
-    <ImageLoader src="./fluid-macos1.png" />
-    <ImageLoader src="./fluid-macos2.png" />
-    <ImageLoader src="./fluid-macos3.png" />
-    <ImageLoader src="./fluid-macos4.png" />
-    <ImageLoader src="./fluid-macos5.png" />
+    <div layout={Layout.style(~flexDirection=Row, ~flexWrap=CssWrap, ())}>
+      <ImageLoader src="./fluid-macos.png" />
+      <ImageLoader src="./fluid-macos1.png" />
+      <ImageLoader src="./fluid-macos2.png" />
+      <ImageLoader src="./fluid-macos3.png" />
+      <ImageLoader src="./fluid-macos4.png" />
+      <ImageLoader src="./fluid-macos5.png" />
+    </div>
   </Loading>
-  /* <img src="./fluid-macos.png" layout={Layout.style(~width=200., ~height=200., ())} /> */
+  <img src="./fluid-macos.png" layout={Layout.style(~width=200., ~height=200., ())} />
   <Toggle
     on=(onClick => <div layout={Layout.style(~flexDirection=Row, ~alignItems=AlignCenter, ())}>
       (str("Click this to"))
@@ -192,5 +243,5 @@ let first = (hooks) => {
 
 switch (getElementById("root")) {
   | None => assert(false)
-  | Some(node) => Fluid.mount(<First />, node)
+  | Some(node) => Fluid.mount(<LoadExample />, node)
 }

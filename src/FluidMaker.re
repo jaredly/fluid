@@ -371,6 +371,7 @@ let updateLayout = (layout: option(Layout.node), children, style, measure) => {
     | Some(layout) =>
       layout.style = style;
       layout.children = children;
+      layout.childrenCount = Array.length(children);
       layout.measure = measure;
       layout.layout = Layout.LayoutSupport.createLayout();
       Layout.Layout.invalidateCache(layout.layout);

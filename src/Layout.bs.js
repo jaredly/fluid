@@ -43,7 +43,7 @@ function layout(layoutNode) {
   return Curry._4(Layout[/* layoutNode */26], layoutNode, FloatEncoding$Flex.cssUndefined, FloatEncoding$Flex.cssUndefined, /* Ltr */2);
 }
 
-function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, $staropt$star$6, $staropt$star$7, $staropt$star$8, $staropt$star$9, $staropt$star$10, $staropt$star$11, $staropt$star$12, $staropt$star$13, $staropt$star$14, $staropt$star$15, $staropt$star$16, $staropt$star$17, $staropt$star$18, $staropt$star$19, $staropt$star$20, $staropt$star$21, $staropt$star$22, $staropt$star$23, $staropt$star$24, $staropt$star$25, $staropt$star$26, $staropt$star$27, param) {
+function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, $staropt$star$6, $staropt$star$7, $staropt$star$8, $staropt$star$9, $staropt$star$10, $staropt$star$11, $staropt$star$12, $staropt$star$13, $staropt$star$14, $staropt$star$15, $staropt$star$16, $staropt$star$17, $staropt$star$18, $staropt$star$19, $staropt$star$20, $staropt$star$21, $staropt$star$22, $staropt$star$23, $staropt$star$24, $staropt$star$25, $staropt$star$26, $staropt$star$27, $staropt$star$28, param) {
   var width = $staropt$star !== undefined ? $staropt$star : FloatEncoding$Flex.cssUndefined;
   var height = $staropt$star$1 !== undefined ? $staropt$star$1 : FloatEncoding$Flex.cssUndefined;
   var flexBasis = $staropt$star$2 !== undefined ? $staropt$star$2 : FloatEncoding$Flex.cssUndefined;
@@ -63,15 +63,16 @@ function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3,
   var marginRight = $staropt$star$16 !== undefined ? $staropt$star$16 : FloatEncoding$Flex.cssUndefined;
   var marginBottom = $staropt$star$17 !== undefined ? $staropt$star$17 : FloatEncoding$Flex.cssUndefined;
   var margin = $staropt$star$18 !== undefined ? $staropt$star$18 : FloatEncoding$Flex.cssUndefined;
-  var marginVertical = $staropt$star$19 !== undefined ? $staropt$star$19 : FloatEncoding$Flex.cssUndefined;
-  var marginHorizontal = $staropt$star$20 !== undefined ? $staropt$star$20 : FloatEncoding$Flex.cssUndefined;
-  var padding = $staropt$star$21 !== undefined ? $staropt$star$21 : FloatEncoding$Flex.cssUndefined;
-  var paddingVertical = $staropt$star$22 !== undefined ? $staropt$star$22 : FloatEncoding$Flex.cssUndefined;
-  var paddingHorizontal = $staropt$star$23 !== undefined ? $staropt$star$23 : FloatEncoding$Flex.cssUndefined;
-  var paddingTop = $staropt$star$24 !== undefined ? $staropt$star$24 : FloatEncoding$Flex.cssUndefined;
-  var paddingLeft = $staropt$star$25 !== undefined ? $staropt$star$25 : FloatEncoding$Flex.cssUndefined;
-  var paddingRight = $staropt$star$26 !== undefined ? $staropt$star$26 : FloatEncoding$Flex.cssUndefined;
-  var paddingBottom = $staropt$star$27 !== undefined ? $staropt$star$27 : FloatEncoding$Flex.cssUndefined;
+  var flexWrap = $staropt$star$19 !== undefined ? $staropt$star$19 : /* CssNoWrap */0;
+  var marginVertical = $staropt$star$20 !== undefined ? $staropt$star$20 : FloatEncoding$Flex.cssUndefined;
+  var marginHorizontal = $staropt$star$21 !== undefined ? $staropt$star$21 : FloatEncoding$Flex.cssUndefined;
+  var padding = $staropt$star$22 !== undefined ? $staropt$star$22 : FloatEncoding$Flex.cssUndefined;
+  var paddingVertical = $staropt$star$23 !== undefined ? $staropt$star$23 : FloatEncoding$Flex.cssUndefined;
+  var paddingHorizontal = $staropt$star$24 !== undefined ? $staropt$star$24 : FloatEncoding$Flex.cssUndefined;
+  var paddingTop = $staropt$star$25 !== undefined ? $staropt$star$25 : FloatEncoding$Flex.cssUndefined;
+  var paddingLeft = $staropt$star$26 !== undefined ? $staropt$star$26 : FloatEncoding$Flex.cssUndefined;
+  var paddingRight = $staropt$star$27 !== undefined ? $staropt$star$27 : FloatEncoding$Flex.cssUndefined;
+  var paddingBottom = $staropt$star$28 !== undefined ? $staropt$star$28 : FloatEncoding$Flex.cssUndefined;
   var init = Layout[/* LayoutSupport */0][/* defaultStyle */26];
   return /* record */[
           /* direction */init[/* direction */0],
@@ -81,7 +82,7 @@ function style($staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3,
           /* alignItems */alignItems,
           /* alignSelf */alignSelf,
           /* positionType */position,
-          /* flexWrap */init[/* flexWrap */7],
+          /* flexWrap */flexWrap,
           /* overflow */init[/* overflow */8],
           /* flex */init[/* flex */9],
           /* flexGrow */flexGrow,
