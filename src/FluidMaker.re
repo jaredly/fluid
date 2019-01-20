@@ -774,6 +774,37 @@ let mount = (el, node) => {
   }
 };
 
+let preMount = (el, makeNative) => {
+  /* Native.view(~children=[el], ()) */
+  let instances = switch (instantiateTree(el)) {
+    | Bad(exn) => raise(exn)
+    | Suspense(s) => failwith("useSuspense called, no handler found")
+    | Good(i) => i
+  };
+  let instanceLayout = getInstanceLayout(instances);
+  Layout.layout(instanceLayout);
+  let root = {
+    layout: instanceLayout,
+    node: None,
+    invalidatedElements: [],
+    waiting: false
+  };
+
+  let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
+  makeNative(~size=(width, height), node => {
+    print_endline("Mounting now I guess");
+    let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
+    print_endline("Mounted");
+    switch (getNativeNode(tree)) {
+      | None => failwith("Still pending?")
+      | Some(childNode) =>
+        root.node = Some((tree, childNode));
+        print_endline("Add to the mwindow");
+        node->NativeInterface.appendChild(childNode)
+    }
+  })
+};
+
 let noReason = (_) => NoReason;
 
 module Cache = (Config: {type arg; type result; let reason: arg => suspendReason; let fetch: (arg) => async(result)}) => {

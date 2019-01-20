@@ -104,5 +104,8 @@ let first = hooks => {
   let%hook (count, setCount) = useState(0);
 }; */
 
-Fluid.launchWindow(~title="Hello Fluid", ~floating=false, <First />);
+Fluid.App.launch(() => {
+  Fluid.launchWindow(~title="Hello Fluid", ~floating=false, <First />);
+});
+
 /* Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />); */

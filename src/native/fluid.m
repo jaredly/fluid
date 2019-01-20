@@ -8,16 +8,12 @@
 @implementation MLApplicationDelegate
 {
   value onLaunch;
-  NSWindow* window;
-  NSString* title;
 }
 
-- (instancetype)initWithOnLaunch:(value)onLaunchv window:(NSWindow*)windowv title:(NSString*)titlev
+- (instancetype)initWithOnLaunch:(value)onLaunchv
 {
   if (self = [super init]) {
     onLaunch = onLaunchv;
-    window = windowv;
-    title = titlev;
   }
   return self;
 }
@@ -29,32 +25,19 @@
 
 - (void)applicationWillFinishLaunching:(NSNotification *)__unused not
 {
-
-
-  CAMLparam0();
-  CAMLlocal1(contentView_v);
-  Wrap(contentView_v, window.contentView);
-  caml_callback(onLaunch, contentView_v);
-
-  [window makeKeyAndOrderFront:window];
-  [window center];
-  if ([window canBecomeMainWindow]) {
-    [window makeMainWindow];
-  }
+  log("Finish Launching\n");
+  caml_callback(onLaunch, Val_unit);
   [NSApp unhide:nil];
-
   [NSApp activateIgnoringOtherApps:true];
-  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
-  CAMLreturn0;
+  caml_remove_global_root(&onLaunch);
 }
 
 @end
 
-
-void fluid_App_setupMenu() {
+void fluid_App_setupMenu(value title_v) {
+  CAMLparam1(title_v);
   id appMenu = [NSMenu new];
-  id appName = title;
+  id appName = NSString_val(title_v);
   id aboutMenuItem = [[NSMenuItem alloc] initWithTitle:[@"About " stringByAppendingString:appName]
                                                 action:@selector(orderFrontStandardAboutPanel:)
                                          keyEquivalent:@""];
@@ -101,48 +84,22 @@ void fluid_App_setupMenu() {
   // [menubar setSubmenu:menu2 forItem:item2];
 
   [NSApp setMainMenu:menubar];
+  CAMLreturn0;
 }
 
 
 
 
 
-void fluid_startApp (value title_v, value size, value boolean, value callback)
+void fluid_App_launch (value callback)
 {
-  CAMLparam3(title_v, size, callback);
-  NSString *title = [NSString stringWithUTF8String:String_val (title_v)];
-
-  float width = Double_val(Field(size, 0));
-  float height = Double_val(Field(size, 1));
-
+  CAMLparam1(callback);
 
   @autoreleasepool {
 
     [NSApplication sharedApplication];
-
-    NSWindowStyleMask mask;
-    if (boolean == Val_true) {
-      mask = NSWindowStyleMaskBorderless;
-    } else {
-      mask = 
-        NSWindowStyleMaskClosable |
-        NSWindowStyleMaskMiniaturizable |
-        NSWindowStyleMaskResizable |
-        NSWindowStyleMaskTitled;
-    }
-
-    NSWindow* window = [[NSWindow alloc]
-      initWithContentRect: NSMakeRect(0, 0, width, height)
-      styleMask: mask
-      backing: NSBackingStoreBuffered
-      defer: NO];
-    window.contentView = [[FlippedView alloc] initWithFrame:NSMakeRect(0, 0, width, height)];
-
-    [window setTitle:title];
-    [window center];
     
-    MLApplicationDelegate* delegate = [[MLApplicationDelegate alloc]
-      initWithOnLaunch:callback window:window title:title];
+    MLApplicationDelegate* delegate = [[MLApplicationDelegate alloc] initWithOnLaunch:callback];
 
     [NSApp setDelegate: delegate];
 

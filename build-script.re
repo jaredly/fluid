@@ -5,6 +5,7 @@ let ( +/ ) = Filename.concat;
 
 gcc(~flags=["-g"], "lib" +/ "fluid_shared.o", ["src" +/ "native" +/ "fluid_shared.m"]);
 gcc(~flags=["-g"], "lib" +/ "fluid_components.o", ["src" +/ "native" +/ "fluid_components.m"]);
+gcc(~flags=["-g"], "lib" +/ "fluid_window.o", ["src" +/ "native" +/ "fluid_window.m"]);
 gcc(~flags=["-g"], "lib" +/ "fluid.o", ["src" +/ "native" +/ "fluid.m"]);
 /* gcc("lib" +/ "fluid.o", [
   "src" +/ "native" +/ "fluid_shared.m",

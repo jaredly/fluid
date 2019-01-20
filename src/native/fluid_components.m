@@ -7,7 +7,8 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
   log("Append child view\n");
   NSView* view = (NSView*) Unwrap(view_v);
   NSView* child = (NSView*) Unwrap(child_v);
-  // NSLog(@"- unwrapped %@\n", view);
+  // NSLog(@"- view %@\n", view);
+  // NSLog(@"- child %@\n", child);
 
   NSView* last = view.subviews.lastObject;
   if (last != nil) {
@@ -17,6 +18,7 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
     log("- add last\n");
     [view addSubview:child];
   }
+  log("Finished appending\n");
 
   CAMLreturn0;
 }

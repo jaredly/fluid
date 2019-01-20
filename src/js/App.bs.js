@@ -18,7 +18,7 @@ Belt_Debug.setupChromeDebugger(/* () */0);
 
 var Style = /* module */[];
 
-var str = FluidDom.Fluid[/* string */29];
+var str = FluidDom.Fluid[/* string */30];
 
 function translate(node, dx, offset) {
   return Animate.spring(1, 10, undefined, (function (amount) {
@@ -44,7 +44,7 @@ function fade(node, out) {
 }
 
 function toggle(on, off, hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useState */3], false, hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */28][/* useState */3], false, hooks);
   var match$1 = match[0];
   var setOn = match$1[1];
   var isOn = match$1[0];
@@ -61,14 +61,14 @@ function toggle(on, off, hooks) {
 }
 
 function awesomeComponent(value, toString, hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useState */3], "Awesome", hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */28][/* useState */3], "Awesome", hooks);
   var match$1 = match[0];
   var setState = match$1[1];
   var state = match$1[0];
-  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+  return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
               undefined,
               /* :: */[
-                Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                       undefined,
                       /* :: */[
                         str(undefined, undefined, "Folkx " + (Curry._1(toString, value) + (" " + state))),
@@ -97,7 +97,7 @@ function awesomeComponent(value, toString, hooks) {
 }
 
 function button(text, style, onClick, hooks) {
-  return Curry.app(FluidDom.Fluid[/* Native */28][/* button */1], [
+  return Curry.app(FluidDom.Fluid[/* Native */29][/* button */1], [
               undefined,
               /* :: */[
                 str(undefined, undefined, text),
@@ -115,15 +115,15 @@ function button(text, style, onClick, hooks) {
             ]);
 }
 
-var simple = Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+var simple = Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
       "awesome",
       /* :: */[
         str(undefined, undefined, "Hello"),
         /* :: */[
-          Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+          Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 "here",
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                  Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                         undefined,
                         /* :: */[
                           str(undefined, undefined, "What"),
@@ -159,30 +159,30 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
       /* () */0
     ]);
 
-var reason = FluidDom.Fluid[/* noReason */25];
+var reason = FluidDom.Fluid[/* noReason */26];
 
 function fetch(arg, fin) {
   setTimeout(fin, 500 + Caml_int32.imul(10, Random.$$int(100)) | 0);
   return /* () */0;
 }
 
-var ImageCache = Curry._1(FluidDom.Fluid[/* Cache */26], /* module */[
+var ImageCache = Curry._1(FluidDom.Fluid[/* Cache */27], /* module */[
       /* reason */reason,
       /* fetch */fetch
     ]);
 
 function imageLoader(src, hooks) {
   Curry._1(ImageCache[/* fetch */1], src);
-  return Curry._3(FluidDom.Fluid[/* Native */28][/* img */2], src, Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0);
+  return Curry._3(FluidDom.Fluid[/* Native */29][/* img */2], src, Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0);
 }
 
 function loading($staropt$star, hooks) {
   var children = $staropt$star !== undefined ? $staropt$star : /* [] */0;
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useSuspenseHandler */1], /* () */0, hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */28][/* useSuspenseHandler */1], /* () */0, hooks);
   var suspended = match[0];
   console.log("Rerender", suspended);
   if (suspended !== /* [] */0) {
-    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 undefined,
                 /* :: */[
                   str(undefined, undefined, "Preloading " + (String(List.length(suspended)) + " images...")),
@@ -197,7 +197,7 @@ function loading($staropt$star, hooks) {
                 /* () */0
               ]);
   } else {
-    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 undefined,
                 children,
                 undefined,
@@ -213,7 +213,7 @@ function loading($staropt$star, hooks) {
 
 function loadExample(hooks) {
   var partial_arg = /* :: */[
-    Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
           undefined,
           /* :: */[
             /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
@@ -236,7 +236,7 @@ function loadExample(hooks) {
         ]),
     /* [] */0
   ];
-  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+  return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
               undefined,
               /* :: */[
                 str(undefined, /* record */[
@@ -266,12 +266,12 @@ function fakeLoader(contents, hooks) {
 }
 
 function toggle2(hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useState */3], false, hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */28][/* useState */3], false, hooks);
   var match$1 = match[0];
   var set = match$1[1];
   var on = match$1[0];
   if (on) {
-    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 undefined,
                 /* :: */[
                   str(undefined, undefined, "Yes"),
@@ -293,10 +293,10 @@ function toggle2(hooks) {
                 /* () */0
               ]);
   } else {
-    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 undefined,
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                  Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                         undefined,
                         /* :: */[
                           str(undefined, undefined, "Hello"),
@@ -337,12 +337,12 @@ function toggle2(hooks) {
 }
 
 function toggle3(hooks) {
-  var match = Curry._2(FluidDom.Fluid[/* Hooks */27][/* useState */3], false, hooks);
+  var match = Curry._2(FluidDom.Fluid[/* Hooks */28][/* useState */3], false, hooks);
   var match$1 = match[0];
   var set = match$1[1];
   var on = match$1[0];
   if (on) {
-    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 undefined,
                 /* :: */[
                   str(undefined, undefined, "Yes"),
@@ -364,7 +364,7 @@ function toggle3(hooks) {
                 /* () */0
               ]);
   } else {
-    return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                 undefined,
                 /* :: */[
                   str(undefined, undefined, "Hello"),
@@ -396,7 +396,7 @@ function toggle3(hooks) {
 
 function first(hooks) {
   var partial_arg = /* :: */[
-    Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+    Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
           undefined,
           /* :: */[
             /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], imageLoader, (function (param) {
@@ -439,15 +439,15 @@ function first(hooks) {
         ]),
     /* [] */0
   ];
-  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+  return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
               "awesome",
               /* :: */[
                 str(undefined, undefined, "Hello"),
                 /* :: */[
-                  Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                  Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                         "here",
                         /* :: */[
-                          Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                          Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                                 undefined,
                                 /* :: */[
                                   str(undefined, undefined, "What"),
@@ -476,11 +476,11 @@ function first(hooks) {
                                 return loading(partial_arg, param);
                               }))]),
                     /* :: */[
-                      Curry._3(FluidDom.Fluid[/* Native */28][/* img */2], "./fluid-macos.png", Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
+                      Curry._3(FluidDom.Fluid[/* Native */29][/* img */2], "./fluid-macos.png", Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
                       /* :: */[
                         /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], toggle, (function (param) {
                                     return toggle((function (onClick) {
-                                                  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                                                  return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                                                               undefined,
                                                               /* :: */[
                                                                 str(undefined, undefined, "Click this to"),
@@ -500,7 +500,7 @@ function first(hooks) {
                                                               /* () */0
                                                             ]);
                                                 }), (function (onClick) {
-                                                  return Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                                                  return Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                                                               undefined,
                                                               /* :: */[
                                                                 /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], button, (function (param) {
@@ -534,7 +534,7 @@ function first(hooks) {
                                                     }), param);
                                       }))]),
                             /* :: */[
-                              Curry.app(FluidDom.Fluid[/* Native */28][/* div */0], [
+                              Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                                     "Inner",
                                     /* :: */[
                                       str(undefined, undefined, "world"),

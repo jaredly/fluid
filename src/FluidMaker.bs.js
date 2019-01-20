@@ -878,6 +878,54 @@ function F(NativeInterface) {
       return Pervasives.failwith("Still pending?");
     }
   };
+  var preMount = function (el, makeNative) {
+    var match = instantiateTree(undefined, el);
+    var instances;
+    switch (match.tag | 0) {
+      case 0 : 
+          instances = match[0];
+          break;
+      case 1 : 
+          instances = Pervasives.failwith("useSuspense called, no handler found");
+          break;
+      case 2 : 
+          throw match[0];
+      
+    }
+    var instanceLayout = getInstanceLayout(instances);
+    Layout.layout(instanceLayout);
+    var root = /* record */[
+      /* layout */instanceLayout,
+      /* node */undefined,
+      /* invalidatedElements : [] */0,
+      /* waiting */false
+    ];
+    var match$1 = instanceLayout[/* layout */2];
+    var width = match$1[/* width */4];
+    var height = match$1[/* height */5];
+    return Curry._2(makeNative, /* tuple */[
+                width,
+                height
+              ], (function (node) {
+                  console.log("Mounting now I guess");
+                  var tree = mountPending((function (param) {
+                          return enqueue(root, param);
+                        }), /* AppendChild */Block.__(0, [node]), makePending(instances));
+                  console.log("Mounted");
+                  var match = getNativeNode(tree);
+                  if (match !== undefined) {
+                    var childNode = Js_primitive.valFromOption(match);
+                    root[/* node */1] = /* tuple */[
+                      tree,
+                      childNode
+                    ];
+                    console.log("Add to the mwindow");
+                    return Curry._2(NativeInterface[/* appendChild */7], node, childNode);
+                  } else {
+                    return Pervasives.failwith("Still pending?");
+                  }
+                }));
+  };
   var noReason = function (param) {
     return NoReason;
   };
@@ -1165,6 +1213,7 @@ function F(NativeInterface) {
           /* reconcileChildren */reconcileChildren,
           /* enqueue */enqueue,
           /* mount */mount,
+          /* preMount */preMount,
           /* noReason */noReason,
           /* Cache */Cache,
           /* Hooks */Hooks

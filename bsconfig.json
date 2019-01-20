@@ -31,7 +31,7 @@
   },
   "suffix": ".bs.js",
   "c-linker-flags": ["-framework", "Cocoa"],
-  "static-libraries": ["lib/fluid_shared.o", "lib/fluid_components.o", "lib/fluid.o"],
+  "static-libraries": ["lib/fluid_shared.o", "lib/fluid_components.o", "lib/fluid_window.o", "lib/fluid.o"],
   "refmt": 3,
   "ppx-flags": ["./fluid-ppx/lib/bs/native/fluid_ppx.native"]
 }
