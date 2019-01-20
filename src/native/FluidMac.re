@@ -83,7 +83,11 @@ module NativeInterface = {
   external updateButton: (nativeInternal, string) => unit = "fluid_update_NSButton";
   external updateView: (nativeInternal, option(unit => unit), viewStyles) => unit = "fluid_update_NSView";
 
-  external startApp: (~title: string, ~size: (float, float), nativeInternal => unit) => unit = "fluid_startApp";
+  external updateViewLoc: (nativeInternal, dims) => unit = "fluid_update_NSView_loc";
+  external updateButtonLoc: (nativeInternal, dims) => unit = "fluid_update_NSButton_loc";
+  external updateTextLoc: (nativeInternal, dims) => unit = "fluid_update_Text_loc";
+
+  /* external startApp: (~title: string, ~size: (float, float), ~floating: bool, nativeInternal => unit) => unit = "fluid_startApp"; */
 
   external measureText: (~text: string, ~font: string, ~fontSize: float, ~maxWidth: option(float)) => (float, float) = "fluid_measureText";
 
@@ -135,6 +139,15 @@ module NativeInterface = {
   };
 
   let dims = ({Layout.LayoutTypes.layout: {width, height, top, left}}) => {left, top, width, height};
+
+  let updateLayout = (mounted, (mountPoint, _), layout: Layout.node) => {
+    switch (mounted) {
+      | View(_, _) => updateViewLoc(mountPoint, dims(layout))
+      | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
+      | String(_, _) => updateTextLoc(mountPoint, dims(layout))
+      | Image(_) => updateViewLoc(mountPoint, dims(layout))
+    }
+  };
 
   let update = (mounted, (mountPoint, id), newElement, layout) => {
     switch (mounted, newElement) {
@@ -226,29 +239,52 @@ module Fluid = {
 
   }
 
+  module App = {
+    external launch: (~isAccessory: bool, unit => unit) => unit = "fluid_App_launch";
+    external setupMenu: (~title: string) => unit = "fluid_App_setupMenu";
+    let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
+    external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => unit = "fluid_App_statusBarItem";
+    /* type menuAction =
+      | Call(unit => unit)
+      | Quit
+      | Close
+      | ShowAll
+      | Hide
+      | HideOthers;
+    type menuItem;
+    external menuItem: (~title: string, ~action: menuAction, ~shortcut: string) => menuItem = "fluid_App_menuItem";
+    external separatorItem: unit => menuItem = "fluid_App_separatorItem";
+    type menu;
+    external menu: (~item: array(menuItem)) => menu = "fluid_App_menu"; */
+  };
+
+  module Window = {
+    type window;
+    external make: (~title: string, ~onBlur: option(window => unit), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
+    external center: (window) => unit = "fluid_Window_center";
+    external close: (window) => unit = "fluid_Window_close";
+    external activate: (window) => unit = "fluid_Window_activate";
+    external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
+  }
+
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~root: element) => {
-    let instances = instantiateTree(Native.view(~children=[root], ()));
-    let instanceLayout = getInstanceLayout(instances);
-    Layout.layout(instanceLayout);
-    let root = {
-      layout: instanceLayout,
-      node: None,
-      invalidatedElements: [],
-      waiting: false
-    };
-
-    let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
-    NativeInterface.startApp(~title, ~size=(width, height), node => {
-      let node = (node, NativeInterface.getNativeId());
-      let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
-      switch (getNativeNode(tree)) {
-        | None => failwith("Still pending?")
-        | Some(childNode) =>
-          root.node = Some(childNode);
-          node->NativeInterface.appendChild(childNode)
+  let launchWindow = (~title: string, ~pos=?, ~onBlur=?, ~floating=false, root: element) => {
+    preMount(root, (~size as (width, height), onNode) => {
+      let (left, top) = switch pos {
+        | None => (0., 0.)
+        | Some((x, y)) => (x, y -. height)
+      };
+      let window = Window.make(~title, ~onBlur, ~dims={left, top, width, height}, ~isFloating=floating);
+      let node = (Window.contentView(window), NativeInterface.getNativeId());
+      onNode(node);
+      if (!floating) {
+        App.setupMenu(~title);
       }
-    });
+      if (pos == None) {
+        Window.center(window);
+      };
+      Window.activate(window);
+    })
   };
 }

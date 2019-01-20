@@ -397,7 +397,7 @@ let rec instantiateTree = (~withLayout=?, el: element) => switch el {
     });
 
     ichildren->mapResult(children => {
-      Js.log2("instantiated children", children);
+      /* Js.log2("instantiated children", children); */
         let children = children->List.reverse;
         let childLayouts = children->List.map(getInstanceLayout)->List.toArray;
         let style = switch layout {
@@ -615,7 +615,7 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => instantiate
         }
       });
       ichildren->mapResult(children => {
-        Js.log2("Got extra children", children->List.toArray);
+        /* Js.log2("Got extra children", children->List.toArray); */
         children->List.mapReverse(makePending);
       })
     | (more, []) => 
@@ -772,6 +772,37 @@ let mount = (el, node) => {
       root.node = Some((tree, childNode));
       node->NativeInterface.appendChild(childNode)
   }
+};
+
+let preMount = (el, makeNative) => {
+  /* Native.view(~children=[el], ()) */
+  let instances = switch (instantiateTree(el)) {
+    | Bad(exn) => raise(exn)
+    | Suspense(s) => failwith("useSuspense called, no handler found")
+    | Good(i) => i
+  };
+  let instanceLayout = getInstanceLayout(instances);
+  Layout.layout(instanceLayout);
+  let root = {
+    layout: instanceLayout,
+    node: None,
+    invalidatedElements: [],
+    waiting: false
+  };
+
+  let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
+  makeNative(~size=(width, height), node => {
+    print_endline("Mounting now I guess");
+    let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
+    print_endline("Mounted");
+    switch (getNativeNode(tree)) {
+      | None => failwith("Still pending?")
+      | Some(childNode) =>
+        root.node = Some((tree, childNode));
+        print_endline("Add to the mwindow");
+        node->NativeInterface.appendChild(childNode)
+    }
+  })
 };
 
 let noReason = (_) => NoReason;

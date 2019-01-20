@@ -7,7 +7,8 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
   log("Append child view\n");
   NSView* view = (NSView*) Unwrap(view_v);
   NSView* child = (NSView*) Unwrap(child_v);
-  // NSLog(@"- unwrapped %@\n", view);
+  // NSLog(@"- view %@\n", view);
+  // NSLog(@"- child %@\n", child);
 
   NSView* last = view.subviews.lastObject;
   if (last != nil) {
@@ -17,6 +18,7 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
     log("- add last\n");
     [view addSubview:child];
   }
+  log("Finished appending\n");
 
   CAMLreturn0;
 }
@@ -53,6 +55,44 @@ void fluid_setImmediate(value callback) {
   // dispatch_after(DISPATCH_TIME_NOW, dispatch_get_main_queue(), ^(void){
     caml_callback(callback, Val_unit);
   // });
+  CAMLreturn0;
+}
+
+// MARK - location updates
+
+void fluid_update_NSView_loc(value view_v, value dims_v) {
+  CAMLparam2(view_v, dims_v);
+
+  NSView* view = (NSView*) Unwrap(view_v);
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  [view setFrameOrigin:NSMakePoint(left, top)];
+  [view setFrameSize:NSMakeSize(width, height)];
+
+  CAMLreturn0;
+}
+
+void fluid_update_Text_loc(value view_v, value dims_v) {
+  CAMLparam2(view_v, dims_v);
+
+  NSTextField* text = (NSTextField*) Unwrap(view_v);
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  [text setFrameOrigin:NSMakePoint(left, top + 5.0)];
+  [text setFrameSize:NSMakeSize(width, height)];
+
+  CAMLreturn0;
+}
+
+void fluid_update_NSButton_loc(value view_v, value dims_v) {
+  CAMLparam2(view_v, dims_v);
+
+  FluidButton* view = (FluidButton*) Unwrap(view_v);
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  [view setFrameOrigin:NSMakePoint(left, top)];
+  // [view setFrameSize:NSMakeSize(width, height)];
+
   CAMLreturn0;
 }
 
@@ -93,8 +133,8 @@ CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value st
   NSView* view = [[FlippedView alloc] initWithFrame:frame];
 
   value backgroundColor = Field(style_v, 0);
-  if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
-    value color = Field(backgroundColor, 0);
+  if (Check_optional(backgroundColor)) {
+    value color = Unpack_optional(backgroundColor);
     Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);

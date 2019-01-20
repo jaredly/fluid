@@ -366,11 +366,13 @@ var Fluid_023 = /* enqueue */include[22];
 
 var Fluid_024 = /* mount */include[23];
 
-var Fluid_025 = /* noReason */include[24];
+var Fluid_025 = /* preMount */include[24];
 
-var Fluid_026 = /* Cache */include[25];
+var Fluid_026 = /* noReason */include[25];
 
-var Fluid_027 = /* Hooks */include[26];
+var Fluid_027 = /* Cache */include[26];
+
+var Fluid_028 = /* Hooks */include[27];
 
 var Fluid = /* module */[
   /* NativeInterface */0,
@@ -401,6 +403,7 @@ var Fluid = /* module */[
   Fluid_025,
   Fluid_026,
   Fluid_027,
+  Fluid_028,
   /* Native */Native,
   /* string */string
 ];
