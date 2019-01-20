@@ -62,3 +62,7 @@
 + (FluidButton*)createWithTitle:(NSString*)title id:(int)id;
 - (void)setId:(int)id;
 @end
+
+@interface ClickTarget : NSObject
+- (instancetype)initWithOnClick:(value)onClick;
+@end

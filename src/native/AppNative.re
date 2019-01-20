@@ -104,15 +104,24 @@ let first = hooks => {
   let%hook (count, setCount) = useState(0);
 }; */
 
-Fluid.App.launch(~isAccessory=true, () => {
-  Fluid.launchWindow(
-    ~title="Hello Fluid",
-    ~floating=true,
-    ~onBlur=win => {
-      print_endline("Blurred! Ok cleaning now");
-    },
-    <First />
-  );
+Fluid.App.launch(
+  ~isAccessory=true,
+  () => {
+  Fluid.App.statusBarItem(
+    ~title="Mojibar",
+    ~onClick=pos => {
+      Fluid.launchWindow(
+        ~title="Hello Fluid",
+        ~floating=true,
+        ~pos,
+        ~onBlur=win => {
+          print_endline("Blurred! Ok cleaning now");
+          Fluid.Window.close(win);
+        },
+        <First />
+      );
+    }
+  )
 });
 
 /* Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />); */

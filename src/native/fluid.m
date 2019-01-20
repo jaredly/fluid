@@ -16,7 +16,7 @@
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSNotification *)notification {
-  return YES;
+  return NO;
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)__unused not {
@@ -107,5 +107,49 @@ void fluid_App_launch (value isAccessory, value callback)
     [NSApp run];
   }
 
+  CAMLreturn0;
+}
+
+@interface StatusClickTarget : NSObject
+- (instancetype)initWithOnClick:(value)onClickv andItem:(NSStatusItem*)item;
+@end
+
+@implementation StatusClickTarget {
+  value onClick;
+  NSStatusItem* item;
+}
+
+- (instancetype)initWithOnClick:(value)onClickv andItem:(NSStatusItem*)itemv {
+  if (self = [super init]) {
+    onClick = onClickv;
+    caml_register_global_root(&onClickv);
+    item = itemv;
+  }
+  return self;
+}
+
+- (void)onClick {
+  CAMLparam0();
+  CAMLlocal1(pair);
+  Create_double_pair(
+    pair,
+    item.button.window.frame.origin.x,
+    item.button.window.frame.origin.y
+  );
+  
+  caml_callback(onClick, pair);
+  CAMLreturn0;
+}
+@end
+
+void fluid_App_statusBarItem(value title_v, value onClick_v) {
+  CAMLparam2(title_v, onClick_v);
+  NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
+  [item retain];
+  item.button.title = NSString_val(title_v);
+  StatusClickTarget* target = [[StatusClickTarget alloc] initWithOnClick:onClick_v andItem:item];
+  item.button.target = target;
+  item.button.action = @selector(onClick);
+  // NSLog(@"Made an item %f, %f", item.button.window.frame.origin.x, item.button.window.frame.origin.y);
   CAMLreturn0;
 }

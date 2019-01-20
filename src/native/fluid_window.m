@@ -41,6 +41,14 @@ void fluid_Window_activate(value window_v) {
   CAMLreturn0;
 }
 
+void fluid_Window_close(value window_v) {
+  CAMLparam1(window_v);
+  log("Center window\n");
+  FluidWindow* window = (FluidWindow*)Unwrap(window_v);
+  [window close];
+  CAMLreturn0;
+}
+
 void fluid_Window_center(value window_v) {
   CAMLparam1(window_v);
   log("Center window\n");
@@ -64,13 +72,13 @@ void fluid_Window_center(value window_v) {
   return self;
 }
 
-- (void)windowDidResignKey:(NSNotification *)__unused not {
+- (void)windowDidResignKey:(NSNotification *) notification {
   CAMLparam0();
   CAMLlocal1(window_v);
   log("Window blur\n");
 
   if (Check_optional(onBlur)) {
-    Wrap(window_v, self);
+    Wrap(window_v, [notification object]);
     caml_callback(Unpack_optional(onBlur), window_v);
   }
 

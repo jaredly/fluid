@@ -243,6 +243,7 @@ module Fluid = {
     external launch: (~isAccessory: bool, unit => unit) => unit = "fluid_App_launch";
     external setupMenu: (~title: string) => unit = "fluid_App_setupMenu";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
+    external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => unit = "fluid_App_statusBarItem";
     /* type menuAction =
       | Call(unit => unit)
       | Quit
@@ -261,21 +262,28 @@ module Fluid = {
     type window;
     external make: (~title: string, ~onBlur: option(window => unit), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
     external center: (window) => unit = "fluid_Window_center";
+    external close: (window) => unit = "fluid_Window_close";
     external activate: (window) => unit = "fluid_Window_activate";
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
   }
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~onBlur=?, ~floating=false, root: element) => {
+  let launchWindow = (~title: string, ~pos=?, ~onBlur=?, ~floating=false, root: element) => {
     preMount(root, (~size as (width, height), onNode) => {
-      let window = Window.make(~title, ~onBlur, ~dims={left: 0., top: 0., width, height}, ~isFloating=floating);
+      let (left, top) = switch pos {
+        | None => (0., 0.)
+        | Some((x, y)) => (x, y -. height)
+      };
+      let window = Window.make(~title, ~onBlur, ~dims={left, top, width, height}, ~isFloating=floating);
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
       if (!floating) {
         App.setupMenu(~title);
       }
-      Window.center(window);
+      if (pos == None) {
+        Window.center(window);
+      };
       Window.activate(window);
     })
   };

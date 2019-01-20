@@ -6,6 +6,26 @@
 // - (BOOL)isFlipped;
 // @end
 
+
+@implementation ClickTarget {
+  value onClick;
+}
+
+- (instancetype)initWithOnClick:(value)onClickv {
+  if (self = [super init]) {
+    onClick = onClickv;
+    caml_register_global_root(&onClickv);
+  }
+  return self;
+}
+
+- (void)onClick {
+  caml_callback(onClick, Val_unit);
+}
+@end
+
+
+
 @implementation FlippedView : NSView
 - (BOOL)isFlipped {
   return YES;
