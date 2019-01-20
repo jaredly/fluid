@@ -133,8 +133,8 @@ CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value st
   NSView* view = [[FlippedView alloc] initWithFrame:frame];
 
   value backgroundColor = Field(style_v, 0);
-  if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
-    value color = Field(backgroundColor, 0);
+  if (Check_optional(backgroundColor)) {
+    value color = Unpack_optional(backgroundColor);
     Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);

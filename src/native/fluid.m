@@ -2,29 +2,24 @@
 
 
 @interface MLApplicationDelegate : NSObject <NSApplicationDelegate>
-
 @end
 
-@implementation MLApplicationDelegate
-{
+@implementation MLApplicationDelegate {
   value onLaunch;
 }
 
-- (instancetype)initWithOnLaunch:(value)onLaunchv
-{
+- (instancetype)initWithOnLaunch:(value)onLaunchv {
   if (self = [super init]) {
     onLaunch = onLaunchv;
   }
   return self;
 }
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSNotification *)notification
-{
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSNotification *)notification {
   return YES;
 }
 
-- (void)applicationWillFinishLaunching:(NSNotification *)__unused not
-{
+- (void)applicationWillFinishLaunching:(NSNotification *)__unused not {
   log("Finish Launching\n");
   caml_callback(onLaunch, Val_unit);
   [NSApp unhide:nil];
@@ -91,15 +86,21 @@ void fluid_App_setupMenu(value title_v) {
 
 
 
-void fluid_App_launch (value callback)
+void fluid_App_launch (value isAccessory, value callback)
 {
-  CAMLparam1(callback);
+  CAMLparam2(isAccessory, callback);
 
   @autoreleasepool {
 
     [NSApplication sharedApplication];
     
     MLApplicationDelegate* delegate = [[MLApplicationDelegate alloc] initWithOnLaunch:callback];
+
+    if (isAccessory == Val_true) {
+      [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+    } else {
+      [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    }
 
     [NSApp setDelegate: delegate];
 
