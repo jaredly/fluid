@@ -18,7 +18,10 @@ module NativeInterface = {
   external updateTextView: (nativeInternal, string, dims, font) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
-  external createImage: (~src: string, ~dims: dims) => nativeInternal = "fluid_create_NSImageView";
+  type image;
+  type imageSrc = | Preloaded(image) | Plain(string);
+  external createImage: (~src: imageSrc, ~dims: dims) => nativeInternal = "fluid_create_NSImageView";
+  external preloadImage: (~src: string, ~onDone: image => unit) => unit = "fluid_Image_load";
 
   external appendChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_appendChild";
   let appendChild = (a, b) => appendChild(fst(a), fst(b));
@@ -121,7 +124,7 @@ module NativeInterface = {
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
     | String(string, option(font))
-    | Image(string);
+    | Image(imageSrc);
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {

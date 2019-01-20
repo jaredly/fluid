@@ -98,6 +98,33 @@ void fluid_update_NSButton_loc(value view_v, value dims_v) {
 
 // MARK - Image View
 
+void fluid_Image_load(value src_v, value onDone_v) {
+  CAMLparam2(src_v, onDone_v);
+  caml_register_global_root(&onDone_v);
+
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    // Your Background work
+    NSImage* image;
+    NSString* src = NSString_val(src_v);
+    if ([src hasPrefix:@"http"]) {
+      image = [[NSImage alloc] initWithContentsOfURL:[NSURL URLWithString:src]];
+    } else {
+      image = [[NSImage alloc] initWithContentsOfFile:src];
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+      CAMLparam0();
+      CAMLlocal1(image_v);
+      Wrap(image_v, image);
+      caml_callback(onDone_v, image_v);
+      caml_remove_global_root(&onDone_v);
+      CAMLreturn0;
+    });
+  });
+
+  CAMLreturn0;
+}
+
 CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   CAMLparam2(src_v, dims_v);
 
@@ -106,7 +133,12 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   NSRect frame = NSMakeRect(left, top, width, height);
 
   NSView* view = [[FlippedView alloc] initWithFrame:frame];
-  NSImage* image = [[NSImage alloc] initWithContentsOfFile:NSString_val(src_v)];
+  NSImage* image;
+  if (Tag_val(src_v) == 0) {
+    image = (NSImage*)Unwrap(Field(src_v, 0));
+  } else {
+    image = [[NSImage alloc] initWithContentsOfFile:NSString_val(Field(src_v, 0))];
+  }
   view.wantsLayer = true;
   if (image != nil) {
     [view.layer setContents:image];

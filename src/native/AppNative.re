@@ -62,6 +62,32 @@ hrmmm and I guess we don't need to track the type of the thing that's going to b
   ((), hooks)
 }; */
 
+module ImageCache = Fluid.Cache({
+  type arg = string;
+  type result = Fluid.NativeInterface.image;
+  let reason = Fluid.noReason;
+  let fetch = (src, onDone) => {
+    Fluid.NativeInterface.preloadImage(~src, ~onDone)
+  }
+});
+
+let imageLoader = (~src, hooks) => {
+  let data = ImageCache.fetch(src);
+
+  <image src=Preloaded(data) layout={Layout.style(~width=200., ~height=200., ())} />
+};
+
+let loading = (~children=[], hooks) => {
+  let%hook suspended = Fluid.Hooks.useSuspenseHandler();
+
+  /* Js.log2("Rerender", suspended); */
+  if (suspended != []) {
+    str("Preloading " ++ string_of_int(List.length(suspended)) ++ " images...")
+  } else {
+    Fluid.Native.view(~children, ())
+  }
+};
+
 let first = hooks => {
   let%hook (times, setTimes) = useState(0);
 
@@ -78,7 +104,11 @@ let first = hooks => {
     {str("More world")}
     <view>
       <ColorSwitcher />
-      <image src="./fluid-js.png" layout={Layout.style(~margin=20., ~width=100., ~height=100., ())} />
+      <Loading>
+        <ImageLoader src="./fluid-macos.png" />
+        <ImageLoader src="./fluid-js.png" />
+      </Loading>
+      <image src=Plain("./fluid-js.png") layout={Layout.style(~margin=20., ~width=100., ~height=100., ())} />
       <view
         layout={Layout.style(~width=40., ~height=40., ~alignSelf=AlignCenter, ())}
         backgroundColor={r: 1., g: 0., b: 0., a: 1.}
