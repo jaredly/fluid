@@ -56,6 +56,44 @@ void fluid_setImmediate(value callback) {
   CAMLreturn0;
 }
 
+// MARK - location updates
+
+void fluid_update_NSView_loc(value view_v, value dims_v) {
+  CAMLparam2(view_v, dims_v);
+
+  NSView* view = (NSView*) Unwrap(view_v);
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  [view setFrameOrigin:NSMakePoint(left, top)];
+  [view setFrameSize:NSMakeSize(width, height)];
+
+  CAMLreturn0;
+}
+
+void fluid_update_Text_loc(value view_v, value dims_v) {
+  CAMLparam2(view_v, dims_v);
+
+  NSTextField* text = (NSTextField*) Unwrap(view_v);
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  [text setFrameOrigin:NSMakePoint(left, top + 5.0)];
+  [text setFrameSize:NSMakeSize(width, height)];
+
+  CAMLreturn0;
+}
+
+void fluid_update_NSButton_loc(value view_v, value dims_v) {
+  CAMLparam2(view_v, dims_v);
+
+  FluidButton* view = (FluidButton*) Unwrap(view_v);
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  [view setFrameOrigin:NSMakePoint(left, top)];
+  // [view setFrameSize:NSMakeSize(width, height)];
+
+  CAMLreturn0;
+}
+
 // MARK - Image View
 
 CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {

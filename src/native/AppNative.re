@@ -65,14 +65,14 @@ hrmmm and I guess we don't need to track the type of the thing that's going to b
 let first = hooks => {
   let%hook (times, setTimes) = useState(0);
 
-  let%hook status = useSuspense(~filter=(reason) => switch reason {
+  /* let%hook status = useSuspense(~filter=(reason) => switch reason {
     | LoadingImage(string) => true
     | _ => false
     /*
     I think the type of useSuspense should be
     let useSuspense: (~filter: (list(suspendEvent)))
      */
-  }, ());
+  }, ()); */
 
   <view layout={Layout.style(~marginHorizontal=10., ())}>
     {str("More world")}
@@ -104,5 +104,5 @@ let first = hooks => {
   let%hook (count, setCount) = useState(0);
 }; */
 
-Fluid.launchWindow(~title="Hello Fluid", ~root=<First />);
+Fluid.launchWindow(~title="Hello Fluid", ~floating=false, <First />);
 /* Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />); */

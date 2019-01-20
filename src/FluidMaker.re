@@ -397,7 +397,7 @@ let rec instantiateTree = (~withLayout=?, el: element) => switch el {
     });
 
     ichildren->mapResult(children => {
-      Js.log2("instantiated children", children);
+      /* Js.log2("instantiated children", children); */
         let children = children->List.reverse;
         let childLayouts = children->List.map(getInstanceLayout)->List.toArray;
         let style = switch layout {
@@ -615,7 +615,7 @@ let rec reconcileTrees: (container => unit, mountedTree, element) => instantiate
         }
       });
       ichildren->mapResult(children => {
-        Js.log2("Got extra children", children->List.toArray);
+        /* Js.log2("Got extra children", children->List.toArray); */
         children->List.mapReverse(makePending);
       })
     | (more, []) => 

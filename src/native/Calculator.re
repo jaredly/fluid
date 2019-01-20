@@ -176,4 +176,4 @@ let calculator = hooks => {
   </view>
 };
 
-Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator />);
+Fluid.launchWindow(~title="Hello Fluid", <Calculator />);

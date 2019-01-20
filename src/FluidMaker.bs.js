@@ -421,7 +421,6 @@ function F(NativeInterface) {
               }
             }));
       return mapResult(ichildren, (function (children) {
-                    console.log("instantiated children", children);
                     var children$1 = Belt_List.reverse(children);
                     var childLayouts = Belt_List.toArray(Belt_List.map(children$1, getInstanceLayout));
                     var style = layout !== undefined ? layout : Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0);
@@ -684,7 +683,6 @@ function F(NativeInterface) {
               }
             }));
       return mapResult(ichildren, (function (children) {
-                    console.log("Got extra children", Belt_List.toArray(children));
                     return Belt_List.mapReverse(children, makePending);
                   }));
     } else {
