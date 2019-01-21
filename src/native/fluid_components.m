@@ -170,6 +170,9 @@ CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value st
     Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
+  } else {
+    view.wantsLayer = true;
+    view.layer.backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 0.1);
   }
 
   Wrap(view_v, view);
@@ -308,7 +311,11 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
 
   if (Check_optional(onChange_v)) {
     text.editable = true;
+    text.wantsLayer = true;
+    text.layer.backgroundColor = CGColorCreateGenericRGB(1, 1, 1, 1);
   }
+  // text.wantsLayer = true;
+  // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
   text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_v];
 
   Unpack_record4_double(dims_v, left, top, width, height);
@@ -316,8 +323,6 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
   [text setFrameOrigin:NSMakePoint(left, top + 5.0)];
   [text setFrameSize:NSMakeSize(width, height)];
 
-  // text.wantsLayer = true;
-  // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
   Wrap(text_v, text);
 
   CAMLreturn(text_v);

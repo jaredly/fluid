@@ -166,7 +166,7 @@ module NativeInterface = {
         };
 
       | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
-        if (atext != btext || afont != bfont || aonChange != bonChange) {
+        if (atext != btext || afont != bfont || aonChange !== bonChange) {
           updateTextView(mountPoint, btext, dims(layout), bfont, bonChange)
         };
 
@@ -281,9 +281,9 @@ module Fluid = {
       let window = Window.make(~title, ~onBlur, ~dims={left, top, width, height}, ~isFloating=floating);
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
-      if (!floating) {
+      /* if (!floating) {
         App.setupMenu(~title);
-      }
+      } */
       if (pos == None) {
         Window.center(window);
       };

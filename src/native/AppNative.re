@@ -109,10 +109,10 @@ let first = hooks => {
     />
     <view>
       <ColorSwitcher />
-      <Loading>
+      /* <Loading>
         <ImageLoader src="./fluid-macos.png" />
         <ImageLoader src="./fluid-js.png" />
-      </Loading>
+      </Loading> */
       <image src=Plain("./fluid-js.png") layout={Layout.style(~margin=20., ~width=100., ~height=100., ())} />
       <view
         layout={Layout.style(~width=40., ~height=40., ~alignSelf=AlignCenter, ())}
@@ -140,17 +140,17 @@ let first = hooks => {
 }; */
 
 Fluid.App.launch(() => {
-
-      Fluid.launchWindow(
-        ~title="Hello Fluid",
-        /* ~floating=true, */
-        /* ~pos, */
-        ~onBlur=win => {
-          print_endline("Blurred! Ok cleaning now");
-          Fluid.Window.close(win);
-        },
-        <First />
-      );
+  Fluid.App.setupMenu(~title="Hello Folks");
+  Fluid.launchWindow(
+    ~title="Hello Fluid",
+    /* ~floating=true, */
+    /* ~pos, */
+    /* ~onBlur=win => {
+      print_endline("Blurred! Ok cleaning now");
+      Fluid.Window.close(win);
+    }, */
+    <First />
+  );
 })
 
 

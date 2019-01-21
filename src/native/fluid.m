@@ -29,6 +29,18 @@
 
 @end
 
+@interface MenuDelegate : NSObject
+
+@end
+
+@implementation MenuDelegate { }
+
+- (void)dummySelect {
+  // nothing
+}
+
+@end
+
 void fluid_App_setupMenu(value title_v) {
   CAMLparam1(title_v);
   id appMenu = [NSMenu new];
@@ -39,13 +51,10 @@ void fluid_App_setupMenu(value title_v) {
   id hideMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Hide " stringByAppendingString:appName]
                                                action:@selector(hide:)
                                         keyEquivalent:@"h"];
-  id hideOthersMenuItem = [[NSMenuItem alloc] initWithTitle:@"Hide Others"
+  id hideOthersMenuItem = [[NSMenuItem alloc] initWithTitle:@"Hide Them"
                                                      action:@selector(hideOtherApplications:)
                                               keyEquivalent:@"h"];
   [hideOthersMenuItem setKeyEquivalentModifierMask:(NSEventModifierFlagOption | NSEventModifierFlagCommand)];
-  id showAllMenuItem = [[NSMenuItem alloc] initWithTitle:@"Show All"
-                                                  action:@selector(unhideAllApplications:)
-                                           keyEquivalent:@""];
   id closeMenuItem = [[NSMenuItem alloc] initWithTitle:@"Close window "
                                                action:@selector(terminate:)
                                         keyEquivalent:@"w"];
@@ -54,29 +63,34 @@ void fluid_App_setupMenu(value title_v) {
                                         keyEquivalent:@"q"];
   [appMenu addItem:aboutMenuItem];
   [appMenu addItem:[NSMenuItem separatorItem]];
-  [appMenu addItem:hideMenuItem];
-  [appMenu addItem:hideOthersMenuItem];
-  [appMenu addItem:showAllMenuItem];
+  // [appMenu addItem:hideMenuItem];
+  // [appMenu addItem:hideOthersMenuItem];
   [appMenu addItem:[NSMenuItem separatorItem]];
   [appMenu addItem:closeMenuItem];
   [appMenu addItem:quitMenuItem];
 
-  id appMenuItem = [NSMenuItem new];
-  // id appMenuItem = [[NSMenuItem alloc] initWithTitle:title action:nil keyEquivalent:@""];
-  [appMenuItem setSubmenu:appMenu];
+  MenuDelegate* delegate = [MenuDelegate alloc];
 
-  // id menu2 = [NSMenu new];
-  // [menu2 addItem:[NSMenuItem separatorItem]];
-  // [menu2 addItem:[[NSMenuItem alloc] initWithTitle:@"Go places" action:@selector(terminate:) keyEquivalent:@"q"]];
+  id menu2 = [NSMenu new];
+  [menu2 addItem:[NSMenuItem separatorItem]];
+  [menu2 addItem:[[NSMenuItem alloc] initWithTitle:@"Go places" action:@selector(terminate:) keyEquivalent:@"q"]];
   // // id menuTitle2 = [[NSMenuItem alloc] initWithTitle:@"Yeahp" action:nil keyEquivalent:@""];
   // id menuTitle2 = [NSMenuItem new];
   // [menuTitle2 setTitle:@"Yes"];
   // [menuTitle2 setSubmenu:menu2];
 
+  // id appMenuItem = [NSMenuItem new];
+  // [appMenuItem setSubmenu:appMenu];
+
   id menubar = [NSMenu new];
-  [menubar addItem:appMenuItem];
-  // id item2 = [menubar addItemWithTitle:@"Yes" action:nil keyEquivalent:@""];
-  // [menubar setSubmenu:menu2 forItem:item2];
+  NSMenuItem* appMenuItem = [menubar addItemWithTitle:@"Hello Folks" action:@selector(dummySelect) keyEquivalent:@"M"];
+  [appMenuItem setSubmenu:appMenu];
+  appMenuItem.target = delegate;
+  // [menubar addItem:appMenuItem];
+
+  NSMenuItem* item2 = [menubar addItemWithTitle:@"Yes" action:@selector(dummySelect) keyEquivalent:@""];
+  item2.target = delegate;
+  [menubar setSubmenu:menu2 forItem:item2];
 
   [NSApp setMainMenu:menubar];
   CAMLreturn0;
