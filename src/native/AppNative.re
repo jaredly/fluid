@@ -100,8 +100,13 @@ let first = hooks => {
      */
   }, ()); */
 
-  <view layout={Layout.style(~marginHorizontal=10., ())}>
+  <view layout={Layout.style(~paddingHorizontal=10., ())}>
     {str("More world")}
+    <text
+      contents="Hello"
+      layout={Layout.style(~alignSelf=AlignStretch, ~margin=10., ())}
+      onChange={str => print_endline("Hello " ++ str)}
+    />
     <view>
       <ColorSwitcher />
       <Loading>
@@ -134,9 +139,25 @@ let first = hooks => {
   let%hook (count, setCount) = useState(0);
 }; */
 
-Fluid.App.launch(
+Fluid.App.launch(() => {
+
+      Fluid.launchWindow(
+        ~title="Hello Fluid",
+        /* ~floating=true, */
+        /* ~pos, */
+        ~onBlur=win => {
+          print_endline("Blurred! Ok cleaning now");
+          Fluid.Window.close(win);
+        },
+        <First />
+      );
+})
+
+
+/* Fluid.App.launch(
   ~isAccessory=true,
   () => {
+
   Fluid.App.statusBarItem(
     ~title="Mojibar",
     ~onClick=pos => {
@@ -152,6 +173,6 @@ Fluid.App.launch(
       );
     }
   )
-});
+}); */
 
 /* Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />); */

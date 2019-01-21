@@ -247,8 +247,46 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
   CAMLreturn(result);
 }
 
-CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v) {
-  CAMLparam3(contents_v, dims_v, font_v);
+
+
+@interface TextFieldDelegate : NSObject <NSTextFieldDelegate>
+@end
+
+@implementation TextFieldDelegate {
+  value onChange;
+}
+
+- (void)setOnChange:(value)onChangev {
+  onChange = onChangev;
+}
+
+- (instancetype)initWithOnChange:(value)onChangev {
+  if (self = [super init]) {
+    onChange = onChangev;
+    caml_register_global_root(&onChangev);
+  }
+  return self;
+}
+
+- (void)controlTextDidChange:(NSNotification *) notification {
+  CAMLparam0();
+  log("Text change\n");
+  printf("Text change\n");
+
+  if (Check_optional(onChange)) {
+    id textField = [notification object];
+    caml_callback(Unpack_optional(onChange), caml_copy_string([[textField stringValue] UTF8String]));
+  }
+
+  CAMLreturn0;
+}
+@end
+
+
+
+
+CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value onChange_v) {
+  CAMLparam4(contents_v, dims_v, font_v, onChange_v);
   CAMLlocal1(text_v);
   log("Create text view\n");
 
@@ -268,6 +306,11 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
     text = [NSTextField labelWithString:contents];
   }
 
+  if (Check_optional(onChange_v)) {
+    text.editable = true;
+  }
+  text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_v];
+
   Unpack_record4_double(dims_v, left, top, width, height);
 
   [text setFrameOrigin:NSMakePoint(left, top + 5.0)];
@@ -280,8 +323,8 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
   CAMLreturn(text_v);
 }
 
-void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v) {
-  CAMLparam4(text_v, contents_v, dims, font_v);
+void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v, value onChange_v) {
+  CAMLparam5(text_v, contents_v, dims, font_v, onChange_v);
   log("Update text view\n");
 
   NSTextField* text = (NSTextField*)Unwrap(text_v);
@@ -299,6 +342,9 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   } else {
     text.stringValue = contents;
   }
+
+  text.editable = Check_optional(onChange_v);
+  [(TextFieldDelegate*)text.delegate setOnChange:onChange_v];
 
   Unpack_record4_double(dims, left, top, width, height);
 

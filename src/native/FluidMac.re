@@ -14,8 +14,8 @@ module NativeInterface = {
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
-  external createTextNode: (string, ~dims: dims, ~font: font) => nativeInternal = "fluid_create_NSTextView";
-  external updateTextView: (nativeInternal, string, dims, font) => unit = "fluid_set_NSTextView_textContent";
+  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(string => unit)) => nativeInternal = "fluid_create_NSTextView";
+  external updateTextView: (nativeInternal, string, dims, font, option(string => unit)) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
   type image;
@@ -97,9 +97,9 @@ module NativeInterface = {
   let measureCache = Hashtbl.create(100);
 
   let defaultFont = {fontName: "Lucida Grande", fontSize: 12.};
-  let updateTextView = (node, text, dims, font) => {
+  let updateTextView = (node, text, dims, font, onChange) => {
     let font = switch font { | None => defaultFont | Some(f) => f};
-    updateTextView(node, text, dims, font);
+    updateTextView(node, text, dims, font, onChange);
   };
   let measureText = (text, font, _, width, widthMode, _, _) => {
     let {fontName, fontSize} = switch font { | None => defaultFont | Some(f) => f};
@@ -123,7 +123,7 @@ module NativeInterface = {
   type element =
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
-    | String(string, option(font))
+    | String(string, option(font), option(string => unit))
     | Image(imageSrc);
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
@@ -134,7 +134,7 @@ module NativeInterface = {
       | (Button(atitle, apress), Button(btitle, bpress)) =>
         true
 
-      | (String(atext, afont), String(btext, bfont)) => 
+      | (String(atext, afont, _), String(btext, bfont, _)) => 
         true
 
       | _ => false
@@ -147,7 +147,7 @@ module NativeInterface = {
     switch (mounted) {
       | View(_, _) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
-      | String(_, _) => updateTextLoc(mountPoint, dims(layout))
+      | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
       | Image(_) => updateViewLoc(mountPoint, dims(layout))
     }
   };
@@ -165,9 +165,9 @@ module NativeInterface = {
           setButtonPress(id, bpress);
         };
 
-      | (String(atext, afont), String(btext, bfont)) => 
-        if (atext != btext || afont != bfont) {
-          updateTextView(mountPoint, btext, dims(layout), bfont)
+      | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
+        if (atext != btext || afont != bfont || aonChange != bonChange) {
+          updateTextView(mountPoint, btext, dims(layout), bfont, bonChange)
         };
 
       | _ => ()
@@ -190,9 +190,9 @@ module NativeInterface = {
       setButtonPress(id, onPress);
       (native, id)
 
-    | String(contents, font) =>
+    | String(contents, font, onChange) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font);
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange);
       (native, getNativeId())
 
     | Image(src) =>
@@ -231,9 +231,9 @@ module Fluid = {
       })
     );
 
-    let text = (~layout=?, ~font=?, ~contents, ()) => {
+    let text = (~layout=?, ~font=?, ~onChange=?, ~contents, ()) => {
       Builtin(
-        String(contents, font),
+        String(contents, font, onChange),
         [],
         layout,
         Some(NativeInterface.measureText(contents, font))
