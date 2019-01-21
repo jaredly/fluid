@@ -1,5 +1,15 @@
 #include "./fluid_shared.h"
 
+@interface MenuDelegate : NSObject
+- (void)dummySelect;
+@end
+
+@implementation MenuDelegate { }
+- (void)dummySelect {
+  NSLog(@"Selected the menu thing");
+  // nothing
+}
+@end
 
 @interface MLApplicationDelegate : NSObject <NSApplicationDelegate>
 @end
@@ -19,27 +29,39 @@
   return NO;
 }
 
-- (void)applicationWillFinishLaunching:(NSNotification *)__unused not {
+- (void)applicationDidFinishLaunching:(NSNotification *)__unused not {
   log("Finish Launching\n");
   caml_callback(onLaunch, Val_unit);
   [NSApp unhide:nil];
   [NSApp activateIgnoringOtherApps:true];
   caml_remove_global_root(&onLaunch);
+
+
+  // MenuDelegate* delegate = [MenuDelegate alloc];
+
+  // NSMenu* menu = [NSMenu new];
+
+  // NSMenuItem* menuItem = [menu addItemWithTitle:@"MySection" action:@selector(dummySelect) keyEquivalent: @""];
+  // menuItem.target = delegate;
+  // NSMenu* submenu = [[NSMenu alloc] initWithTitle: @"MySection"];
+  // menuItem.submenu = submenu;
+  // NSMenuItem* clickMe = [submenu addItemWithTitle: @"ClickMe" action:@selector(dummySelect) keyEquivalent: @"C"];
+  // clickMe.target = delegate;
+
+  // NSMenuItem* menuItem2 = [menu addItemWithTitle:@"MySection2" action:@selector(dummySelect) keyEquivalent: @""];
+  // menuItem2.target = delegate;
+  // NSMenu* submenu2 = [[NSMenu alloc] initWithTitle: @"MySection2"];
+  // menuItem2.submenu = submenu2;
+  // NSMenuItem* clickMe2 = [submenu2 addItemWithTitle: @"ClickMe2" action:@selector(dummySelect) keyEquivalent: @"C"];
+  // clickMe2.target = delegate;
+
+
+
+  // [NSApp setMainMenu:menu];
 }
 
 @end
 
-@interface MenuDelegate : NSObject
-
-@end
-
-@implementation MenuDelegate { }
-
-- (void)dummySelect {
-  // nothing
-}
-
-@end
 
 void fluid_App_setupMenu(value title_v) {
   CAMLparam1(title_v);
@@ -71,7 +93,7 @@ void fluid_App_setupMenu(value title_v) {
 
   MenuDelegate* delegate = [MenuDelegate alloc];
 
-  id menu2 = [NSMenu new];
+  id menu2 = [[NSMenu alloc] initWithTitle:@"Yes"];
   [menu2 addItem:[NSMenuItem separatorItem]];
   [menu2 addItem:[[NSMenuItem alloc] initWithTitle:@"Go places" action:@selector(terminate:) keyEquivalent:@"q"]];
   // // id menuTitle2 = [[NSMenuItem alloc] initWithTitle:@"Yeahp" action:nil keyEquivalent:@""];
@@ -79,20 +101,25 @@ void fluid_App_setupMenu(value title_v) {
   // [menuTitle2 setTitle:@"Yes"];
   // [menuTitle2 setSubmenu:menu2];
 
-  // id appMenuItem = [NSMenuItem new];
+  NSMenuItem* appMenuItem = [NSMenuItem new];
   // [appMenuItem setSubmenu:appMenu];
 
   id menubar = [NSMenu new];
-  NSMenuItem* appMenuItem = [menubar addItemWithTitle:@"Hello Folks" action:@selector(dummySelect) keyEquivalent:@"M"];
+  // NSMenu* menubar = NSApp.mainMenu;
+
+  // NSMenuItem* appMenuItem = [menubar addItemWithTitle:@"Hello Folks" action:@selector(dummySelect) keyEquivalent:@"M"];
   [appMenuItem setSubmenu:appMenu];
   appMenuItem.target = delegate;
-  // [menubar addItem:appMenuItem];
 
-  NSMenuItem* item2 = [menubar addItemWithTitle:@"Yes" action:@selector(dummySelect) keyEquivalent:@""];
-  item2.target = delegate;
-  [menubar setSubmenu:menu2 forItem:item2];
+  [menubar addItem:appMenuItem];
 
   [NSApp setMainMenu:menubar];
+
+  NSMenuItem* item2 = [menubar addItemWithTitle:@"Yes" action:@selector(terminate:) keyEquivalent:@"N"];
+  // [item2 setSubmenu:menu2];
+  [menubar setSubmenu:menu2 forItem:item2];
+  // item2.target = delegate;
+
   CAMLreturn0;
 }
 
