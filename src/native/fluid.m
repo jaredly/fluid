@@ -35,36 +35,65 @@
   [NSApp unhide:nil];
   [NSApp activateIgnoringOtherApps:true];
   caml_remove_global_root(&onLaunch);
-
-
-  // MenuDelegate* delegate = [MenuDelegate alloc];
-
-  // NSMenu* menu = [NSMenu new];
-
-  // NSMenuItem* menuItem = [menu addItemWithTitle:@"MySection" action:@selector(dummySelect) keyEquivalent: @""];
-  // menuItem.target = delegate;
-  // NSMenu* submenu = [[NSMenu alloc] initWithTitle: @"MySection"];
-  // menuItem.submenu = submenu;
-  // NSMenuItem* clickMe = [submenu addItemWithTitle: @"ClickMe" action:@selector(dummySelect) keyEquivalent: @"C"];
-  // clickMe.target = delegate;
-
-  // NSMenuItem* menuItem2 = [menu addItemWithTitle:@"MySection2" action:@selector(dummySelect) keyEquivalent: @""];
-  // menuItem2.target = delegate;
-  // NSMenu* submenu2 = [[NSMenu alloc] initWithTitle: @"MySection2"];
-  // menuItem2.submenu = submenu2;
-  // NSMenuItem* clickMe2 = [submenu2 addItemWithTitle: @"ClickMe2" action:@selector(dummySelect) keyEquivalent: @"C"];
-  // clickMe2.target = delegate;
-
-
-
-  // [NSApp setMainMenu:menu];
 }
 
 @end
 
+CAMLprim value fluid_App_menuItem(value title_v, value action_v, value shortcut_v) {
+  CAMLparam3(title_v, action_v, shortcut_v);
+  CAMLlocal1(item_v);
+  SEL action;
+  if (Tag_val(action_v) == 1) {
+    action = NSSelectorFromString(NSString_val(Field(action_v, 0)));
+  } else {
+    // Call
+    action = @selector(onClick);
+  }
+  NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:NSString_val(title_v)
+                                              action:action
+                                              keyEquivalent:NSString_val(shortcut_v)];
+  if (Tag_val(action_v) == 0) {
+    value onClick = Field(action_v, 0);
+    caml_register_global_root(&onClick);
+    ClickTarget* delegate = [[ClickTarget alloc] initWithOnClick:onClick];
+    item.target = delegate;
+  }
+  Wrap(item_v, item);
 
-void fluid_App_setupMenu(value title_v) {
-  CAMLparam1(title_v);
+  CAMLreturn(item_v);
+}
+
+CAMLprim value fluid_App_separatorItem() {
+  CAMLparam0();
+  CAMLlocal1(item_v);
+  NSMenuItem* item = [NSMenuItem separatorItem];
+  Wrap(item_v, item);
+  CAMLreturn(item_v);
+}
+
+CAMLprim value fluid_App_menu(value title_v, value items_v) {
+  CAMLparam2(title_v, items_v);
+  CAMLlocal1(menu_v);
+  NSMenu* menu = [[NSMenu alloc] initWithTitle:NSString_val(title_v)];
+
+  int length = Wosize_val(items_v);
+  for (int i=0; i<length; i++) {
+    [menu addItem:(NSMenuItem*)Unwrap(Field(items_v, i))];
+  }
+
+  NSMenuItem* wrapper = [[NSMenuItem alloc] initWithTitle:NSString_val(title_v) action:@selector(dummySelect) keyEquivalent:@""];
+  MenuDelegate* delegate = [MenuDelegate alloc];
+  wrapper.target = delegate;
+  [wrapper setSubmenu:menu];
+
+  Wrap(menu_v, wrapper);
+  CAMLreturn(menu_v);
+}
+
+void fluid_App_setupAppMenu(value title_v, value appItems_v, value menus_v) {
+  CAMLparam3(title_v, appItems_v, menus_v);
+
+
   id appMenu = [NSMenu new];
   id appName = NSString_val(title_v);
   id aboutMenuItem = [[NSMenuItem alloc] initWithTitle:[@"About " stringByAppendingString:appName]
@@ -84,48 +113,32 @@ void fluid_App_setupMenu(value title_v) {
                                                action:@selector(terminate:)
                                         keyEquivalent:@"q"];
   [appMenu addItem:aboutMenuItem];
-  [appMenu addItem:[NSMenuItem separatorItem]];
-  // [appMenu addItem:hideMenuItem];
-  // [appMenu addItem:hideOthersMenuItem];
+  int appItems_length = Wosize_val(appItems_v);
+  if (appItems_length > 0) {
+    [appMenu addItem:[NSMenuItem separatorItem]];
+    for (int i=0; i<appItems_length; i++) {
+      [appMenu addItem:(NSMenuItem*)Unwrap(Field(appItems_v, i))];
+    }
+  }
   [appMenu addItem:[NSMenuItem separatorItem]];
   [appMenu addItem:closeMenuItem];
   [appMenu addItem:quitMenuItem];
 
-  MenuDelegate* delegate = [MenuDelegate alloc];
-
-  id menu2 = [[NSMenu alloc] initWithTitle:@"Yes"];
-  [menu2 addItem:[NSMenuItem separatorItem]];
-  [menu2 addItem:[[NSMenuItem alloc] initWithTitle:@"Go places" action:@selector(terminate:) keyEquivalent:@"q"]];
-  // // id menuTitle2 = [[NSMenuItem alloc] initWithTitle:@"Yeahp" action:nil keyEquivalent:@""];
-  // id menuTitle2 = [NSMenuItem new];
-  // [menuTitle2 setTitle:@"Yes"];
-  // [menuTitle2 setSubmenu:menu2];
-
   NSMenuItem* appMenuItem = [NSMenuItem new];
-  // [appMenuItem setSubmenu:appMenu];
+  [appMenuItem setSubmenu:appMenu];
 
   id menubar = [NSMenu new];
-  // NSMenu* menubar = NSApp.mainMenu;
-
-  // NSMenuItem* appMenuItem = [menubar addItemWithTitle:@"Hello Folks" action:@selector(dummySelect) keyEquivalent:@"M"];
-  [appMenuItem setSubmenu:appMenu];
-  appMenuItem.target = delegate;
-
   [menubar addItem:appMenuItem];
+
+  int menus_length = Wosize_val(menus_v);
+  for (int i=0; i<menus_length; i++) {
+    [menubar addItem:(NSMenuItem*)Unwrap(Field(menus_v, i))];
+  }
 
   [NSApp setMainMenu:menubar];
 
-  NSMenuItem* item2 = [menubar addItemWithTitle:@"Yes" action:@selector(terminate:) keyEquivalent:@"N"];
-  // [item2 setSubmenu:menu2];
-  [menubar setSubmenu:menu2 forItem:item2];
-  // item2.target = delegate;
-
   CAMLreturn0;
 }
-
-
-
-
 
 void fluid_App_launch (value isAccessory, value callback)
 {

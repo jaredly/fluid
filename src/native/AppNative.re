@@ -140,7 +140,25 @@ let first = hooks => {
 }; */
 
 Fluid.App.launch(() => {
-  Fluid.App.setupMenu(~title="Hello Folks");
+  Fluid.App.setupAppMenu(
+    ~title="Hello All",
+    ~appItems=[||],
+    ~menus=[|
+      Fluid.App.menu(
+        ~title="Edit",
+        ~items=[|
+          Fluid.App.menuItem(~title="Copy", ~action=Selector("copy:"), ~shortcut="c"),
+          Fluid.App.menuItem(~title="Paste", ~action=Selector("paste:"), ~shortcut="v"),
+          Fluid.App.menuItem(~title="Cut", ~action=Selector("cut:"), ~shortcut="x"),
+          Fluid.App.menuItem(~title="Select All", ~action=Selector("selectAll:"), ~shortcut="a"),
+          Fluid.App.menuItem(~title="Party", ~action=Call(() => {
+            print_endline("Partying here");
+          }), ~shortcut="m"),
+        |]
+      )
+    |]
+  )
+
   Fluid.launchWindow(
     ~title="Hello Fluid",
     /* ~floating=true, */

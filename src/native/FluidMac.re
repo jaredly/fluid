@@ -244,21 +244,23 @@ module Fluid = {
 
   module App = {
     external launch: (~isAccessory: bool, unit => unit) => unit = "fluid_App_launch";
-    external setupMenu: (~title: string) => unit = "fluid_App_setupMenu";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => unit = "fluid_App_statusBarItem";
-    /* type menuAction =
-      | Call(unit => unit)
-      | Quit
-      | Close
-      | ShowAll
-      | Hide
-      | HideOthers;
+
     type menuItem;
-    external menuItem: (~title: string, ~action: menuAction, ~shortcut: string) => menuItem = "fluid_App_menuItem";
+    type menuAction =
+    | Call(unit => unit)
+    | Selector(string);
+    external menuItem:
+      (~title: string, ~action: menuAction, ~shortcut: string) => menuItem =
+      "fluid_App_menuItem";
     external separatorItem: unit => menuItem = "fluid_App_separatorItem";
-    type menu;
-    external menu: (~item: array(menuItem)) => menu = "fluid_App_menu"; */
+    external menu: (~title: string, ~items: array(menuItem)) => menuItem =
+      "fluid_App_menu";
+    external setupAppMenu:
+      (~title: string, ~appItems: array(menuItem), ~menus: array(menuItem)) =>
+      unit =
+      "fluid_App_setupAppMenu";
   };
 
   module Window = {
