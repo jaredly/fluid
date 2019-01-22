@@ -135,62 +135,20 @@ let first = hooks => {
 };
 
 
-/* let invalidate = hooks => {
-  let%hook (count, setCount) = useState(0);
-}; */
-
-Fluid.App.launch(() => {
+Fluid.App.launch(
+  /* ~isAccessory=true, */
+  () => {
   Fluid.App.setupAppMenu(
     ~title="Hello All",
     ~appItems=[||],
-    ~menus=[|
-      Fluid.App.menu(
-        ~title="Edit",
-        ~items=[|
-          Fluid.App.menuItem(~title="Copy", ~action=Selector("copy:"), ~shortcut="c"),
-          Fluid.App.menuItem(~title="Paste", ~action=Selector("paste:"), ~shortcut="v"),
-          Fluid.App.menuItem(~title="Cut", ~action=Selector("cut:"), ~shortcut="x"),
-          Fluid.App.menuItem(~title="Select All", ~action=Selector("selectAll:"), ~shortcut="a"),
-          Fluid.App.menuItem(~title="Party", ~action=Call(() => {
-            print_endline("Partying here");
-          }), ~shortcut="m"),
-        |]
-      )
-    |]
+    ~menus=[| Fluid.App.defaultEditMenu() |]
   )
 
   Fluid.launchWindow(
     ~title="Hello Fluid",
     /* ~floating=true, */
-    /* ~pos, */
-    /* ~onBlur=win => {
-      print_endline("Blurred! Ok cleaning now");
-      Fluid.Window.close(win);
-    }, */
     <First />
   );
 })
-
-
-/* Fluid.App.launch(
-  ~isAccessory=true,
-  () => {
-
-  Fluid.App.statusBarItem(
-    ~title="Mojibar",
-    ~onClick=pos => {
-      Fluid.launchWindow(
-        ~title="Hello Fluid",
-        ~floating=true,
-        ~pos,
-        ~onBlur=win => {
-          print_endline("Blurred! Ok cleaning now");
-          Fluid.Window.close(win);
-        },
-        <First />
-      );
-    }
-  )
-}); */
 
 /* Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />); */

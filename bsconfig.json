@@ -16,6 +16,9 @@
     "main-module": "App"
   }, {
     "backend": "native",
+    "main-module": "Mojibar"
+  }, {
+    "backend": "native",
     "main-module": "AppNative"
   }],
   "ocaml-flags": ["-bin-annot", "-g"],
@@ -24,7 +27,7 @@
   "warnings": {
     "number": "-27-45-40-26-32-44"
   },
-  "bs-dependencies": ["flex"],
+  "bs-dependencies": ["flex", "rex-json"],
   "package-specs": {
     "module": "commonjs",
     "in-source": true

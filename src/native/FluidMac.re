@@ -14,6 +14,8 @@ module NativeInterface = {
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
+  external createCustom: (~dims: dims, ~drawFn: unit => unit) => nativeInternal = "fluid_create_CustomView";
+  external updateCustom: (nativeInternal, unit => unit) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(string => unit)) => nativeInternal = "fluid_create_NSTextView";
   external updateTextView: (nativeInternal, string, dims, font, option(string => unit)) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
@@ -121,6 +123,7 @@ module NativeInterface = {
   };
 
   type element =
+    | Custom(unit => unit)
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
     | String(string, option(font), option(string => unit))
@@ -128,6 +131,8 @@ module NativeInterface = {
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
+      | (Custom(adrawFn), Custom(drawFn)) => true
+
       | (View(aPress, aStyle), View(onPress, style)) => 
         true
 
@@ -146,6 +151,7 @@ module NativeInterface = {
   let updateLayout = (mounted, (mountPoint, _), layout: Layout.node) => {
     switch (mounted) {
       | View(_, _) => updateViewLoc(mountPoint, dims(layout))
+      | Custom(_) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
       | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
       | Image(_) => updateViewLoc(mountPoint, dims(layout))
@@ -165,6 +171,8 @@ module NativeInterface = {
           setButtonPress(id, bpress);
         };
 
+      | (Custom(a), Custom(draw)) => updateCustom(mountPoint, draw)
+
       | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
         if (atext != btext || afont != bfont || aonChange !== bonChange) {
           updateTextView(mountPoint, btext, dims(layout), bfont, bonChange)
@@ -180,6 +188,9 @@ module NativeInterface = {
   } */
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
+    | Custom(drawFn) =>
+      let native = createCustom(~drawFn, ~dims={left, top, width, height});
+      (native, getNativeId())
     | View(onPress, style) => 
       Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
       let native = createView(~onPress, ~pos=(top, left), ~size=(width, height), ~style);
@@ -240,6 +251,8 @@ module Fluid = {
       )
     };
 
+    let custom = (~layout=?, ~draw, ()) => Builtin(Custom(draw), [], layout, None);
+
   }
 
   module App = {
@@ -261,6 +274,17 @@ module Fluid = {
       (~title: string, ~appItems: array(menuItem), ~menus: array(menuItem)) =>
       unit =
       "fluid_App_setupAppMenu";
+
+    let defaultEditMenu = () =>
+      menu(
+        ~title="Edit",
+        ~items=[|
+          menuItem(~title="Copy", ~action=Selector("copy:"), ~shortcut="c"),
+          menuItem(~title="Paste", ~action=Selector("paste:"), ~shortcut="v"),
+          menuItem(~title="Cut", ~action=Selector("cut:"), ~shortcut="x"),
+          menuItem(~title="Select All", ~action=Selector("selectAll:"), ~shortcut="a"),
+        |]
+      );
   };
 
   module Window = {

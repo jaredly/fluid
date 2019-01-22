@@ -153,6 +153,68 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 
 // MARK - Plain View
 
+@interface CustomView: NSView
+- (void)setDraw:(value)draw;
+@end
+
+@implementation CustomView {
+  value drawFn;
+}
+
+- (instancetype)initWithDraw:(value)drawFnv andFrame:(NSRect)frame {
+  if (self = [super initWithFrame:frame]) {
+    drawFn = drawFnv;
+    caml_register_global_root(&drawFnv);
+  }
+  return self;
+}
+
+- (void)setDraw:(value)draw {
+  drawFn = draw;
+}
+
+- (BOOL)isFlipped {
+  return YES;
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+  CAMLparam0();
+  // CAMLlocal1(rect_v);
+  // Wrap(rect_v, dirtyRect);
+  [@"Hi" drawAtPoint:CGPointMake(20., 20.)
+  withAttributes:@{}];
+  caml_callback(drawFn, Val_unit);
+  CAMLreturn0;
+}
+
+@end
+
+
+CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
+  CAMLparam2(dims_v, draw_v);
+  CAMLlocal1(view_v);
+
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  NSRect frame = NSMakeRect(left, top, width, height);
+  NSView* view = [[CustomView alloc] initWithDraw:draw_v andFrame:frame];
+  view.wantsLayer = true;
+
+  Wrap(view_v, view);
+  CAMLreturn(view_v);
+}
+
+void fluid_update_CustomView(value view_v, value draw_v) {
+  CAMLparam2(view_v, draw_v);
+
+  CustomView* view = (CustomView*)Unwrap(view_v);
+  [view setDraw:draw_v];
+
+  CAMLreturn0;
+}
+
+
+
 CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value style_v) {
   CAMLparam4(id, pos_v, size_v, style_v);
   CAMLlocal1(view_v);
@@ -274,7 +336,6 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 - (void)controlTextDidChange:(NSNotification *) notification {
   CAMLparam0();
   log("Text change\n");
-  printf("Text change\n");
 
   if (Check_optional(onChange)) {
     id textField = [notification object];
