@@ -54,6 +54,19 @@ let main = hooks => {
 
   print_endline("Render emojis: " ++ string_of_int(List.length(filtered)));
 
+  let%hook draw = useCallback(({top, left, width, height}) => {
+    print_endline(
+      "Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height),
+    );
+    filtered->Belt.List.forEachWithIndex((index, emoji) => {
+      let x = index mod row |> float_of_int;
+      let y = index / row |> float_of_int;
+      if (y *. size +. size >= top && y *. size <= top +. height) {
+        Fluid.Draw.text(emoji.char, {x: x *. size, y: y *. size});
+      };
+    });
+  }, text);
+
   <view layout={Layout.style(
     ~width=300.,
     ~height=200.,
@@ -61,9 +74,15 @@ let main = hooks => {
     ()
   )}
   >
+    /* <view backgroundColor={r: 1., g: 0., b: 0., a: 1.} layout={Layout.style(~height=20., ~width=50., ())} /> */
     <text
       contents=text
-      layout={Layout.style(~alignSelf=AlignStretch, ~marginVertical=10., ())}
+      layout={Layout.style(
+        ~alignSelf=AlignStretch,
+        ~marginHorizontal=10.,
+        ~marginBottom=15.,
+        ~marginTop=5.,
+        ())}
       onChange={text => {
         print_endline("Onchange text " ++ text);
         setText(text)
@@ -79,25 +98,11 @@ let main = hooks => {
       )},
       ~children=[
         <view layout={
-          Layout.style(~alignSelf=AlignStretch, ())
+          Layout.style(~padding=10., ~alignSelf=AlignStretch, ())
         }>
-      <text contents="Hello"/>
       <custom
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
-        draw={({top, left, width, height}) => {
-          print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height));
-          filtered->Belt.List.forEachWithIndex((index, emoji) => {
-            let x = index mod row |> float_of_int;
-            let y = index / row |> float_of_int;
-            if (y *. size +. size >= top && y *. size <= top +. height) {
-              Fluid.Draw.text(
-                emoji.char,
-                {x: x *. size,
-                y: y *. size}
-              )
-            }
-          })
-        }}
+        draw={draw}
       />
         </view>
       ],
