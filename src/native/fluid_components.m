@@ -127,6 +127,7 @@ void fluid_Image_load(value src_v, value onDone_v) {
       CAMLparam0();
       CAMLlocal1(image_v);
       Wrap(image_v, image);
+      // TODO fix this one
       caml_callback(onDone_v, image_v);
       caml_remove_global_root(&onDone_v);
       CAMLreturn0;
@@ -165,24 +166,24 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 // MARK - Plain View
 
 @interface CustomView: NSView
-- (void)setDraw:(value)draw;
+- (void)setDraw:(int)draw;
 @end
 
 @implementation CustomView {
-  value drawFn;
+  int drawFn;
 }
 
-- (instancetype)initWithDraw:(value)drawFnv andFrame:(NSRect)frame {
+- (instancetype)initWithDraw:(int)drawFnv andFrame:(NSRect)frame {
   if (self = [super initWithFrame:frame]) {
     drawFn = drawFnv;
-    caml_register_global_root(&drawFnv);
+    // caml_register_global_root(&drawFnv);
   }
   return self;
 }
 
-- (void)setDraw:(value)draw {
-  caml_remove_global_root(&drawFn);
-  caml_register_global_root(&draw);
+- (void)setDraw:(int)draw {
+  // caml_remove_global_root(&drawFn);
+  // caml_register_global_root(&draw);
   drawFn = draw;
 }
 
@@ -196,7 +197,14 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   Create_record4_double(rect_v, dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
   // Wrap(rect_v, dirtyRect);
   NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
-  caml_callback(drawFn, rect_v);
+
+  static value * closure_f = NULL;
+  if (closure_f == NULL) {
+      /* First time around, look up by name */
+      closure_f = caml_named_value("fluid_draw");
+  }
+
+  caml_callback2(*closure_f, Val_int(drawFn), rect_v);
   CAMLreturn0;
 }
 
@@ -241,11 +249,12 @@ CAMLprim value fluid_create_ScrollView(value dims_v) {
 CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
   CAMLparam2(dims_v, draw_v);
   CAMLlocal1(view_v);
+  // caml_register_global_root(&draw_v);
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
   NSRect frame = NSMakeRect(left, top, width, height);
-  NSView* view = [[CustomView alloc] initWithDraw:draw_v andFrame:frame];
+  NSView* view = [[CustomView alloc] initWithDraw:Int_val(draw_v) andFrame:frame];
   view.wantsLayer = true;
 
   Wrap(view_v, view);
@@ -254,9 +263,10 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
 
 void fluid_update_CustomView(value view_v, value draw_v) {
   CAMLparam2(view_v, draw_v);
+  // caml_register_global_root(&draw_v);
 
   CustomView* view = (CustomView*)Unwrap(view_v);
-  [view setDraw:draw_v];
+  [view setDraw:Int_val(draw_v)];
 
   CAMLreturn0;
 }
@@ -366,28 +376,36 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 @end
 
 @implementation TextFieldDelegate {
-  value onChange;
+  int onChange;
 }
 
-- (void)setOnChange:(value)onChangev {
+- (void)setOnChange:(int)onChangev {
   onChange = onChangev;
 }
 
-- (instancetype)initWithOnChange:(value)onChangev {
+- (instancetype)initWithOnChange:(int)onChangev {
   if (self = [super init]) {
     onChange = onChangev;
-    caml_register_global_root(&onChangev);
+    // caml_register_global_root(&onChangev);
   }
   return self;
 }
 
 - (void)controlTextDidChange:(NSNotification *) notification {
   CAMLparam0();
-  // log("Text change\n");
+  log("Text change\n");
 
-  if (Check_optional(onChange)) {
+  if (onChange != -1) {
     id textField = [notification object];
-    caml_callback(Unpack_optional(onChange), caml_copy_string([[textField stringValue] UTF8String]));
+    log("Calling\n");
+
+    static value * closure_f = NULL;
+    if (closure_f == NULL) {
+        /* First time around, look up by name */
+        closure_f = caml_named_value("fluid_string_change");
+    }
+
+    caml_callback2(*closure_f, Val_int(onChange), caml_copy_string([[textField stringValue] UTF8String]));
   }
 
   CAMLreturn0;
@@ -400,6 +418,7 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value onChange_v) {
   CAMLparam4(contents_v, dims_v, font_v, onChange_v);
   CAMLlocal1(text_v);
+  // caml_register_global_root(&onChange_v);
   log("Create text view\n");
 
   NSString *contents = NSString_val(contents_v);
@@ -418,14 +437,16 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
     text = [NSTextField labelWithString:contents];
   }
 
+  int onChange_i = -1;
   if (Check_optional(onChange_v)) {
     text.editable = true;
     text.wantsLayer = true;
     text.layer.backgroundColor = CGColorCreateGenericRGB(1, 1, 1, 1);
+    onChange_i = Int_val(Unpack_optional(onChange_v));
   }
   // text.wantsLayer = true;
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
-  text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_v];
+  text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_i];
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
@@ -439,6 +460,7 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
 
 void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v, value onChange_v) {
   CAMLparam5(text_v, contents_v, dims, font_v, onChange_v);
+  // caml_register_global_root(&onChange_v);
   // log("Update text view\n");
 
   NSTextField* text = (NSTextField*)Unwrap(text_v);
@@ -458,7 +480,11 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   }
 
   text.editable = Check_optional(onChange_v);
-  [(TextFieldDelegate*)text.delegate setOnChange:onChange_v];
+  int onChange_i = -1;
+  if (Check_optional(onChange_v)) {
+    onChange_i = Int_val(Unpack_optional(onChange_v));
+  }
+  [(TextFieldDelegate*)text.delegate setOnChange:onChange_i];
 
   Unpack_record4_double(dims, left, top, width, height);
 

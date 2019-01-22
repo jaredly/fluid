@@ -4,6 +4,12 @@ let str = Fluid.string;
 
 open Fluid.Hooks;
 
+Gc.create_alarm(() => {
+  print_endline("========");
+  print_endline("GC GC GC");
+  print_endline("========");
+});
+
 let text = Files.readFileExn("./emojis.json");
 let emojis = Json.parse(text);
 let force = x => switch x { |None => failwith("Force unwrapped nil") | Some(x) => x};
@@ -26,7 +32,7 @@ let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
     category,
   }
 });
-let emojis = emojis->Belt.List.take(10)->force;
+/* let emojis = emojis->Belt.List.take(10)->force; */
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
 /** Count: 1570 */
@@ -48,8 +54,9 @@ let main = hooks => {
     emoji.keywords->Belt.Array.some(has(_, rx))
   );
   let size = 20.;
-  let row = int_of_float(300. /. 20.);
-  let rows = List.length(filtered) / row;
+  let rowf = 300. /. 20.;
+  let row = int_of_float(rowf);
+  let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
   <view layout={Layout.style(
     ~width=300.,
@@ -61,7 +68,10 @@ let main = hooks => {
     <text
       contents=text
       layout={Layout.style(~alignSelf=AlignStretch, ~marginVertical=10., ())}
-      onChange={setText}
+      onChange={text => {
+        print_endline("Onchange text");
+        setText(text)
+      }}
     />
     {Fluid.Native.scrollView(
       ~layout={Layout.style(
@@ -79,7 +89,7 @@ let main = hooks => {
       <custom
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
         draw={({top, left, width, height}) => {
-          print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height));
+          /* print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height)); */
           filtered->Belt.List.forEachWithIndex((index, emoji) => {
             let x = index mod row |> float_of_int;
             let y = index / row |> float_of_int;
@@ -97,6 +107,11 @@ let main = hooks => {
       ],
       ()
     )}
+    <button title="GC ME"
+    onPress={() => {
+      print_endline("Full major hgc here");
+      Gc.full_major();
+    }}/>
   </view>
 };
 

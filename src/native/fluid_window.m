@@ -62,10 +62,10 @@ void fluid_Window_center(value window_v) {
 @end
 
 @implementation WindowDelegate {
-  value onBlur;
+  int onBlur;
 }
 
-- (instancetype)initWithOnBlur:(value)onBlurv {
+- (instancetype)initWithOnBlur:(int)onBlurv {
   if (self = [super init]) {
     onBlur = onBlurv;
     // if (Check_optional(onBlur)) {
@@ -73,7 +73,6 @@ void fluid_Window_center(value window_v) {
     // } else {
     //   log("Doesn't have a blur\n");
     // }
-    caml_register_global_root(&onBlurv);
   }
   return self;
 }
@@ -83,9 +82,15 @@ void fluid_Window_center(value window_v) {
   CAMLlocal1(window_v);
   log("Window blur\n");
 
-  caml_callback(onBlur, window_v);
+  Wrap(window_v, [notification object]);
+
+  static value * closure_f = NULL;
+  if (closure_f == NULL) {
+      /* First time around, look up by name */
+      closure_f = caml_named_value("fluid_window");
+  }
+  caml_callback2(*closure_f, Val_int(onBlur), window_v);
   // if (Check_optional(onBlur)) {
-  //   Wrap(window_v, [notification object]);
   //   caml_callback(Unpack_optional(onBlur), window_v);
   // } else {
   //   log("No blur handler\n");
@@ -99,7 +104,6 @@ void fluid_Window_center(value window_v) {
 CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, value isFloating) {
   CAMLparam4(title_v, onBlur_v, dims_v, isFloating);
   CAMLlocal1(window_v);
-  caml_register_global_root(&onBlur_v);
   log("Make window\n");
 
   Unpack_record4_double(dims_v, left, top, width, height);
@@ -115,7 +119,7 @@ CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, va
       NSWindowStyleMaskTitled;
   }
 
-  WindowDelegate* delegate = [[WindowDelegate alloc] initWithOnBlur:onBlur_v];
+  WindowDelegate* delegate = [[WindowDelegate alloc] initWithOnBlur:Int_val(onBlur_v)];
 
   FluidWindow* window = [[FluidWindow alloc]
     initWithContentRect: NSMakeRect(left, top, width, height)
