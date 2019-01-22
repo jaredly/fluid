@@ -62,7 +62,7 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
 
 void fluid_setImmediate(value callback) {
   CAMLparam1(callback);
-  log("Set immediate\n");
+  // log("Set immediate\n");
   // dispatch_after(DISPATCH_TIME_NOW, dispatch_get_main_queue(), ^(void){
     caml_callback(callback, Val_unit);
   // });
@@ -383,7 +383,7 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 - (void)controlTextDidChange:(NSNotification *) notification {
   CAMLparam0();
-  log("Text change\n");
+  // log("Text change\n");
 
   if (Check_optional(onChange)) {
     id textField = [notification object];
@@ -439,7 +439,7 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
 
 void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v, value onChange_v) {
   CAMLparam5(text_v, contents_v, dims, font_v, onChange_v);
-  log("Update text view\n");
+  // log("Update text view\n");
 
   NSTextField* text = (NSTextField*)Unwrap(text_v);
   NSString *contents = NSString_val(contents_v);

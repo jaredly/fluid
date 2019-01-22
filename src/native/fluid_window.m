@@ -67,6 +67,11 @@ void fluid_Window_center(value window_v) {
 - (instancetype)initWithOnBlur:(value)onBlurv {
   if (self = [super init]) {
     onBlur = onBlurv;
+    // if (Check_optional(onBlur)) {
+    //   log("Has a blur\n");
+    // } else {
+    //   log("Doesn't have a blur\n");
+    // }
     caml_register_global_root(&onBlurv);
   }
   return self;
@@ -77,12 +82,13 @@ void fluid_Window_center(value window_v) {
   CAMLlocal1(window_v);
   log("Window blur\n");
 
-  if (Check_optional(onBlur)) {
-    Wrap(window_v, [notification object]);
-    caml_callback(Unpack_optional(onBlur), window_v);
-  } else {
-    log("No blur handler\n");
-  }
+  caml_callback(onBlur, window_v);
+  // if (Check_optional(onBlur)) {
+  //   Wrap(window_v, [notification object]);
+  //   caml_callback(Unpack_optional(onBlur), window_v);
+  // } else {
+  //   log("No blur handler\n");
+  // }
 
   CAMLreturn0;
 }

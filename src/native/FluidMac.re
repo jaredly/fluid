@@ -7,9 +7,10 @@ type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
 module Tracker = (C: {type arg;}) => {
-  let fns: Hashtbl.t(C.arg, unit) = Hashtbl.create(1000);
-  let track = fn => {Hashtbl.replace(fns, fn, ()); fn};
-  let untrack = fn => Hashtbl.remove(fns, fn);
+  module Id = Belt.Id.MakeHashable({type t=C.arg; let hash=Hashtbl.hash; let eq=(===)});
+  let fns: Belt.HashSet.t(C.arg, Id.identity) = Belt.HashSet.make(~hintSize=1000, ~id=(module Id:Belt.Id.Hashable with type t = C.arg and type identity = Id.identity));
+  let track = fn => {Belt.HashSet.add(fns, fn); fn};
+  let untrack = fn => Belt.HashSet.remove(fns, fn);
 };
 
 /* let trackMaybeFn = fn => switch fn {
@@ -312,23 +313,24 @@ module Fluid = {
 
   module Window = {
     type window;
-    external make: (~title: string, ~onBlur: option(window => unit), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
+    external make: (~title: string, ~onBlur: (window => unit), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
     external center: (window) => unit = "fluid_Window_center";
     external close: (window) => unit = "fluid_Window_close";
     external activate: (window) => unit = "fluid_Window_activate";
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
   }
 
-  module WindowTracker = Tracker({type arg = option(Window.window => unit)});
+  module WindowTracker = Tracker({type arg = (Window.window => unit)});
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~pos=?, ~onBlur=?, ~floating=false, root: element) => {
+  let launchWindow = (~title: string, ~pos=?, ~onBlur=(_) => (), ~floating=false, root: element) => {
     preMount(root, (~size as (width, height), onNode) => {
       let (left, top) = switch pos {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
+      print_endline("making");
       let window =
         Window.make(
           ~title,
@@ -336,6 +338,7 @@ module Fluid = {
           ~dims={left, top, width, height},
           ~isFloating=floating,
         );
+      print_endline("made");
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
       /* if (!floating) {
