@@ -267,6 +267,7 @@ void fluid_update_CustomView(value view_v, value draw_v) {
 
   CustomView* view = (CustomView*)Unwrap(view_v);
   [view setDraw:Int_val(draw_v)];
+  [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
 
   CAMLreturn0;
 }

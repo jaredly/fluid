@@ -4,12 +4,6 @@ let str = Fluid.string;
 
 open Fluid.Hooks;
 
-Gc.create_alarm(() => {
-  print_endline("========");
-  print_endline("GC GC GC");
-  print_endline("========");
-});
-
 let text = Files.readFileExn("./emojis.json");
 let emojis = Json.parse(text);
 let force = x => switch x { |None => failwith("Force unwrapped nil") | Some(x) => x};
@@ -58,10 +52,12 @@ let main = hooks => {
   let row = int_of_float(rowf);
   let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
+  print_endline("Render emojis: " ++ string_of_int(List.length(filtered)));
+
   <view layout={Layout.style(
     ~width=300.,
     ~height=200.,
-    ~padding=10.,
+    /* ~padding=10., */
     ()
   )}
   >
@@ -69,7 +65,7 @@ let main = hooks => {
       contents=text
       layout={Layout.style(~alignSelf=AlignStretch, ~marginVertical=10., ())}
       onChange={text => {
-        print_endline("Onchange text");
+        print_endline("Onchange text " ++ text);
         setText(text)
       }}
     />
@@ -89,7 +85,7 @@ let main = hooks => {
       <custom
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
         draw={({top, left, width, height}) => {
-          /* print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height)); */
+          print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height));
           filtered->Belt.List.forEachWithIndex((index, emoji) => {
             let x = index mod row |> float_of_int;
             let y = index / row |> float_of_int;
@@ -107,11 +103,6 @@ let main = hooks => {
       ],
       ()
     )}
-    <button title="GC ME"
-    onPress={() => {
-      print_endline("Full major hgc here");
-      Gc.full_major();
-    }}/>
   </view>
 };
 

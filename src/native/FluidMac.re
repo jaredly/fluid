@@ -224,7 +224,9 @@ module NativeInterface = {
 
       | (Custom(a), Custom(draw)) =>
         /* TODO DrawTracker.untrack(a); */
-        updateCustom(mountPoint, DrawTracker.track(draw))
+        if (a !== draw) {
+          updateCustom(mountPoint, DrawTracker.track(draw))
+        }
 
       | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
         if (atext != btext || afont != bfont || aonChange !== bonChange) {
