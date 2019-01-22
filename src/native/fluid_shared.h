@@ -33,13 +33,15 @@
   Store_field(c, 0, caml_copy_double(a)); \
   Store_field(c, 1, caml_copy_double(b))
 
-#define DEBUG
+// #define DEBUG
 
+#ifdef DEBUG
 #define log(fmt) fprintf(stdout, fmt)
 #define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
-
-// #define log(fmt) (void)0
-// #define logf(fmt, ...) (void)0
+#else
+#define log(fmt) (void)0
+#define logf(fmt, ...) (void)0
+#endif
 
 #define Create_record4_double(r, a, b, c, d) \
   r = caml_alloc(4 * Double_wosize, Double_array_tag); \

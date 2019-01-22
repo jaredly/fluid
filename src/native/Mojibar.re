@@ -26,6 +26,7 @@ let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
     category,
   }
 });
+/* let emojis = emojis->Belt.List.take(10)->force; */
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
 /** Count: 1570 */
@@ -47,20 +48,45 @@ let main = hooks => {
     emoji.keywords->Belt.Array.some(has(_, rx))
   );
   let size = 20.;
-  let row = int_of_float(300. /. 20.);
-  let rows = List.length(filtered) / row;
+  let rowf = 300. /. 20.;
+  let row = int_of_float(rowf);
+  let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
+
+  print_endline("Render emojis: " ++ string_of_int(List.length(filtered)));
+
+  let%hook draw = useCallback(({top, left, width, height}) => {
+    print_endline(
+      "Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height),
+    );
+    filtered->Belt.List.forEachWithIndex((index, emoji) => {
+      let x = index mod row |> float_of_int;
+      let y = index / row |> float_of_int;
+      if (y *. size +. size >= top && y *. size <= top +. height) {
+        Fluid.Draw.text(emoji.char, {x: x *. size, y: y *. size});
+      };
+    });
+  }, text);
 
   <view layout={Layout.style(
     ~width=300.,
     ~height=200.,
-    ~padding=10.,
+    /* ~padding=10., */
     ()
   )}
   >
+    /* <view backgroundColor={r: 1., g: 0., b: 0., a: 1.} layout={Layout.style(~height=20., ~width=50., ())} /> */
     <text
       contents=text
-      layout={Layout.style(~alignSelf=AlignStretch, ~marginVertical=10., ())}
-      onChange={setText}
+      layout={Layout.style(
+        ~alignSelf=AlignStretch,
+        ~marginHorizontal=10.,
+        ~marginBottom=15.,
+        ~marginTop=5.,
+        ())}
+      onChange={text => {
+        print_endline("Onchange text " ++ text);
+        setText(text)
+      }}
     />
     {Fluid.Native.scrollView(
       ~layout={Layout.style(
@@ -72,25 +98,11 @@ let main = hooks => {
       )},
       ~children=[
         <view layout={
-          Layout.style(~alignSelf=AlignStretch, ())
+          Layout.style(~padding=10., ~alignSelf=AlignStretch, ())
         }>
-      <text contents="Hello"/>
       <custom
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
-        draw={({top, left, width, height}) => {
-          print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height));
-          filtered->Belt.List.forEachWithIndex((index, emoji) => {
-            let x = index mod row |> float_of_int;
-            let y = index / row |> float_of_int;
-            if (y *. size +. size >= top && y *. size <= top +. height) {
-              Fluid.Draw.text(
-                emoji.char,
-                {x: x *. size,
-                y: y *. size}
-              )
-            }
-          })
-        }}
+        draw={draw}
       />
         </view>
       ],
@@ -112,6 +124,7 @@ Fluid.App.launch(
   Fluid.App.statusBarItem(
     ~title="Mojibar",
     ~onClick=pos => {
+      print_endline("Launching");
       Fluid.launchWindow(
         ~title="Hello Fluid",
         ~floating=true,

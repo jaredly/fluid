@@ -6,12 +6,47 @@ Printexc.record_backtrace(true);
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
-module Tracker = (C: {type arg;}) => {
-  let fns: Hashtbl.t(C.arg, unit) = Hashtbl.create(1000);
-  let track = fn => {Hashtbl.replace(fns, fn, ()); fn};
-  let untrack = fn => Hashtbl.remove(fns, fn);
+/* module Tracker = (C: {type arg;}) => {
+  module Id = Belt.Id.MakeHashable({type t=C.arg; let hash=Hashtbl.hash; let eq=(===)});
+  let fns: Belt.HashSet.t(C.arg, Id.identity) = Belt.HashSet.make(~hintSize=1000, ~id=(module Id:Belt.Id.Hashable with type t = C.arg and type identity = Id.identity));
+  let track = fn => {Belt.HashSet.add(fns, fn); fn};
+  let untrack = fn => Belt.HashSet.remove(fns, fn);
+}; */
+
+module Tracker = (C: {type arg;let name: string}) => {
+  let fns: Hashtbl.t(int, C.arg => unit) = Hashtbl.create(100);
+  let cur = ref(0);
+  let next = () => {cur := cur^ + 1; cur^};
+  let track = fn => {
+    let id = next();
+    Hashtbl.replace(fns, id, fn); id
+  };
+  let untrack = id => Hashtbl.remove(fns, id);
+  let call = (id, arg) => switch (Hashtbl.find(fns, id)) {
+    | exception Not_found =>
+      print_endline("Failed to find callback! " ++ string_of_int(id))
+    | fn => fn(arg)
+  };
+  Callback.register(C.name, call);
 };
 
+module OptTracker = (C: {type arg;let name: string}) => {
+  include Tracker(C);
+  let track = fn => {
+    switch fn {
+      | None => None
+      | Some(fn) =>
+        let id = next();
+        Hashtbl.replace(fns, id, fn);
+        Some(id)
+    }
+  };
+};
+
+  /* let fns: ref(list(C.arg)) = ref([]);
+  let track = fn => {fns := [fn, ...fns^]; fn};
+  let untrack = (_) => (); */
+  /* let untrack = fn => fns := (fns^)->Belt.List.keep((!==)(fn)); */
 /* let trackMaybeFn = fn => switch fn {
   | None => None
   | Some(f) => trackFn(f); fn
@@ -30,10 +65,10 @@ module NativeInterface = {
 
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
-  external createCustom: (~dims: dims, ~drawFn: dims => unit) => nativeInternal = "fluid_create_CustomView";
-  external updateCustom: (nativeInternal, dims => unit) => unit = "fluid_update_CustomView";
-  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(string => unit)) => nativeInternal = "fluid_create_NSTextView";
-  external updateTextView: (nativeInternal, string, dims, font, option(string => unit)) => unit = "fluid_set_NSTextView_textContent";
+  external createCustom: (~dims: dims, ~drawFn: int) => nativeInternal = "fluid_create_CustomView";
+  external updateCustom: (nativeInternal, int) => unit = "fluid_update_CustomView";
+  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(int)) => nativeInternal = "fluid_create_NSTextView";
+  external updateTextView: (nativeInternal, string, dims, font, option(int)) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
   type image;
@@ -170,8 +205,8 @@ module NativeInterface = {
     }
   };
 
-  module DrawTracker = Tracker({type arg = dims => unit});
-  module MaybeStringTracker = Tracker({type arg = option(string => unit)});
+  module DrawTracker = Tracker({type arg = dims; let name = "fluid_draw"});
+  module MaybeStringTracker = OptTracker({type arg = string; let name = "fluid_string_change"});
 
   let update = (mounted, (mountPoint, id), newElement, layout) => {
     switch (mounted, newElement) {
@@ -188,14 +223,15 @@ module NativeInterface = {
         };
 
       | (Custom(a), Custom(draw)) =>
-        DrawTracker.untrack(a);
-        updateCustom(mountPoint, DrawTracker.track(draw))
+        /* TODO DrawTracker.untrack(a); */
+        if (a !== draw) {
+          updateCustom(mountPoint, DrawTracker.track(draw))
+        }
 
       | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
         if (atext != btext || afont != bfont || aonChange !== bonChange) {
-          MaybeStringTracker.untrack(aonChange);
-          MaybeStringTracker.track(bonChange)->ignore;
-          updateTextView(mountPoint, btext, dims(layout), bfont, bonChange)
+          /* MaybeStringTracker.untrack(aonChange); */
+          updateTextView(mountPoint, btext, dims(layout), bfont, MaybeStringTracker.track(bonChange))
         };
 
       | _ => ()
@@ -312,23 +348,24 @@ module Fluid = {
 
   module Window = {
     type window;
-    external make: (~title: string, ~onBlur: option(window => unit), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
+    external make: (~title: string, ~onBlur: (int), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
     external center: (window) => unit = "fluid_Window_center";
     external close: (window) => unit = "fluid_Window_close";
     external activate: (window) => unit = "fluid_Window_activate";
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
   }
 
-  module WindowTracker = Tracker({type arg = option(Window.window => unit)});
+  module WindowTracker = Tracker({type arg = Window.window; let name = "fluid_window"});
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~pos=?, ~onBlur=?, ~floating=false, root: element) => {
+  let launchWindow = (~title: string, ~pos=?, ~onBlur=(_) => (), ~floating=false, root: element) => {
     preMount(root, (~size as (width, height), onNode) => {
       let (left, top) = switch pos {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
+      print_endline("making");
       let window =
         Window.make(
           ~title,
@@ -336,6 +373,7 @@ module Fluid = {
           ~dims={left, top, width, height},
           ~isFloating=floating,
         );
+      print_endline("made");
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
       /* if (!floating) {

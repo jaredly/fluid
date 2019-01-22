@@ -45,6 +45,7 @@ void fluid_Window_close(value window_v) {
   CAMLparam1(window_v);
   log("close window\n");
   FluidWindow* window = (FluidWindow*)Unwrap(window_v);
+  log("Ok here\n");
   [window close];
   CAMLreturn0;
 }
@@ -61,13 +62,17 @@ void fluid_Window_center(value window_v) {
 @end
 
 @implementation WindowDelegate {
-  value onBlur;
+  int onBlur;
 }
 
-- (instancetype)initWithOnBlur:(value)onBlurv {
+- (instancetype)initWithOnBlur:(int)onBlurv {
   if (self = [super init]) {
     onBlur = onBlurv;
-    caml_register_global_root(&onBlurv);
+    // if (Check_optional(onBlur)) {
+    //   log("Has a blur\n");
+    // } else {
+    //   log("Doesn't have a blur\n");
+    // }
   }
   return self;
 }
@@ -77,12 +82,19 @@ void fluid_Window_center(value window_v) {
   CAMLlocal1(window_v);
   log("Window blur\n");
 
-  if (Check_optional(onBlur)) {
-    Wrap(window_v, [notification object]);
-    caml_callback(Unpack_optional(onBlur), window_v);
-  } else {
-    log("No blur handler\n");
+  Wrap(window_v, [notification object]);
+
+  static value * closure_f = NULL;
+  if (closure_f == NULL) {
+      /* First time around, look up by name */
+      closure_f = caml_named_value("fluid_window");
   }
+  caml_callback2(*closure_f, Val_int(onBlur), window_v);
+  // if (Check_optional(onBlur)) {
+  //   caml_callback(Unpack_optional(onBlur), window_v);
+  // } else {
+  //   log("No blur handler\n");
+  // }
 
   CAMLreturn0;
 }
@@ -107,7 +119,7 @@ CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, va
       NSWindowStyleMaskTitled;
   }
 
-  WindowDelegate* delegate = [[WindowDelegate alloc] initWithOnBlur:onBlur_v];
+  WindowDelegate* delegate = [[WindowDelegate alloc] initWithOnBlur:Int_val(onBlur_v)];
 
   FluidWindow* window = [[FluidWindow alloc]
     initWithContentRect: NSMakeRect(left, top, width, height)
