@@ -26,7 +26,7 @@ let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
     category,
   }
 });
-/* let emojis = emojis->Belt.List.take(10)->force; */
+let emojis = emojis->Belt.List.take(10)->force;
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
 /** Count: 1570 */

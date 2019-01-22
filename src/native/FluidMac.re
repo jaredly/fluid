@@ -6,11 +6,16 @@ Printexc.record_backtrace(true);
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
-module Tracker = (C: {type arg;}) => {
+/* module Tracker = (C: {type arg;}) => {
   module Id = Belt.Id.MakeHashable({type t=C.arg; let hash=Hashtbl.hash; let eq=(===)});
   let fns: Belt.HashSet.t(C.arg, Id.identity) = Belt.HashSet.make(~hintSize=1000, ~id=(module Id:Belt.Id.Hashable with type t = C.arg and type identity = Id.identity));
   let track = fn => {Belt.HashSet.add(fns, fn); fn};
   let untrack = fn => Belt.HashSet.remove(fns, fn);
+}; */
+module Tracker = (C: {type arg;}) => {
+  let fns: ref(list(C.arg)) = ref([]);
+  let track = fn => {fns := [fn, ...fns^]; fn};
+  let untrack = fn => fns := (fns^)->Belt.List.keep((!==)(fn));
 };
 
 /* let trackMaybeFn = fn => switch fn {

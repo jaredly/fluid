@@ -45,6 +45,7 @@ void fluid_Window_close(value window_v) {
   CAMLparam1(window_v);
   log("close window\n");
   FluidWindow* window = (FluidWindow*)Unwrap(window_v);
+  log("Ok here\n");
   [window close];
   CAMLreturn0;
 }
@@ -98,6 +99,7 @@ void fluid_Window_center(value window_v) {
 CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, value isFloating) {
   CAMLparam4(title_v, onBlur_v, dims_v, isFloating);
   CAMLlocal1(window_v);
+  caml_register_global_root(&onBlur_v);
   log("Make window\n");
 
   Unpack_record4_double(dims_v, left, top, width, height);
