@@ -14,6 +14,7 @@ module NativeInterface = {
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
+
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
   external createCustom: (~dims: dims, ~drawFn: unit => unit) => nativeInternal = "fluid_create_CustomView";
   external updateCustom: (nativeInternal, unit => unit) => unit = "fluid_update_CustomView";
@@ -292,6 +293,11 @@ module Fluid = {
         |]
       );
   };
+
+  module Draw = {
+    type pos = {x: float, y: float};
+    external text: (string, pos) => unit = "fluid_Draw_text";
+  }
 
   module Window = {
     type window;

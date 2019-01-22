@@ -42,9 +42,16 @@ let main = hooks => {
         }>
       <text contents="Hello"/>
       <custom
-        layout={Layout.style(~alignSelf=AlignStretch, ~height=100., ())}
+        layout={Layout.style(~alignSelf=AlignStretch, ~height=15000., ())}
         draw={() => {
           print_endline("Ok drawing");
+          for (i in 0 to 100) {
+            Fluid.Draw.text(
+              "🎉",
+              {x: 10.,
+              y: float_of_int(i) *. 20.}
+            )
+          }
         }}
       />
         </view>

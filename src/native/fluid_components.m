@@ -203,6 +203,16 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 
 @end
 
+void fluid_Draw_text(value text, value pos) {
+  CAMLparam2(text, pos);
+  [NSString_val(text) drawAtPoint:CGPointMake(
+    Double_field(pos, 0),
+    Double_field(pos, 1)
+  )
+  withAttributes:@{}];
+  CAMLreturn0;
+}
+
 
 CAMLprim value fluid_create_ScrollView(value dims_v) {
   CAMLparam1(dims_v);
