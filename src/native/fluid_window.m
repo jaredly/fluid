@@ -43,7 +43,7 @@ void fluid_Window_activate(value window_v) {
 
 void fluid_Window_close(value window_v) {
   CAMLparam1(window_v);
-  log("Center window\n");
+  log("close window\n");
   FluidWindow* window = (FluidWindow*)Unwrap(window_v);
   [window close];
   CAMLreturn0;
@@ -80,6 +80,8 @@ void fluid_Window_center(value window_v) {
   if (Check_optional(onBlur)) {
     Wrap(window_v, [notification object]);
     caml_callback(Unpack_optional(onBlur), window_v);
+  } else {
+    log("No blur handler\n");
   }
 
   CAMLreturn0;

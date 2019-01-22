@@ -181,6 +181,8 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 }
 
 - (void)setDraw:(value)draw {
+  caml_remove_global_root(&drawFn);
+  caml_register_global_root(&draw);
   drawFn = draw;
 }
 
@@ -190,14 +192,11 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 
 - (void)drawRect:(NSRect)dirtyRect {
   CAMLparam0();
-  // CAMLlocal1(rect_v);
+  CAMLlocal1(rect_v);
+  Create_record4_double(rect_v, dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
   // Wrap(rect_v, dirtyRect);
-  for (int i=0; i<1500; i++) {
-    [@"Hi" drawAtPoint:CGPointMake(20. + i, 20.)
-    withAttributes:@{}];
-  }
   NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
-  caml_callback(drawFn, Val_unit);
+  caml_callback(drawFn, rect_v);
   CAMLreturn0;
 }
 
@@ -281,9 +280,9 @@ CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value st
     Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
-  } else {
-    view.wantsLayer = true;
-    view.layer.backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 0.1);
+  // } else {
+  //   view.wantsLayer = true;
+  //   view.layer.backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 0.1);
   }
 
   Wrap(view_v, view);

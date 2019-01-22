@@ -7,13 +7,48 @@ open Fluid.Hooks;
 let text = Files.readFileExn("./emojis.json");
 let emojis = Json.parse(text);
 let force = x => switch x { |None => failwith("Force unwrapped nil") | Some(x) => x};
-let emojis = force(Json.obj(emojis)) -> Belt.List.take(200) -> force;
+type emoji = {
+  name: string,
+  keywords: array(string),
+  char: string,
+  fitz: bool,
+  category: string,
+};
+let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
+  let keywords = Json.array(emoji |> Json.get("keywords") |> force)->force->Belt.List.map(item => force(Json.string(item)))->Belt.List.toArray;
+  let char = Json.string(emoji |> Json.get("char") |> force) |> force;
+  let category = Json.string(emoji |> Json.get("category") |> force) |> force;
+  {
+    name,
+    keywords,
+    char,
+    fitz: false,
+    category,
+  }
+});
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
 /** Count: 1570 */
 
+/* let has = (text, rx) => switch (Str.search_forward(rx, text, 0)) {
+  | exception Not_found => false
+  | n => true
+}; */
+
+
+let has = (text, rx) => Str.string_match(rx, text, 0);
+
 let main = hooks => {
   let%hook (text, setText) = useState("");
+
+  let rx = Str.regexp(".*" ++ Str.quote(text) ++ ".*");
+  let filtered = text == "" ? emojis : emojis->Belt.List.keep(emoji =>
+    emoji.name->has(rx) ||
+    emoji.keywords->Belt.Array.some(has(_, rx))
+  );
+  let size = 20.;
+  let row = int_of_float(300. /. 20.);
+  let rows = List.length(filtered) / row;
 
   <view layout={Layout.style(
     ~width=300.,
@@ -27,7 +62,6 @@ let main = hooks => {
       layout={Layout.style(~alignSelf=AlignStretch, ~marginVertical=10., ())}
       onChange={setText}
     />
-    <text contents="Top"/>
     {Fluid.Native.scrollView(
       ~layout={Layout.style(
         ~overflow=Scroll,
@@ -42,49 +76,26 @@ let main = hooks => {
         }>
       <text contents="Hello"/>
       <custom
-        layout={Layout.style(~alignSelf=AlignStretch, ~height=15000., ())}
-        draw={() => {
-          print_endline("Ok drawing");
-          for (i in 0 to 100) {
-            Fluid.Draw.text(
-              "🎉",
-              {x: 10.,
-              y: float_of_int(i) *. 20.}
-            )
-          }
+        layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
+        draw={({top, left, width, height}) => {
+          print_endline("Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height));
+          filtered->Belt.List.forEachWithIndex((index, emoji) => {
+            let x = index mod row |> float_of_int;
+            let y = index / row |> float_of_int;
+            if (y *. size +. size >= top && y *. size <= top +. height) {
+              Fluid.Draw.text(
+                emoji.char,
+                {x: x *. size,
+                y: y *. size}
+              )
+            }
+          })
         }}
       />
         </view>
       ],
       ()
     )}
-      /* <text contents="Hello"/> */
-      /* <custom
-        layout={Layout.style(~alignSelf=AlignStretch, ~height=100., ())}
-        draw={() => {
-          print_endline("Ok drawing");
-        }}
-      /> */
-    /* </scrollView> */
-    <text contents="Bottom"/>
-    /* {Fluid.Native.view(~layout={Layout.style(
-      ~flexWrap=CssWrap,
-      ~flexDirection=Row,
-      ()
-      )},
-    ~children={
-      emojis->Belt.List.map(((name, defn)) => {
-        let char = force(defn |> Json.get("char") |?> Json.string);
-        <button
-          title=char
-          onPress={() => {
-            print_endline("Selected: " ++ char)
-          }}
-        />
-      })
-    },
-    ()
-    )} */
   </view>
 };
 

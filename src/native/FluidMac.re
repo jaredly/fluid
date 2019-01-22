@@ -6,6 +6,20 @@ Printexc.record_backtrace(true);
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
+module Tracker = (C: {type arg;}) => {
+  let fns: Hashtbl.t(C.arg, unit) = Hashtbl.create(1000);
+  let track = fn => {Hashtbl.replace(fns, fn, ()); fn};
+  let untrack = fn => Hashtbl.remove(fns, fn);
+};
+
+/* let trackMaybeFn = fn => switch fn {
+  | None => None
+  | Some(f) => trackFn(f); fn
+};
+let dimsFns = Hashtbl.create(1000);
+let trackDimsFn = fn => {Hashtbl.replace(dimsFns, fn, ()); fn};
+let untrackDimsFn = fn => Hashtbl.remove(dimsFns, fn); */
+
 module NativeInterface = {
   type nativeInternal;
   type nativeNode = (nativeInternal, int);
@@ -16,8 +30,8 @@ module NativeInterface = {
 
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
-  external createCustom: (~dims: dims, ~drawFn: unit => unit) => nativeInternal = "fluid_create_CustomView";
-  external updateCustom: (nativeInternal, unit => unit) => unit = "fluid_update_CustomView";
+  external createCustom: (~dims: dims, ~drawFn: dims => unit) => nativeInternal = "fluid_create_CustomView";
+  external updateCustom: (nativeInternal, dims => unit) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(string => unit)) => nativeInternal = "fluid_create_NSTextView";
   external updateTextView: (nativeInternal, string, dims, font, option(string => unit)) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
@@ -125,7 +139,7 @@ module NativeInterface = {
   };
 
   type element =
-    | Custom(unit => unit)
+    | Custom(dims => unit)
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
@@ -134,17 +148,11 @@ module NativeInterface = {
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
+      | (ScrollView, ScrollView) => true
       | (Custom(adrawFn), Custom(drawFn)) => true
-
-      | (View(aPress, aStyle), View(onPress, style)) => 
-        true
-
-      | (Button(atitle, apress), Button(btitle, bpress)) =>
-        true
-
-      | (String(atext, afont, _), String(btext, bfont, _)) => 
-        true
-
+      | (View(aPress, aStyle), View(onPress, style)) => true
+      | (Button(atitle, apress), Button(btitle, bpress)) => true
+      | (String(atext, afont, _), String(btext, bfont, _)) => true
       | _ => false
     }
   };
@@ -164,6 +172,7 @@ module NativeInterface = {
 
   let update = (mounted, (mountPoint, id), newElement, layout) => {
     switch (mounted, newElement) {
+      | (ScrollView, ScrollView) => ()
       | (View(aPress, aStyle), View(onPress, style)) => 
         if (aPress != onPress || aStyle != style) {
           updateView(mountPoint, onPress, style)
@@ -191,10 +200,12 @@ module NativeInterface = {
     createTextNode(text, ~pos=(top, left), ~size=(width, height), ~font);
   } */
 
+  module DrawTracker = Tracker({type arg = dims => unit});
+
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
     | Custom(drawFn) =>
-      let native = createCustom(~drawFn, ~dims={left, top, width, height});
+      let native = createCustom(~drawFn=DrawTracker.track(drawFn), ~dims={left, top, width, height});
       (native, getNativeId())
     | View(onPress, style) => 
       Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
@@ -308,6 +319,8 @@ module Fluid = {
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
   }
 
+  module WindowTracker = Tracker({type arg = option(Window.window => unit)});
+
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
   let launchWindow = (~title: string, ~pos=?, ~onBlur=?, ~floating=false, root: element) => {
@@ -316,7 +329,13 @@ module Fluid = {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
-      let window = Window.make(~title, ~onBlur, ~dims={left, top, width, height}, ~isFloating=floating);
+      let window =
+        Window.make(
+          ~title,
+          ~onBlur=WindowTracker.track(onBlur),
+          ~dims={left, top, width, height},
+          ~isFloating=floating,
+        );
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
       /* if (!floating) {

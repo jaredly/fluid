@@ -34,11 +34,19 @@
   Store_field(c, 1, caml_copy_double(b))
 
 #define DEBUG
-// #define log(fmt) fprintf(stdout, fmt)
-// #define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
 
-#define log(fmt) (void)0
-#define logf(fmt, ...) (void)0
+#define log(fmt) fprintf(stdout, fmt)
+#define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
+
+// #define log(fmt) (void)0
+// #define logf(fmt, ...) (void)0
+
+#define Create_record4_double(r, a, b, c, d) \
+  r = caml_alloc(4 * Double_wosize, Double_array_tag); \
+  Store_double_field(r, 0, a); \
+  Store_double_field(r, 1, b); \
+  Store_double_field(r, 2, c); \
+  Store_double_field(r, 3, d)
 
 #define Unpack_record2_double(source, a, b) \
   float a = Double_field(source, 0); \
