@@ -170,6 +170,9 @@ module NativeInterface = {
     }
   };
 
+  module DrawTracker = Tracker({type arg = dims => unit});
+  module MaybeStringTracker = Tracker({type arg = option(string => unit)});
+
   let update = (mounted, (mountPoint, id), newElement, layout) => {
     switch (mounted, newElement) {
       | (ScrollView, ScrollView) => ()
@@ -184,23 +187,20 @@ module NativeInterface = {
           setButtonPress(id, bpress);
         };
 
-      | (Custom(a), Custom(draw)) => updateCustom(mountPoint, draw)
+      | (Custom(a), Custom(draw)) =>
+        DrawTracker.untrack(a);
+        updateCustom(mountPoint, DrawTracker.track(draw))
 
       | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
         if (atext != btext || afont != bfont || aonChange !== bonChange) {
+          MaybeStringTracker.untrack(aonChange);
+          MaybeStringTracker.track(bonChange)->ignore;
           updateTextView(mountPoint, btext, dims(layout), bfont, bonChange)
         };
 
       | _ => ()
     }
   };
-
-  /* let createTextNode = (text, {Layout.LayoutTypes.layout: {top, left, width, height}}, font) => {
-    let font = switch font { | None => defaultFont | Some(f) => f};
-    createTextNode(text, ~pos=(top, left), ~size=(width, height), ~font);
-  } */
-
-  module DrawTracker = Tracker({type arg = dims => unit});
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
@@ -219,7 +219,7 @@ module NativeInterface = {
 
     | String(contents, font, onChange) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange);
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange=MaybeStringTracker.track(onChange));
       (native, getNativeId())
 
     | Image(src) =>
