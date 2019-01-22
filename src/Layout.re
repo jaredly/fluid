@@ -62,6 +62,7 @@ let style =
       ~bottom=Encoding.cssUndefined,
       ~left=Encoding.cssUndefined,
       ~right=Encoding.cssUndefined,
+      ~overflow=LayoutTypes.Visible,
       ~marginTop=Encoding.cssUndefined,
       ~marginLeft=Encoding.cssUndefined,
       ~marginRight=Encoding.cssUndefined,
@@ -82,6 +83,7 @@ let style =
   let ret: LayoutTypes.cssStyle = {
     ...LayoutSupport.defaultStyle,
     positionType: position,
+    overflow,
     top,
     left,
     bottom,

@@ -10,6 +10,13 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
   // NSLog(@"- view %@\n", view);
   // NSLog(@"- child %@\n", child);
 
+  if ([view isKindOfClass:[NSScrollView class]]) {
+    // view = ((NSScrollView*)view).documentView;
+    NSScrollView* scroll = (NSScrollView*)view;
+    [scroll setDocumentView:child];
+    CAMLreturn0;
+  }
+
   NSView* last = view.subviews.lastObject;
   if (last != nil) {
     log("- add after\n");
@@ -28,6 +35,10 @@ void fluid_NSView_removeChild(value view_v, value child_v) {
   log("Remove child view\n");
   NSView* view = (NSView*) Unwrap(view_v);
   NSView* child = (NSView*) Unwrap(child_v);
+
+  if ([view isKindOfClass:[NSScrollView class]]) {
+    view = ((NSScrollView*)view).documentView;
+  }
 
   if (child.superview == view) {
     [child removeFromSuperview];
@@ -181,14 +192,42 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   CAMLparam0();
   // CAMLlocal1(rect_v);
   // Wrap(rect_v, dirtyRect);
-  [@"Hi" drawAtPoint:CGPointMake(20., 20.)
-  withAttributes:@{}];
+  for (int i=0; i<1500; i++) {
+    [@"Hi" drawAtPoint:CGPointMake(20. + i, 20.)
+    withAttributes:@{}];
+  }
+  NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
   caml_callback(drawFn, Val_unit);
   CAMLreturn0;
 }
 
 @end
 
+
+CAMLprim value fluid_create_ScrollView(value dims_v) {
+  CAMLparam1(dims_v);
+  CAMLlocal1(view_v);
+
+  Unpack_record4_double(dims_v, left, top, width, height);
+
+  NSRect frame = NSMakeRect(left, top, width, height);
+  NSScrollView* view = [[NSScrollView alloc] initWithFrame:frame];
+  // view.wantsLayer = true;
+  // view.layer.backgroundColor = CGColorCreateGenericRGB(1, 0, 1, 0.2);
+
+  // view.documentView.wantsLayer = true;
+  // view.documentView.layer.backgroundColor = CGColorCreateGenericRGB(0, 0, 1, 0.2);
+
+  [view setHasVerticalScroller:YES];
+  [view setHasHorizontalScroller:NO];
+  [view setAutoresizingMask:NSViewWidthSizable |
+              NSViewHeightSizable];
+
+  Wrap(view_v, view);
+  CAMLreturn(view_v);
+}
+
+// MARK - Custom view
 
 CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
   CAMLparam2(dims_v, draw_v);

@@ -27,13 +27,39 @@ let main = hooks => {
       layout={Layout.style(~alignSelf=AlignStretch, ~marginVertical=10., ())}
       onChange={setText}
     />
-    <custom
-      layout={Layout.style(~alignSelf=AlignStretch, ~height=500., ())}
-      draw={() => {
-        print_endline("Ok drawing");
-      }}
-    />
-
+    <text contents="Top"/>
+    {Fluid.Native.scrollView(
+      ~layout={Layout.style(
+        ~overflow=Scroll,
+        ~flexGrow=1.,
+        ~alignSelf=AlignStretch,
+        ~flexShrink=1.,
+        ()
+      )},
+      ~children=[
+        <view layout={
+          Layout.style(~alignSelf=AlignStretch, ())
+        }>
+      <text contents="Hello"/>
+      <custom
+        layout={Layout.style(~alignSelf=AlignStretch, ~height=100., ())}
+        draw={() => {
+          print_endline("Ok drawing");
+        }}
+      />
+        </view>
+      ],
+      ()
+    )}
+      /* <text contents="Hello"/> */
+      /* <custom
+        layout={Layout.style(~alignSelf=AlignStretch, ~height=100., ())}
+        draw={() => {
+          print_endline("Ok drawing");
+        }}
+      /> */
+    /* </scrollView> */
+    <text contents="Bottom"/>
     /* {Fluid.Native.view(~layout={Layout.style(
       ~flexWrap=CssWrap,
       ~flexDirection=Row,

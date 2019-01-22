@@ -14,6 +14,7 @@ module NativeInterface = {
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
+  external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
   external createCustom: (~dims: dims, ~drawFn: unit => unit) => nativeInternal = "fluid_create_CustomView";
   external updateCustom: (nativeInternal, unit => unit) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(string => unit)) => nativeInternal = "fluid_create_NSTextView";
@@ -124,6 +125,7 @@ module NativeInterface = {
 
   type element =
     | Custom(unit => unit)
+    | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
     | String(string, option(font), option(string => unit))
@@ -150,11 +152,12 @@ module NativeInterface = {
 
   let updateLayout = (mounted, (mountPoint, _), layout: Layout.node) => {
     switch (mounted) {
-      | View(_, _) => updateViewLoc(mountPoint, dims(layout))
+      | ScrollView
+      | View(_, _)
+      | Image(_)
       | Custom(_) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
       | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
-      | Image(_) => updateViewLoc(mountPoint, dims(layout))
     }
   };
 
@@ -188,6 +191,7 @@ module NativeInterface = {
   } */
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
+    | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
     | Custom(drawFn) =>
       let native = createCustom(~drawFn, ~dims={left, top, width, height});
       (native, getNativeId())
@@ -252,6 +256,8 @@ module Fluid = {
     };
 
     let custom = (~layout=?, ~draw, ()) => Builtin(Custom(draw), [], layout, None);
+
+    let scrollView = (~layout=?, ~children, ()) => Builtin(ScrollView, children, layout, None);
 
   }
 
