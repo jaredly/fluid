@@ -228,13 +228,21 @@ void fluid_Draw_rect(value rect, value color) {
   CAMLreturn0;
 }
 
-void fluid_Draw_text(value text, value pos) {
-  CAMLparam2(text, pos);
-  [NSString_val(text) drawAtPoint:CGPointMake(
-    Double_field(pos, 0),
-    Double_field(pos, 1)
-  )
-  withAttributes:@{}];
+void fluid_Draw_text(value text, value pos, value font, value fontSize_v) {
+  CAMLparam4(text, pos, font, fontSize_v);
+  NSString* fontName = NSString_val(font);
+  double fontSize = Double_val(fontSize_v);
+  NSFont *nsFont = [NSFont fontWithName:NSString_val(font) size:fontSize];
+  if (nsFont == nil) {
+    nsFont = [NSFont systemFontOfSize:fontSize];
+  }
+  [NSString_val(text)
+    drawAtPoint:CGPointMake(
+      Double_field(pos, 0),
+      Double_field(pos, 1)
+    )
+    withAttributes:@{NSFontAttributeName: nsFont}];
+
   CAMLreturn0;
 }
 
@@ -287,11 +295,8 @@ void fluid_update_CustomView(value view_v, value draw_v) {
   // caml_register_global_root(&draw_v);
 
   CustomView* view = (CustomView*)Unwrap(view_v);
-  log("Unwrapped it\n");
   [view setDraw:Int_val(draw_v)];
-  log("drew\n");
   [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
-  log("done\n");
 
   CAMLreturn0;
 }
@@ -316,9 +321,6 @@ CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value st
     Unpack_record4_double(color, r, g, b, a);
     view.wantsLayer = true;
     view.layer.backgroundColor = CGColorCreateGenericRGB(r, g, b, a);
-  // } else {
-  //   view.wantsLayer = true;
-  //   view.layer.backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 0.1);
   }
 
   Wrap(view_v, view);
@@ -350,7 +352,6 @@ void fluid_update_NSView(value view_v, value id, value style_v) {
 CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, value maxWidth_v) {
   CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);
-  // TODO cache these values pls
   log("Measure text\n");
 
   NSSize textSize;

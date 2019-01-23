@@ -264,3 +264,26 @@ CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
   Wrap(statusBar_v, item);
   CAMLreturn(statusBar_v);
 }
+
+NSData* dataForText(NSString* text) {
+  NSFont* nsFont = [NSFont systemFontOfSize:8.0];
+  NSDictionary* attributes = @{NSFontAttributeName: nsFont};
+  NSImage *img = [[NSImage alloc] initWithSize:[text sizeWithAttributes:attributes]];
+  [img lockFocus];
+  [text drawAtPoint:NSMakePoint(10, 10) withAttributes:attributes];
+  [img unlockFocus];
+  return [img TIFFRepresentation];
+}
+
+BOOL isEmojiSupported(NSString* text) {
+  static NSData * UNAVAILABLE = NULL;
+  if (UNAVAILABLE == NULL) {
+    UNAVAILABLE = dataForText(@"\u1fff");
+  }
+  return ![dataForText(text) isEqualToData:UNAVAILABLE];
+}
+
+CAMLprim value fluid_App_isEmojiSupported(value text) {
+  CAMLparam1(text);
+  CAMLreturn(isEmojiSupported(NSString_val(text)) ? Val_true : Val_false);
+}

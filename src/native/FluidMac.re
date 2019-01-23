@@ -27,12 +27,12 @@ module Tracker = (C: {type arg;let name: string}): {
   let cur = ref(0);
   let next = () => {cur := cur^ + 1; cur^};
   let track: fn => callbackId = fn => {
-    print_endline("Track");
+    /* print_endline("Track"); */
     switch (Belt.HashMap.get(ids, fn)) {
       | None =>
         let id = next();
         Hashtbl.replace(fns, id, fn);
-        print_endline("Tracked");
+        /* print_endline("Tracked"); */
         id
       | Some(id) => id
     }
@@ -42,12 +42,12 @@ module Tracker = (C: {type arg;let name: string}): {
     | Some(fn) => Some(track(fn))
   };
   let untrack = fn => {
-    print_endline("Untrack");
+    /* print_endline("Untrack"); */
     switch (Belt.HashMap.get(ids, fn)) {
       | None => ()
       | Some(id) => Hashtbl.remove(fns, id)
     };
-    print_endline("Removed");
+    /* print_endline("Removed"); */
   };
   let maybeUntrack: (option(C.arg => unit)) => unit = fn => switch fn {
     | None => ()
@@ -268,7 +268,7 @@ module NativeInterface = {
         /* TODO DrawTracker.untrack(a); */
         if (a !== draw) {
           updateCustom(mountPoint, DrawTracker.track(draw));
-          print_endline("updated\n");
+          /* print_endline("updated\n"); */
         }
 
       | (String(atext, afont, ahandlers), String(btext, bfont, bhandlers)) => 
@@ -384,6 +384,8 @@ module Fluid = {
     let statusBarItem = (~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick));
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
+    external isEmojiSupported: string => bool = "fluid_App_isEmojiSupported";
+
     external triggerString: (string) => unit = "fluid_App_triggerString";
     external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
 
@@ -415,7 +417,10 @@ module Fluid = {
   };
 
   module Draw = {
-    external text: (string, pos) => unit = "fluid_Draw_text";
+    external text: (string, pos, ~fontName: string, ~fontSize: float) => unit = "fluid_Draw_text";
+    let text = (~fontName="", ~fontSize=10., string, pos) => {
+      text(string, pos, ~fontName, ~fontSize);
+    };
     external fillRect: (dims, color) => unit = "fluid_Draw_fillRect";
     external rect: (dims, color) => unit = "fluid_Draw_rect";
   }
@@ -453,7 +458,7 @@ module Fluid = {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
-      print_endline("making");
+      /* print_endline("making"); */
       let window =
         Window.make(
           ~title,
@@ -461,7 +466,7 @@ module Fluid = {
           ~dims={left, top, width, height},
           ~isFloating=floating,
         );
-      print_endline("made");
+      /* print_endline("made"); */
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
       /* if (!floating) {

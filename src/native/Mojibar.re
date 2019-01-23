@@ -26,6 +26,7 @@ let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
     category,
   }
 });
+let emojis = emojis->Belt.List.keep(emoji => Fluid.App.isEmojiSupported(emoji.char));
 /* let emojis = emojis->Belt.List.take(10)->force; */
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
@@ -48,8 +49,10 @@ let main = (~onDone, hooks) => {
     emoji.name->has(rx) ||
     emoji.keywords->Belt.Array.some(has(_, rx))
   );
-  let size = 20.;
-  let rowf = 280. /. 20.;
+  let fontSize = 17.;
+  let size = fontSize *. 1.6;
+
+  let rowf = 280. /. size;
   let row = int_of_float(rowf);
   let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
@@ -76,7 +79,7 @@ let main = (~onDone, hooks) => {
             a: 0.5,
           })
         };
-        Fluid.Draw.text(emoji.char, {x: x +. 2., y: y +. 2.});
+        Fluid.Draw.text(~fontSize, emoji.char, {x: x +. 2., y: y +. 2.});
       };
     });
   }, (text, selection));
@@ -196,4 +199,6 @@ Fluid.App.launch(
     print_endline("Got it!");
     Fluid.Window.showAtPos(win, Fluid.App.statusBarPos(statusBarItem));
   })->ignore;
+
+  Fluid.Window.showAtPos(win, Fluid.App.statusBarPos(statusBarItem));
 });
