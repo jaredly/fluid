@@ -357,7 +357,7 @@ module Fluid = {
     external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     type statusBarItem;
-    external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => statusBarItem = "fluid_App_statusBarItem";
+    external statusBarItem: (~title: string, ~onClick: (pos => unit)) => statusBarItem = "fluid_App_statusBarItem";
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
@@ -397,17 +397,32 @@ module Fluid = {
   module Window = {
     type window;
     module Tracker: Tracker with type arg = window = Tracker({type arg = window; let name = "fluid_window"});
-    external make: (~title: string, ~onBlur: Tracker.callbackId, ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
+    external make: (
+      ~title: string,
+      ~onBlur: Tracker.callbackId,
+      ~dims: dims,
+      ~isFloating: bool
+    ) => window = "fluid_Window_make";
     external center: (window) => unit = "fluid_Window_center";
     external close: (window) => unit = "fluid_Window_close";
+    external hide: (window) => unit = "fluid_Window_hide";
+
+    external position: (window, pos) => unit = "fluid_Window_position";
+    /* external show: (window) => unit = "fluid_Window_show"; */
+
     external activate: (window) => unit = "fluid_Window_activate";
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
+
+    let showAtPos = (win, pos) => {
+      position(win, pos);
+      activate(win);
+    }
   }
 
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~pos=?, ~onBlur=(_) => (), ~floating=false, root: element) => {
+  let launchWindow = (~title: string, ~pos=?, ~hidden=false, ~onBlur=(_) => (), ~floating=false, root: element) => {
     preMount(root, (~size as (width, height), onNode) => {
       let (left, top) = switch pos {
         | None => (0., 0.)
@@ -427,10 +442,12 @@ module Fluid = {
       /* if (!floating) {
         App.setupMenu(~title);
       } */
-      if (pos == None) {
-        Window.center(window);
+      if (!hidden) {
+        if (pos == None) {
+          Window.center(window);
+        };
+        Window.activate(window);
       };
-      Window.activate(window);
       window
     })
   };

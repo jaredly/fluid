@@ -41,6 +41,26 @@ void fluid_Window_activate(value window_v) {
   CAMLreturn0;
 }
 
+void fluid_Window_hide(value window_v) {
+  CAMLparam1(window_v);
+  log("hide window\n");
+  FluidWindow* window = (FluidWindow*)Unwrap(window_v);
+  [window orderOut:nil];
+  CAMLreturn0;
+}
+
+void fluid_Window_position(value window_v, value pos_v) {
+  CAMLparam1(window_v);
+  Unpack_record2_double(pos_v, x, y);
+
+  log("move window\n");
+  FluidWindow* window = (FluidWindow*)Unwrap(window_v);
+  [window setFrameTopLeftPoint:CGPointMake(x, y)];
+  CAMLreturn0;
+}
+
+
+
 void fluid_Window_close(value window_v) {
   CAMLparam1(window_v);
   log("close window\n");
@@ -86,7 +106,6 @@ void fluid_Window_center(value window_v) {
 
   static value * closure_f = NULL;
   if (closure_f == NULL) {
-      /* First time around, look up by name */
       closure_f = caml_named_value("fluid_window");
   }
   caml_callback2(*closure_f, Val_int(onBlur), window_v);
@@ -99,7 +118,6 @@ void fluid_Window_center(value window_v) {
   CAMLreturn0;
 }
 @end
-
 
 CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, value isFloating) {
   CAMLparam4(title_v, onBlur_v, dims_v, isFloating);

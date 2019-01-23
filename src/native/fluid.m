@@ -233,20 +233,32 @@ void fluid_App_launch (value isAccessory, value callback)
 // TODO this needs to use the int-fn-tracker thing too
 - (void)onClick {
   CAMLparam0();
-  CAMLlocal1(pair);
-  Create_double_pair(
-    pair,
+  CAMLlocal1(pos_v);
+  Create_record2_double(pos_v,
     item.button.window.frame.origin.x,
     item.button.window.frame.origin.y
   );
   
-  caml_callback(onClick, pair);
+  caml_callback(onClick, pos_v);
   CAMLreturn0;
 }
 @end
 
-void fluid_App_statusBarItem(value title_v, value onClick_v) {
+CAMLprim value fluid_App_statusBarPos(value item_v) {
+  CAMLparam1(item_v);
+  CAMLlocal1(pos_v);
+
+  NSStatusItem* item = (NSStatusItem*)Unwrap(item_v);
+  Create_record2_double(pos_v,
+    item.button.window.frame.origin.x,
+    item.button.window.frame.origin.y
+  );
+  CAMLreturn(pos_v);
+}
+
+CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
   CAMLparam2(title_v, onClick_v);
+  CAMLlocal1(statusBar_v);
   NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
   [item retain];
   item.button.title = NSString_val(title_v);
@@ -254,5 +266,6 @@ void fluid_App_statusBarItem(value title_v, value onClick_v) {
   item.button.target = target;
   item.button.action = @selector(onClick);
   // NSLog(@"Made an item %f, %f", item.button.window.frame.origin.x, item.button.window.frame.origin.y);
-  CAMLreturn0;
+  Wrap(statusBar_v, item);
+  CAMLreturn(statusBar_v);
 }
