@@ -7,22 +7,15 @@ type pos = {x: float, y: float};
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
-/* module Tracker = (C: {type arg;}) => {
-  let track = fn => {Belt.HashSet.add(fns, fn); fn};
-  let untrack = fn => Belt.HashSet.remove(fns, fn);
-}; */
-
-module type Tracker = {
+module Tracker = (C: {type arg;let name: string}): {
   type callbackId;
-  type arg;
+  type arg = C.arg;
   type fn = arg => unit;
   let track: (arg => unit) => callbackId;
   let maybeTrack: option(arg => unit) => option(callbackId);
   let untrack: fn => unit;
   let maybeUntrack: option(fn) => unit;
-};
-
-module Tracker = (C: {type arg;let name: string}) => {
+} => {
   type callbackId = int;
   type arg = C.arg;
   type fn = C.arg => unit;
@@ -63,42 +56,12 @@ module Tracker = (C: {type arg;let name: string}) => {
   Callback.register(C.name, call);
 };
 
-/* module type OptTracker = {
-  type callbackId;
-  type arg;
-  let track: option(arg => unit) => option(callbackId);
-  let untrack: callbackId => unit;
-};
 
-module OptTracker = (C: {type arg;let name: string}) => {
-  include Tracker(C);
-  let track: (option(C.arg => unit)) => option(callbackId) = fn => {
-    switch fn {
-      | None => None
-      | Some(fn) =>
-        let id = next();
-        Hashtbl.replace(fns, id, fn);
-        Some(id)
-    }
-  };
-}; */
+module DrawTracker = Tracker({type arg = dims; let name = "fluid_rect_fn"});
+module StringTracker = Tracker({type arg = string; let name = "fluid_string_fn"});
+module UnitTracker = Tracker({type arg = unit; let name = "fluid_unit_fn"});
+module PosTracker = Tracker({type arg = pos; let name = "fluid_pos_fn"});
 
-module DrawTracker: Tracker with type arg = dims = Tracker({type arg = dims; let name = "fluid_draw"});
-module StringTracker: Tracker with type arg = string = Tracker({type arg = string; let name = "fluid_string_fn"});
-module UnitTracker: Tracker with type arg = unit = Tracker({type arg = unit; let name = "fluid_unit_fn"});
-
-
-  /* let fns: ref(list(C.arg)) = ref([]);
-  let track = fn => {fns := [fn, ...fns^]; fn};
-  let untrack = (_) => (); */
-  /* let untrack = fn => fns := (fns^)->Belt.List.keep((!==)(fn)); */
-/* let trackMaybeFn = fn => switch fn {
-  | None => None
-  | Some(f) => trackFn(f); fn
-};
-let dimsFns = Hashtbl.create(1000);
-let trackDimsFn = fn => {Hashtbl.replace(dimsFns, fn, ()); fn};
-let untrackDimsFn = fn => Hashtbl.remove(dimsFns, fn); */
 
 type keyHandlers = {
   enter: option(UnitTracker.fn),
@@ -410,7 +373,8 @@ module Fluid = {
     external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     type statusBarItem;
-    external statusBarItem: (~title: string, ~onClick: (pos => unit)) => statusBarItem = "fluid_App_statusBarItem";
+    external statusBarItem: (~title: string, ~onClick: PosTracker.callbackId) => statusBarItem = "fluid_App_statusBarItem";
+    let statusBarItem = (~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick));
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
@@ -451,7 +415,7 @@ module Fluid = {
 
   module Window = {
     type window;
-    module Tracker: Tracker with type arg = window = Tracker({type arg = window; let name = "fluid_window"});
+    module Tracker = Tracker({type arg = window; let name = "fluid_window"});
     external make: (
       ~title: string,
       ~onBlur: Tracker.callbackId,

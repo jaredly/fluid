@@ -79,5 +79,10 @@
 @end
 
 @interface ClickTarget : NSObject
-- (instancetype)initWithOnClick:(value)onClick;
+- (instancetype)initWithOnClick:(int)onClick;
 @end
+
+void callUnit(int id);
+void callString(int id, const char* text);
+void callPos(int id, float x, float y);
+void callRect(int id, float x, float y, float w, float h);

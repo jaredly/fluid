@@ -192,20 +192,16 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-  CAMLparam0();
-  CAMLlocal1(rect_v);
-  Create_record4_double(rect_v, dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
   // Wrap(rect_v, dirtyRect);
   // NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
 
-  static value * closure_f = NULL;
-  if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_draw");
-  }
-
-  caml_callback2(*closure_f, Val_int(drawFn), rect_v);
-  CAMLreturn0;
+  callRect(
+    drawFn,
+    dirtyRect.origin.x,
+    dirtyRect.origin.y,
+    dirtyRect.size.width,
+    dirtyRect.size.height
+  );
 }
 
 @end
@@ -397,26 +393,6 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 
 
-void callUnit(int fnId) {
-  static value * closure_f = NULL;
-  if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_unit_fn");
-  }
-
-  caml_callback2(*closure_f, Val_int(fnId), Val_unit);
-}
-
-void callString(int fnId, const char* text) {
-  static value * closure_f = NULL;
-  if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_string_fn");
-  }
-
-  caml_callback2(*closure_f, Val_int(fnId), caml_copy_string(text));
-}
-
 
 @interface TextFieldDelegate : NSObject <NSTextFieldDelegate>
 @property (nonatomic) int onChange;
@@ -463,25 +439,6 @@ void callString(int fnId, const char* text) {
   }
   return NO;
 }
-
-// - (void)controlTextDidEndEditing:(NSNotification *)notification {
-//   CAMLparam0();
-//   log("Text finished\n");
-
-//   if (onEnter != -1) {
-//     id textField = [notification object];
-
-//     static value * closure_f = NULL;
-//     if (closure_f == NULL) {
-//         /* First time around, look up by name */
-//         closure_f = caml_named_value("fluid_string_change");
-//     }
-
-//     caml_callback2(*closure_f, Val_int(onEnter), caml_copy_string([[textField stringValue] UTF8String]));
-//   }
-
-//   CAMLreturn0;
-// }
 
 - (void)controlTextDidChange:(NSNotification *) notification {
   CAMLparam0();

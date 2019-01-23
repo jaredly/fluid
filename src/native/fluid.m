@@ -53,8 +53,8 @@ CAMLprim value fluid_App_menuItem(value title_v, value action_v, value shortcut_
                                               action:action
                                               keyEquivalent:NSString_val(shortcut_v)];
   if (Tag_val(action_v) == 0) {
-    value onClick = Field(action_v, 0);
-    caml_register_global_root(&onClick);
+    int onClick = Int_val(Field(action_v, 0));
+    // caml_register_global_root(&onClick);
     ClickTarget* delegate = [[ClickTarget alloc] initWithOnClick:onClick];
     item.target = delegate;
   }
@@ -213,15 +213,15 @@ void fluid_App_launch (value isAccessory, value callback)
 }
 
 @interface StatusClickTarget : NSObject
-- (instancetype)initWithOnClick:(value)onClickv andItem:(NSStatusItem*)item;
+- (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)item;
 @end
 
 @implementation StatusClickTarget {
-  value onClick;
+  int onClick;
   NSStatusItem* item;
 }
 
-- (instancetype)initWithOnClick:(value)onClickv andItem:(NSStatusItem*)itemv {
+- (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)itemv {
   if (self = [super init]) {
     onClick = onClickv;
     caml_register_global_root(&onClickv);
@@ -233,13 +233,11 @@ void fluid_App_launch (value isAccessory, value callback)
 // TODO this needs to use the int-fn-tracker thing too
 - (void)onClick {
   CAMLparam0();
-  CAMLlocal1(pos_v);
-  Create_record2_double(pos_v,
+  callPos(
+    onClick,
     item.button.window.frame.origin.x,
     item.button.window.frame.origin.y
   );
-  
-  caml_callback(onClick, pos_v);
   CAMLreturn0;
 }
 @end
@@ -262,7 +260,7 @@ CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
   NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
   [item retain];
   item.button.title = NSString_val(title_v);
-  StatusClickTarget* target = [[StatusClickTarget alloc] initWithOnClick:onClick_v andItem:item];
+  StatusClickTarget* target = [[StatusClickTarget alloc] initWithOnClick:Int_val(onClick_v) andItem:item];
   item.button.target = target;
   item.button.action = @selector(onClick);
   // NSLog(@"Made an item %f, %f", item.button.window.frame.origin.x, item.button.window.frame.origin.y);
