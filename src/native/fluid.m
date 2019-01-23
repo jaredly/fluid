@@ -1,7 +1,4 @@
 #include "./fluid_shared.h"
-#import <Carbon/Carbon.h>
-
-
 
 @interface MenuDelegate : NSObject
 - (void)dummySelect;
@@ -39,8 +36,6 @@
   [NSApp activateIgnoringOtherApps:true];
   caml_remove_global_root(&onLaunch);
 }
-
-// - (void)
 
 @end
 
@@ -235,6 +230,7 @@ void fluid_App_launch (value isAccessory, value callback)
   return self;
 }
 
+// TODO this needs to use the int-fn-tracker thing too
 - (void)onClick {
   CAMLparam0();
   CAMLlocal1(pair);

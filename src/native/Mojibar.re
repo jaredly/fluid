@@ -132,7 +132,11 @@ Fluid.App.launch(
     ~title="Mojibar",
     ~appItems=[||],
     ~menus=[| Fluid.App.defaultEditMenu() |]
-  )
+  );
+  Fluid.Hotkeys.init();
+  Fluid.Hotkeys.register(~key=0x31, () => {
+    print_endline("Got it!");
+  });
 
   Fluid.App.statusBarItem(
     ~title="Mojibar",

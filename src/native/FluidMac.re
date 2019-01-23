@@ -3,6 +3,7 @@ module M = Flex.Layout;
 
 Printexc.record_backtrace(true);
 
+type pos = {x: float, y: float};
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
@@ -330,12 +331,34 @@ module Fluid = {
 
   }
 
+  module Hotkeys = {
+    external init: unit => unit = "fluid_Hotkeys_init";
+    external register: (~id: int, ~key: int) => unit = "fluid_Hotkeys_register";
+    let cur = ref(0);
+    let next = () => {cur := cur^ + 1; cur^};
+    let fns = Hashtbl.create(100);
+    Callback.register("fluid_hotkeys_triggered", id => {
+      switch (Hashtbl.find(fns, id)) {
+        | exception Not_found => print_endline("Got hotkey without registered handler " ++ string_of_int(id))
+        | fn => fn()
+      }
+    });
+    let register = (~key: int, fn) => {
+      let id = next();
+      Hashtbl.replace(fns, id, fn);
+      register(~id, ~key);
+      id
+    };
+  }
+
   module App = {
     external launch: (~isAccessory: bool, unit => unit) => unit = "fluid_App_launch";
     external deactivate: unit => unit = "fluid_App_deactivate";
     external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
-    external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => unit = "fluid_App_statusBarItem";
+    type statusBarItem;
+    external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => statusBarItem = "fluid_App_statusBarItem";
+    external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
     external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
@@ -368,7 +391,6 @@ module Fluid = {
   };
 
   module Draw = {
-    type pos = {x: float, y: float};
     external text: (string, pos) => unit = "fluid_Draw_text";
   }
 
