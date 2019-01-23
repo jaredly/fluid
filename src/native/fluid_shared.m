@@ -110,4 +110,5 @@ void callRect(int fnId, float x, float y, float w, float h) {
   logf("Call rect %d\n", fnId);
   Create_record4_double(rect_v, x, y, w, h);
   caml_callback2(*closure_f, Val_int(fnId), rect_v);
+  CAMLreturn0;
 }
