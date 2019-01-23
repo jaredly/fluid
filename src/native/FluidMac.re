@@ -3,6 +3,7 @@ module M = Flex.Layout;
 
 Printexc.record_backtrace(true);
 
+type pos = {x: float, y: float};
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
@@ -330,12 +331,34 @@ module Fluid = {
 
   }
 
+  module Hotkeys = {
+    external init: unit => unit = "fluid_Hotkeys_init";
+    external register: (~id: int, ~key: int) => unit = "fluid_Hotkeys_register";
+    let cur = ref(0);
+    let next = () => {cur := cur^ + 1; cur^};
+    let fns = Hashtbl.create(100);
+    Callback.register("fluid_hotkeys_triggered", id => {
+      switch (Hashtbl.find(fns, id)) {
+        | exception Not_found => print_endline("Got hotkey without registered handler " ++ string_of_int(id))
+        | fn => fn()
+      }
+    });
+    let register = (~key: int, fn) => {
+      let id = next();
+      Hashtbl.replace(fns, id, fn);
+      register(~id, ~key);
+      id
+    };
+  }
+
   module App = {
     external launch: (~isAccessory: bool, unit => unit) => unit = "fluid_App_launch";
     external deactivate: unit => unit = "fluid_App_deactivate";
     external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
-    external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => unit = "fluid_App_statusBarItem";
+    type statusBarItem;
+    external statusBarItem: (~title: string, ~onClick: (pos => unit)) => statusBarItem = "fluid_App_statusBarItem";
+    external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
     external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
@@ -368,24 +391,38 @@ module Fluid = {
   };
 
   module Draw = {
-    type pos = {x: float, y: float};
     external text: (string, pos) => unit = "fluid_Draw_text";
   }
 
   module Window = {
     type window;
     module Tracker: Tracker with type arg = window = Tracker({type arg = window; let name = "fluid_window"});
-    external make: (~title: string, ~onBlur: Tracker.callbackId, ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
+    external make: (
+      ~title: string,
+      ~onBlur: Tracker.callbackId,
+      ~dims: dims,
+      ~isFloating: bool
+    ) => window = "fluid_Window_make";
     external center: (window) => unit = "fluid_Window_center";
     external close: (window) => unit = "fluid_Window_close";
+    external hide: (window) => unit = "fluid_Window_hide";
+
+    external position: (window, pos) => unit = "fluid_Window_position";
+    /* external show: (window) => unit = "fluid_Window_show"; */
+
     external activate: (window) => unit = "fluid_Window_activate";
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
+
+    let showAtPos = (win, pos) => {
+      position(win, pos);
+      activate(win);
+    }
   }
 
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~pos=?, ~onBlur=(_) => (), ~floating=false, root: element) => {
+  let launchWindow = (~title: string, ~pos=?, ~hidden=false, ~onBlur=(_) => (), ~floating=false, root: element) => {
     preMount(root, (~size as (width, height), onNode) => {
       let (left, top) = switch pos {
         | None => (0., 0.)
@@ -405,10 +442,12 @@ module Fluid = {
       /* if (!floating) {
         App.setupMenu(~title);
       } */
-      if (pos == None) {
-        Window.center(window);
+      if (!hidden) {
+        if (pos == None) {
+          Window.center(window);
+        };
+        Window.activate(window);
       };
-      Window.activate(window);
       window
     })
   };

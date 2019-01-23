@@ -3,10 +3,18 @@ open Bsb_internals;
 
 let ( +/ ) = Filename.concat;
 
-gcc(~flags=["-g"], "lib" +/ "fluid_shared.o", ["src" +/ "native" +/ "fluid_shared.m"]);
-gcc(~flags=["-g"], "lib" +/ "fluid_components.o", ["src" +/ "native" +/ "fluid_components.m"]);
-gcc(~flags=["-g"], "lib" +/ "fluid_window.o", ["src" +/ "native" +/ "fluid_window.m"]);
-gcc(~flags=["-g"], "lib" +/ "fluid.o", ["src" +/ "native" +/ "fluid.m"]);
+let sources = [
+  "fluid_shared",
+  "fluid_components",
+  "fluid_window",
+  "fluid_hotkeys",
+  "fluid"
+];
+
+sources |> List.iter(name =>
+gcc(~flags=["-g"], "lib" +/ name ++ ".o", ["src" +/ "native" +/ name ++ ".m"]) |> ignore
+)
+
 /* gcc("lib" +/ "fluid.o", [
   "src" +/ "native" +/ "fluid_shared.m",
   "src" +/ "native" +/ "fluid_components.m",

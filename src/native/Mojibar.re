@@ -74,14 +74,6 @@ let main = (~onDone, hooks) => {
     ()
   )}
   >
-    <button title="Ok" onPress={() => {
-      /* onDone(text) */
-      switch (filtered) {
-        | [] => ()
-        | [{char}, ..._] => onDone(Some(char))
-      }
-    }} />
-    /* <view backgroundColor={r: 1., g: 0., b: 0., a: 1.} layout={Layout.style(~height=20., ~width=50., ())} /> */
     <text
       contents=text
       layout={Layout.style(
@@ -132,35 +124,45 @@ Fluid.App.launch(
     ~title="Mojibar",
     ~appItems=[||],
     ~menus=[| Fluid.App.defaultEditMenu() |]
-  )
+  );
+  Fluid.Hotkeys.init();
 
-  Fluid.App.statusBarItem(
+  let closeWindow = ref(() => ());
+
+  let win = Fluid.launchWindow(
+    ~title="Hello Fluid",
+    ~floating=true,
+    ~hidden=true,
+    /* ~pos, */
+    ~onBlur=win => {
+      Fluid.Window.hide(win);
+    },
+    <Main onDone={text => {
+      switch (text) {
+        | Some(text) =>
+          closeWindow^();
+          Fluid.App.hide();
+          Fluid.App.setTimeout(() => {
+            Fluid.App.triggerString(text)
+          }, 1000 * 1000 * 100)
+        | None =>
+          closeWindow^();
+          Fluid.App.hide();
+      }
+    }}/>
+  );
+
+  closeWindow := () => Fluid.Window.hide(win);
+
+  let statusBarItem = Fluid.App.statusBarItem(
     ~title="Mojibar",
     ~onClick=pos => {
-      print_endline("Launching");
-      let win = ref(None);
-      win := Some(Fluid.launchWindow(
-        ~title="Hello Fluid",
-        ~floating=true,
-        ~pos,
-        ~onBlur=win => {
-          Fluid.Window.close(win);
-        },
-        <Main onDone={text => {
-          switch (win.contents, text) {
-            | (Some(win), Some(text)) =>
-              Fluid.Window.close(win);
-              Fluid.App.hide();
-              Fluid.App.setTimeout(() => {
-                Fluid.App.triggerString(text)
-              }, 1000 * 1000 * 100)
-            | (Some(win), _) =>
-              Fluid.Window.close(win);
-              Fluid.App.hide();
-            | _ => ()
-          }
-        }}/>
-      ));
+      Fluid.Window.showAtPos(win, pos)
     }
-  )
+  );
+
+  Fluid.Hotkeys.register(~key=0x31, () => {
+    print_endline("Got it!");
+    Fluid.Window.showAtPos(win, Fluid.App.statusBarPos(statusBarItem));
+  })->ignore;
 });
