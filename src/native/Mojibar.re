@@ -97,9 +97,9 @@ let main = (~onDone, hooks) => {
         ~marginTop=5.,
         ())}
       onEnter={text => {
-        switch (filtered) {
-          | [] => onDone(None)
-          | [{char}, ..._] => onDone(Some(char))
+        switch (Belt.List.get(filtered, selection)) {
+          | None => onDone(None)
+          | Some({char}) => onDone(Some(char))
         }
       }}
       onEscape={() => {
