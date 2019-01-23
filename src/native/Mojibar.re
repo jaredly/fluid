@@ -41,6 +41,7 @@ let has = (text, rx) => Str.string_match(rx, text, 0);
 
 let main = (~onDone, hooks) => {
   let%hook (text, setText) = useState("");
+  let%hook (selection, setSelection) = useState(0);
 
   let rx = Str.regexp(".*" ++ Str.quote(text) ++ ".*");
   let filtered = text == "" ? emojis : emojis->Belt.List.keep(emoji =>
@@ -59,10 +60,23 @@ let main = (~onDone, hooks) => {
       "Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height),
     );
     filtered->Belt.List.forEachWithIndex((index, emoji) => {
-      let x = index mod row |> float_of_int;
-      let y = index / row |> float_of_int;
-      if (y *. size +. size >= top && y *. size <= top +. height) {
-        Fluid.Draw.text(emoji.char, {x: x *. size, y: y *. size});
+      let x = index mod row |> float_of_int |> (*.)(size);
+      let y = index / row |> float_of_int |> (*.)(size);
+      if (y +. size >= top && y <= top +. height) {
+        if (index == selection) {
+          Fluid.Draw.rect({
+            left: x,
+            top: y,
+            width: size,
+            height: size,
+          }, {
+            r: 0.,
+            g: 0.,
+            b: 1.,
+            a: 0.5,
+          })
+        };
+        Fluid.Draw.text(emoji.char, {x: x +. 2., y: y +. 2.});
       };
     });
   }, text);
