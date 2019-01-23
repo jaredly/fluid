@@ -58,13 +58,16 @@
 
 
 void callUnit(int fnId) {
+  CAMLparam0();
   static value * closure_f = NULL;
   if (closure_f == NULL) {
       /* First time around, look up by name */
       closure_f = caml_named_value("fluid_unit_fn");
   }
 
+  logf("Call unit %d\n", fnId);
   caml_callback2(*closure_f, Val_int(fnId), Val_unit);
+  CAMLreturn0;
 }
 
 void callPos(int fnId, float x, float y) {
@@ -76,19 +79,23 @@ void callPos(int fnId, float x, float y) {
       closure_f = caml_named_value("fluid_pos_fn");
   }
 
+  logf("Call pos %d %f,%f\n", fnId, x, y);
   Create_record2_double(pos_v, x, y);
   caml_callback2(*closure_f, Val_int(fnId), pos_v);
   CAMLreturn0;
 }
 
 void callString(int fnId, const char* text) {
+  CAMLparam0();
   static value * closure_f = NULL;
   if (closure_f == NULL) {
       /* First time around, look up by name */
       closure_f = caml_named_value("fluid_string_fn");
   }
 
+  logf("Call string %d %s\n", fnId, text);
   caml_callback2(*closure_f, Val_int(fnId), caml_copy_string(text));
+  CAMLreturn0;
 }
 
 void callRect(int fnId, float x, float y, float w, float h) {
@@ -100,6 +107,7 @@ void callRect(int fnId, float x, float y, float w, float h) {
       closure_f = caml_named_value("fluid_rect_fn");
   }
 
+  logf("Call rect %d\n", fnId);
   Create_record4_double(rect_v, x, y, w, h);
   caml_callback2(*closure_f, Val_int(fnId), rect_v);
 }

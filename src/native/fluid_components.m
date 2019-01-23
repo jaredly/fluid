@@ -242,6 +242,7 @@ void fluid_Draw_text(value text, value pos) {
 CAMLprim value fluid_create_ScrollView(value dims_v) {
   CAMLparam1(dims_v);
   CAMLlocal1(view_v);
+  log("Create scroll view\n");
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
@@ -268,6 +269,7 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
   CAMLparam2(dims_v, draw_v);
   CAMLlocal1(view_v);
   // caml_register_global_root(&draw_v);
+  log("Create custom view\n");
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
@@ -281,11 +283,15 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
 
 void fluid_update_CustomView(value view_v, value draw_v) {
   CAMLparam2(view_v, draw_v);
+  log("Update custom view\n");
   // caml_register_global_root(&draw_v);
 
   CustomView* view = (CustomView*)Unwrap(view_v);
+  log("Unwrapped it\n");
   [view setDraw:Int_val(draw_v)];
+  log("drew\n");
   [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
+  log("done\n");
 
   CAMLreturn0;
 }
@@ -295,6 +301,7 @@ void fluid_update_CustomView(value view_v, value draw_v) {
 CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value style_v) {
   CAMLparam4(id, pos_v, size_v, style_v);
   CAMLlocal1(view_v);
+  log("Create view\n");
 
   Double_pair(pos_v, top, left);
   Double_pair(size_v, width, height);
@@ -321,8 +328,8 @@ CAMLprim value fluid_create_NSView(value id, value pos_v, value size_v, value st
 void fluid_update_NSView(value view_v, value id, value style_v) {
   CAMLparam3(view_v, id, style_v);
 
+  log("Update view\n");
   NSView* view = (NSView*)Unwrap(view_v);
-  printf("Update view\n");
 
   value backgroundColor = Field(style_v, 0);
   if (Is_block(backgroundColor) && Tag_val(backgroundColor) == 0) {
@@ -344,7 +351,7 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
   CAMLparam4(text_v, font_v, fontSize_v, maxWidth_v);
   CAMLlocal1(result);
   // TODO cache these values pls
-  // log("Measure text\n");
+  log("Measure text\n");
 
   NSSize textSize;
 
@@ -514,6 +521,7 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   CAMLparam5(text_v, contents_v, dims, font_v, handlers_v);
   // caml_register_global_root(&onChange_v);
   // log("Update text view\n");
+  log("Update text view\n");
 
   NSTextField* text = (NSTextField*)Unwrap(text_v);
   NSString *contents = NSString_val(contents_v);

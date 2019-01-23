@@ -27,10 +27,13 @@ module Tracker = (C: {type arg;let name: string}): {
   let cur = ref(0);
   let next = () => {cur := cur^ + 1; cur^};
   let track: fn => callbackId = fn => {
+    print_endline("Track");
     switch (Belt.HashMap.get(ids, fn)) {
       | None =>
         let id = next();
-        Hashtbl.replace(fns, id, fn); id
+        Hashtbl.replace(fns, id, fn);
+        print_endline("Tracked");
+        id
       | Some(id) => id
     }
   };
@@ -38,11 +41,14 @@ module Tracker = (C: {type arg;let name: string}): {
     | None => None
     | Some(fn) => Some(track(fn))
   };
-  let untrack = fn =>
+  let untrack = fn => {
+    print_endline("Untrack");
     switch (Belt.HashMap.get(ids, fn)) {
       | None => ()
       | Some(id) => Hashtbl.remove(fns, id)
     };
+    print_endline("Removed");
+  };
   let maybeUntrack: (option(C.arg => unit)) => unit = fn => switch fn {
     | None => ()
     | Some(fn) => untrack(fn)
@@ -261,7 +267,8 @@ module NativeInterface = {
       | (Custom(a), Custom(draw)) =>
         /* TODO DrawTracker.untrack(a); */
         if (a !== draw) {
-          updateCustom(mountPoint, DrawTracker.track(draw))
+          updateCustom(mountPoint, DrawTracker.track(draw));
+          print_endline("updated\n");
         }
 
       | (String(atext, afont, ahandlers), String(btext, bfont, bhandlers)) => 

@@ -34,7 +34,7 @@
   caml_callback(onLaunch, Val_unit);
   [NSApp unhide:nil];
   [NSApp activateIgnoringOtherApps:true];
-  caml_remove_global_root(&onLaunch);
+  // caml_remove_global_root(&onLaunch);
 }
 
 @end
@@ -224,7 +224,6 @@ void fluid_App_launch (value isAccessory, value callback)
 - (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)itemv {
   if (self = [super init]) {
     onClick = onClickv;
-    caml_register_global_root(&onClickv);
     item = itemv;
   }
   return self;
@@ -232,13 +231,11 @@ void fluid_App_launch (value isAccessory, value callback)
 
 // TODO this needs to use the int-fn-tracker thing too
 - (void)onClick {
-  CAMLparam0();
   callPos(
     onClick,
     item.button.window.frame.origin.x,
     item.button.window.frame.origin.y
   );
-  CAMLreturn0;
 }
 @end
 
