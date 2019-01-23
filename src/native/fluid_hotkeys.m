@@ -1,6 +1,9 @@
 #include "./fluid_shared.h"
 #import <Carbon/Carbon.h>
 
+// from http://dbachrach.com/blog/2005/11/program-global-hotkeys-in-cocoa-easily/
+// and https://snippets.aktagon.com/snippets/361-registering-global-hot-keys-with-cocoa-and-objective-c
+
 OSStatus OnHotKeyEvent(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData) {
   EventHotKeyID hkCom;
 
