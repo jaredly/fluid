@@ -445,6 +445,7 @@ module Fluid = {
 
   module Draw = {
     external text: (string, pos) => unit = "fluid_Draw_text";
+    external fillRect: (dims, color) => unit = "fluid_Draw_fillRect";
     external rect: (dims, color) => unit = "fluid_Draw_rect";
   }
 

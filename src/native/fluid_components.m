@@ -210,13 +210,24 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 
 @end
 
-void fluid_Draw_rect(value rect, value color) {
+void fluid_Draw_fillRect(value rect, value color) {
   CAMLparam2(rect, color);
 
   Unpack_record4_double(rect, left, top, width, height);
   Unpack_record4_double(color, r, g, b, a);
   [[NSColor colorWithCalibratedRed:r green:g blue:b alpha:a] set];
   NSRectFill(NSMakeRect(left, top, width, height));
+
+  CAMLreturn0;
+}
+
+void fluid_Draw_rect(value rect, value color) {
+  CAMLparam2(rect, color);
+
+  Unpack_record4_double(rect, left, top, width, height);
+  Unpack_record4_double(color, r, g, b, a);
+  [[NSColor colorWithCalibratedRed:r green:g blue:b alpha:a] set];
+  NSFrameRect(NSMakeRect(left, top, width, height));
 
   CAMLreturn0;
 }

@@ -56,9 +56,9 @@ let main = (~onDone, hooks) => {
   /* print_endline("Render emojis: " ++ string_of_int(List.length(filtered))); */
 
   let%hook draw = useCallback(({top, left, width, height}) => {
-    print_endline(
+    /* print_endline(
       "Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height),
-    );
+    ); */
     filtered->Belt.List.forEachWithIndex((index, emoji) => {
       let x = index mod row |> float_of_int |> (*.)(size);
       let y = index / row |> float_of_int |> (*.)(size);
