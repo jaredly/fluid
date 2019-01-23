@@ -196,7 +196,7 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   CAMLlocal1(rect_v);
   Create_record4_double(rect_v, dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
   // Wrap(rect_v, dirtyRect);
-  NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
+  // NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
 
   static value * closure_f = NULL;
   if (closure_f == NULL) {
@@ -384,73 +384,6 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 
 
-// @interface TextViewDelegate : NSObject <NSTextViewDelegate>
-// @end
-
-// @implementation TextViewDelegate {
-//   int onChange;
-//   int onEnter;
-//   int onKeyPress;
-// }
-
-// - (void)textDidChange:(NSNotification *)notification {
-//   CAMLparam0();
-//   log("Text change\n");
-
-//   if (onChange != -1) {
-//     NSText* textField = [notification object];
-//     log("Calling\n");
-
-//     static value * closure_f = NULL;
-//     if (closure_f == NULL) {
-//         /* First time around, look up by name */
-//         closure_f = caml_named_value("fluid_string_change");
-//     }
-
-//     caml_callback2(*closure_f, Val_int(onChange), caml_copy_string([[textField string] UTF8String]));
-//   }
-
-// }
-
-// - (void)keyDown:(NSEvent *)event {
-//   NSLog(@"Key down!");
-// }
-
-// - (void)keyUp:(NSEvent *)event {
-//   NSLog(@"Key up!");
-// }
-// @end
-
-// CAMLprim value fluid_TextField_create(value contents_v, value dims_v, value handlers_v) {
-//   CAMLparam3(contents_v, dims_v, handlers_v);
-//   CAMLlocal1(text_v);
-
-//   Unpack_record4_double(dims_v, left, top, width, height);
-
-//   NSRect frame = NSMakeRect(left, top, width, height);
-//   NSTextView* text = [[NSTextView alloc] initWithFrame:frame];
-//   [text.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:NSString_val(contents_v)]];
-
-//   Wrap(text_v, text);
-//   CAMLreturn(text_v);
-// }
-
-// void fluid_TextField_update(value text_v, value contents_v, value dims_v, value handlers_v) {
-//   CAMLparam4(text_v, contents_v, dims_v, handlers_v);
-
-//   NSTextView* text = (NSTextView*)Unwrap(text_v);
-//   /* TODO: check if different first maybe */
-//   [text.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:NSString_val(contents_v)]];
-
-//   Unpack_record4_double(dims_v, left, top, width, height);
-
-//   [text setFrameOrigin:NSMakePoint(left, top)];
-//   [text setFrameSize:NSMakeSize(width, height)];
-
-//   CAMLreturn0;
-// }
-
-
 
 
 void callUnit(int fnId) {
@@ -479,21 +412,22 @@ void callString(int fnId, const char* text) {
 @property (nonatomic) int onEnter;
 @property (nonatomic) int onTab;
 @property (nonatomic) int onShiftTab;
+@property (nonatomic) int onEscape;
 @end
 
 @implementation TextFieldDelegate {
 }
 
-- (void)keyDown:(NSEvent *)event {
-  NSLog(@"Key down!");
-}
-
-- (void)keyUp:(NSEvent *)event {
-  NSLog(@"Key up!");
-}
-
 - (BOOL)control:(NSControl* )control textView:(NSTextView *)textView doCommandBySelector:(SEL)commandSelector {
-  printf("2 Doing a command I guess %s\n", [NSStringFromSelector(commandSelector) UTF8String]);
+  // printf("2 Doing a command I guess %s\n", [NSStringFromSelector(commandSelector) UTF8String]);
+  if (commandSelector == @selector(cancel:)) {
+    if (self.onEscape != -1) {
+      callUnit(self.onEscape);
+      return YES;
+    } else {
+      return NO;
+    }
+  }
   if (commandSelector == @selector(insertNewline:)) {
     if (self.onEnter != -1) {
       callUnit(self.onEnter);
@@ -553,9 +487,20 @@ void callString(int fnId, const char* text) {
 }
 @end
 
+void set_handlers(TextFieldDelegate* delegate, value handlers) {
+  CAMLparam1(handlers);
 
-CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value onChange_v, value onEnter_v) {
-  CAMLparam5(contents_v, dims_v, font_v, onChange_v, onEnter_v);
+  delegate.onEnter = Check_optional(Field(handlers, 0)) ? Int_val(Unpack_optional(Field(handlers, 0))) : -1;
+  delegate.onTab = Check_optional(Field(handlers, 1)) ? Int_val(Unpack_optional(Field(handlers, 1))) : -1;
+  delegate.onShiftTab = Check_optional(Field(handlers, 2)) ? Int_val(Unpack_optional(Field(handlers, 2))) : -1;
+  delegate.onChange = Check_optional(Field(handlers, 3)) ? Int_val(Unpack_optional(Field(handlers, 3))) : -1;
+  delegate.onEscape = Check_optional(Field(handlers, 4)) ? Int_val(Unpack_optional(Field(handlers, 4))) : -1;
+
+  CAMLreturn0;
+}
+
+CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value handlers) {
+  CAMLparam4(contents_v, dims_v, font_v, handlers);
   CAMLlocal1(text_v);
   // caml_register_global_root(&onChange_v);
   log("Create text view\n");
@@ -576,25 +521,16 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
     text = [NSTextField labelWithString:contents];
   }
 
-  int onChange_i = -1;
-  int onEnter_i = -1;
-  if (Check_optional(onChange_v) || Check_optional(onEnter_v)) {
+  if (Check_optional(Field(handlers, 3))) {
     text.editable = true;
     text.wantsLayer = true;
     text.layer.backgroundColor = CGColorCreateGenericRGB(1, 1, 1, 1);
-  }
-  if (Check_optional(onChange_v)) {
-    onChange_i = Int_val(Unpack_optional(onChange_v));
-  }
-  if (Check_optional(onEnter_v)) {
-    onEnter_i = Int_val(Unpack_optional(onEnter_v));
   }
   // text.wantsLayer = true;
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
   TextFieldDelegate* delegate = [[TextFieldDelegate alloc] init];
   text.delegate = delegate;
-  delegate.onChange = onChange_i;
-  delegate.onEnter = onEnter_i;
+  set_handlers(delegate, handlers);
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
@@ -627,21 +563,9 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
     text.stringValue = contents;
   }
 
-  value onChange_v = Field(handlers_v, 0);
-  value onEnter_v = Field(handlers_v, 1);
-
-  text.editable = Check_optional(onChange_v) || Check_optional(onEnter_v);
-  int onChange_i = -1;
-  if (Check_optional(onChange_v)) {
-    onChange_i = Int_val(Unpack_optional(onChange_v));
-  }
-  int onEnter_i = -1;
-  if (Check_optional(onEnter_v)) {
-    onEnter_i = Int_val(Unpack_optional(onEnter_v));
-  }
+  text.editable = Check_optional(Field(handlers_v, 3));
   TextFieldDelegate* delegate = (TextFieldDelegate*)text.delegate;
-  delegate.onEnter = onEnter_i;
-  delegate.onChange = onChange_i;
+  set_handlers(delegate, handlers_v);
 
   Unpack_record4_double(dims, left, top, width, height);
 

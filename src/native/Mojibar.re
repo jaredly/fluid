@@ -49,11 +49,11 @@ let main = (~onDone, hooks) => {
     emoji.keywords->Belt.Array.some(has(_, rx))
   );
   let size = 20.;
-  let rowf = 300. /. 20.;
+  let rowf = 280. /. 20.;
   let row = int_of_float(rowf);
   let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
-  print_endline("Render emojis: " ++ string_of_int(List.length(filtered)));
+  /* print_endline("Render emojis: " ++ string_of_int(List.length(filtered))); */
 
   let%hook draw = useCallback(({top, left, width, height}) => {
     print_endline(
@@ -79,7 +79,7 @@ let main = (~onDone, hooks) => {
         Fluid.Draw.text(emoji.char, {x: x +. 2., y: y +. 2.});
       };
     });
-  }, text);
+  }, (text, selection));
 
   <view layout={Layout.style(
     ~width=300.,
@@ -102,13 +102,21 @@ let main = (~onDone, hooks) => {
           | [{char}, ..._] => onDone(Some(char))
         }
       }}
-      /* onTab={() => {
-        ()
-
-      }} */
+      onEscape={() => {
+        setSelection(0);
+        setText("");
+        onDone(None)
+      }}
+      onTab={() => {
+        setSelection(selection + 1)
+      }}
+      onShiftTab={() => {
+        setSelection(max(0, selection - 1))
+      }}
       onChange={text => {
         print_endline("Onchange text " ++ text);
         setText(text)
+        setSelection(0)
       }}
     />
     {Fluid.Native.scrollView(
