@@ -373,69 +373,174 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 
 
+// @interface TextViewDelegate : NSObject <NSTextViewDelegate>
+// @end
+
+// @implementation TextViewDelegate {
+//   int onChange;
+//   int onEnter;
+//   int onKeyPress;
+// }
+
+// - (void)textDidChange:(NSNotification *)notification {
+//   CAMLparam0();
+//   log("Text change\n");
+
+//   if (onChange != -1) {
+//     NSText* textField = [notification object];
+//     log("Calling\n");
+
+//     static value * closure_f = NULL;
+//     if (closure_f == NULL) {
+//         /* First time around, look up by name */
+//         closure_f = caml_named_value("fluid_string_change");
+//     }
+
+//     caml_callback2(*closure_f, Val_int(onChange), caml_copy_string([[textField string] UTF8String]));
+//   }
+
+// }
+
+// - (void)keyDown:(NSEvent *)event {
+//   NSLog(@"Key down!");
+// }
+
+// - (void)keyUp:(NSEvent *)event {
+//   NSLog(@"Key up!");
+// }
+// @end
+
+// CAMLprim value fluid_TextField_create(value contents_v, value dims_v, value handlers_v) {
+//   CAMLparam3(contents_v, dims_v, handlers_v);
+//   CAMLlocal1(text_v);
+
+//   Unpack_record4_double(dims_v, left, top, width, height);
+
+//   NSRect frame = NSMakeRect(left, top, width, height);
+//   NSTextView* text = [[NSTextView alloc] initWithFrame:frame];
+//   [text.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:NSString_val(contents_v)]];
+
+//   Wrap(text_v, text);
+//   CAMLreturn(text_v);
+// }
+
+// void fluid_TextField_update(value text_v, value contents_v, value dims_v, value handlers_v) {
+//   CAMLparam4(text_v, contents_v, dims_v, handlers_v);
+
+//   NSTextView* text = (NSTextView*)Unwrap(text_v);
+//   /* TODO: check if different first maybe */
+//   [text.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:NSString_val(contents_v)]];
+
+//   Unpack_record4_double(dims_v, left, top, width, height);
+
+//   [text setFrameOrigin:NSMakePoint(left, top)];
+//   [text setFrameSize:NSMakeSize(width, height)];
+
+//   CAMLreturn0;
+// }
+
+
+
+
+void callUnit(int fnId) {
+  static value * closure_f = NULL;
+  if (closure_f == NULL) {
+      /* First time around, look up by name */
+      closure_f = caml_named_value("fluid_unit_fn");
+  }
+
+  caml_callback2(*closure_f, Val_int(fnId), Val_unit);
+}
+
+void callString(int fnId, const char* text) {
+  static value * closure_f = NULL;
+  if (closure_f == NULL) {
+      /* First time around, look up by name */
+      closure_f = caml_named_value("fluid_string_fn");
+  }
+
+  caml_callback2(*closure_f, Val_int(fnId), caml_copy_string(text));
+}
+
+
 @interface TextFieldDelegate : NSObject <NSTextFieldDelegate>
+@property (nonatomic) int onChange;
+@property (nonatomic) int onEnter;
+@property (nonatomic) int onTab;
+@property (nonatomic) int onShiftTab;
 @end
 
 @implementation TextFieldDelegate {
-  int onChange;
-  int onEnter;
 }
 
-- (void)setOnChange:(int)onChangev onEnter:(int)onEnterv {
-  onChange = onChangev;
-  onEnter = onEnterv;
+- (void)keyDown:(NSEvent *)event {
+  NSLog(@"Key down!");
 }
 
-- (instancetype)initWithOnChange:(int)onChangev onEnter:(int)onEnterv {
-  if (self = [super init]) {
-    onChange = onChangev;
-    onEnter = onEnterv;
-    // caml_register_global_root(&onChangev);
-  }
-  return self;
+- (void)keyUp:(NSEvent *)event {
+  NSLog(@"Key up!");
 }
 
-- (void)controlTextDidEndEditing:(NSNotification *)notification {
-  CAMLparam0();
-  log("Text finished\n");
-
-  if (onEnter != -1) {
-    id textField = [notification object];
-
-    static value * closure_f = NULL;
-    if (closure_f == NULL) {
-        /* First time around, look up by name */
-        closure_f = caml_named_value("fluid_string_change");
+- (BOOL)control:(NSControl* )control textView:(NSTextView *)textView doCommandBySelector:(SEL)commandSelector {
+  printf("2 Doing a command I guess %s\n", [NSStringFromSelector(commandSelector) UTF8String]);
+  if (commandSelector == @selector(insertNewline:)) {
+    if (self.onEnter != -1) {
+      callUnit(self.onEnter);
+      return YES;
+    } else {
+      return NO;
     }
-
-    caml_callback2(*closure_f, Val_int(onEnter), caml_copy_string([[textField stringValue] UTF8String]));
+  } else if (commandSelector == @selector(insertTab:)) {
+    if (self.onTab != -1) {
+      callUnit(self.onTab);
+      return YES;
+    } else {
+      return NO;
+    }
+  } else if (commandSelector == @selector(insertBacktab:)) {
+    if (self.onShiftTab != -1) {
+      callUnit(self.onShiftTab);
+      return YES;
+    } else {
+      return NO;
+    }
   }
-
-  CAMLreturn0;
+  return YES;
 }
+
+// - (void)controlTextDidEndEditing:(NSNotification *)notification {
+//   CAMLparam0();
+//   log("Text finished\n");
+
+//   if (onEnter != -1) {
+//     id textField = [notification object];
+
+//     static value * closure_f = NULL;
+//     if (closure_f == NULL) {
+//         /* First time around, look up by name */
+//         closure_f = caml_named_value("fluid_string_change");
+//     }
+
+//     caml_callback2(*closure_f, Val_int(onEnter), caml_copy_string([[textField stringValue] UTF8String]));
+//   }
+
+//   CAMLreturn0;
+// }
 
 - (void)controlTextDidChange:(NSNotification *) notification {
   CAMLparam0();
   log("Text change\n");
 
-  if (onChange != -1) {
+  if (self.onChange != -1) {
     id textField = [notification object];
     log("Calling\n");
 
-    static value * closure_f = NULL;
-    if (closure_f == NULL) {
-        /* First time around, look up by name */
-        closure_f = caml_named_value("fluid_string_change");
-    }
-
-    caml_callback2(*closure_f, Val_int(onChange), caml_copy_string([[textField stringValue] UTF8String]));
+    callString(self.onChange, [[textField stringValue] UTF8String]);
   }
 
   CAMLreturn0;
 }
 @end
-
-
 
 
 CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value onChange_v, value onEnter_v) {
@@ -475,7 +580,10 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
   }
   // text.wantsLayer = true;
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
-  text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_i onEnter:onEnter_i];
+  TextFieldDelegate* delegate = [[TextFieldDelegate alloc] init];
+  text.delegate = delegate;
+  delegate.onChange = onChange_i;
+  delegate.onEnter = onEnter_i;
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
@@ -520,7 +628,9 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
   if (Check_optional(onEnter_v)) {
     onEnter_i = Int_val(Unpack_optional(onEnter_v));
   }
-  [(TextFieldDelegate*)text.delegate setOnChange:onChange_i onEnter:onEnter_i];
+  TextFieldDelegate* delegate = (TextFieldDelegate*)text.delegate;
+  delegate.onEnter = onEnter_i;
+  delegate.onChange = onChange_i;
 
   Unpack_record4_double(dims, left, top, width, height);
 

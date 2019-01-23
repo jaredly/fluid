@@ -18,6 +18,7 @@ module type Tracker = {
   type callbackId;
   type arg;
   let track: (arg => unit) => callbackId;
+  let maybeTrack: option(arg => unit) => option(callbackId);
   let untrack: callbackId => unit;
 };
 
@@ -31,6 +32,10 @@ module Tracker = (C: {type arg;let name: string}) => {
     let id = next();
     Hashtbl.replace(fns, id, fn); id
   };
+  let maybeTrack: (option(C.arg => unit)) => option(callbackId) = fn => switch fn {
+    | None => None
+    | Some(fn) => Some(track(fn))
+  };
   let untrack = id => Hashtbl.remove(fns, id);
   let call = (id: callbackId, arg: C.arg): unit => switch (Hashtbl.find(fns, id)) {
     | exception Not_found =>
@@ -40,7 +45,7 @@ module Tracker = (C: {type arg;let name: string}) => {
   Callback.register(C.name, call);
 };
 
-module type OptTracker = {
+/* module type OptTracker = {
   type callbackId;
   type arg;
   let track: option(arg => unit) => option(callbackId);
@@ -58,10 +63,11 @@ module OptTracker = (C: {type arg;let name: string}) => {
         Some(id)
     }
   };
-};
+}; */
 
 module DrawTracker: Tracker with type arg = dims = Tracker({type arg = dims; let name = "fluid_draw"});
-module MaybeStringTracker: OptTracker with type arg = string = OptTracker({type arg = string; let name = "fluid_string_change"});
+module StringTracker: Tracker with type arg = string = Tracker({type arg = string; let name = "fluid_string_fn"});
+module UnitTracker: Tracker with type arg = unit = Tracker({type arg = unit; let name = "fluid_unit_fn"});
 
 
   /* let fns: ref(list(C.arg)) = ref([]);
@@ -88,8 +94,8 @@ module NativeInterface = {
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
   external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId) => nativeInternal = "fluid_create_CustomView";
   external updateCustom: (nativeInternal, DrawTracker.callbackId) => unit = "fluid_update_CustomView";
-  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(MaybeStringTracker.callbackId), ~onEnter: option(MaybeStringTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
-  external updateTextView: (nativeInternal, string, dims, font, (option(MaybeStringTracker.callbackId), option(MaybeStringTracker.callbackId))) => unit = "fluid_set_NSTextView_textContent";
+  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(StringTracker.callbackId), ~onEnter: option(UnitTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
+  external updateTextView: (nativeInternal, string, dims, font, (option(StringTracker.callbackId), option(UnitTracker.callbackId))) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
   type image;
@@ -199,7 +205,7 @@ module NativeInterface = {
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
-    | String(string, option(font), option(string => unit), option(string => unit))
+    | String(string, option(font), option(string => unit), option(unit => unit))
     | Image(imageSrc);
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
@@ -251,8 +257,8 @@ module NativeInterface = {
         if (atext != btext || afont != bfont || aonChange !== bonChange) {
           /* MaybeStringTracker.untrack(aonChange); */
           updateTextView(mountPoint, btext, dims(layout), bfont, (
-            MaybeStringTracker.track(bonChange),
-            MaybeStringTracker.track(bonEnter)
+            StringTracker.maybeTrack(bonChange),
+            UnitTracker.maybeTrack(bonEnter)
           ))
         };
 
@@ -277,7 +283,7 @@ module NativeInterface = {
 
     | String(contents, font, onChange, onEnter) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange=MaybeStringTracker.track(onChange), ~onEnter=MaybeStringTracker.track(onEnter));
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange=StringTracker.maybeTrack(onChange), ~onEnter=UnitTracker.maybeTrack(onEnter));
       (native, getNativeId())
 
     | Image(src) =>
