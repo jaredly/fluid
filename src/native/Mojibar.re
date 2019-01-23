@@ -100,7 +100,9 @@ let main = (~onDone, hooks) => {
         switch (Belt.List.get(filtered, selection)) {
           | None => onDone(None)
           | Some({char}) => onDone(Some(char))
-        }
+        };
+        setSelection(0);
+        setText("");
       }}
       onEscape={() => {
         if (text == "") {
@@ -114,7 +116,7 @@ let main = (~onDone, hooks) => {
         setSelection(selection + 1)
       }}
       onShiftTab={() => {
-        setSelection(max(0, selection - 1))
+        setSelection(max(0, (selection == 0 ? List.length(filtered) : selection) - 1))
       }}
       onChange={text => {
         /* print_endline("Onchange text " ++ text); */

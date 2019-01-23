@@ -128,7 +128,10 @@ CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, va
 
   NSWindowStyleMask mask;
   if (isFloating == Val_true) {
-    mask = NSWindowStyleMaskBorderless;
+    mask =
+    // NSWindowStyleMaskBorderless;
+      NSWindowStyleMaskTitled |
+      NSWindowStyleMaskFullSizeContentView;
   } else {
     mask = 
       NSWindowStyleMaskClosable |
@@ -144,6 +147,14 @@ CAMLprim value fluid_Window_make(value title_v, value onBlur_v, value dims_v, va
     styleMask: mask
     backing: NSBackingStoreBuffered
     defer: NO];
+  if (isFloating == Val_true) {
+    [window setBackgroundColor:[NSColor whiteColor]];
+    [window setOpaque:NO];
+    [window setTitlebarAppearsTransparent:YES];
+    [window setTitleVisibility:NSWindowTitleHidden];
+    [window standardWindowButton:NSWindowCloseButton].hidden = YES;
+    [window setShowsToolbarButton:NO];
+  }
   window.delegate = delegate;
   window.contentView = [[FlippedView alloc] initWithFrame:NSMakeRect(0, 0, width, height)];
 
