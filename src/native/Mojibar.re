@@ -103,9 +103,12 @@ let main = (~onDone, hooks) => {
         }
       }}
       onEscape={() => {
-        setSelection(0);
-        setText("");
-        onDone(None)
+        if (text == "") {
+          onDone(None)
+        } else {
+          setSelection(0);
+          setText("");
+        }
       }}
       onTab={() => {
         setSelection(selection + 1)
@@ -114,7 +117,7 @@ let main = (~onDone, hooks) => {
         setSelection(max(0, selection - 1))
       }}
       onChange={text => {
-        print_endline("Onchange text " ++ text);
+        /* print_endline("Onchange text " ++ text); */
         setText(text)
         setSelection(0)
       }}
