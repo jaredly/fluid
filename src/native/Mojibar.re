@@ -84,9 +84,11 @@ let main = (~onDone, hooks) => {
     });
   }, (text, selection));
 
+  let selected = filtered->Belt.List.get(selection);
+
   <view layout={Layout.style(
     ~width=300.,
-    ~height=200.,
+    ~height=250.,
     /* ~padding=10., */
     ()
   )}
@@ -115,9 +117,7 @@ let main = (~onDone, hooks) => {
           setText("");
         }
       }}
-      onTab={() => {
-        setSelection(selection + 1)
-      }}
+      onTab={() => setSelection(selection == List.length(filtered) - 1 ? 0 : selection + 1)}
       onShiftTab={() => {
         setSelection(max(0, (selection == 0 ? List.length(filtered) : selection) - 1))
       }}
@@ -137,7 +137,7 @@ let main = (~onDone, hooks) => {
       )},
       ~children=[
         <view layout={
-          Layout.style(~padding=10., ~alignSelf=AlignStretch, ())
+          Layout.style(~paddingHorizontal=10., ~alignSelf=AlignStretch, ())
         }>
       <custom
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
@@ -147,6 +147,22 @@ let main = (~onDone, hooks) => {
       ],
       ()
     )}
+    {switch selected {
+      | None => <view />
+      | Some(emoji) =>
+        <view
+          layout={Layout.style(~alignSelf=AlignStretch, ~paddingBottom=10., ~paddingHorizontal=10., ())}
+        >
+          <view
+            backgroundColor={r: 0.9, g: 0.9, b: 0.9, a: 1.}
+            layout={
+              Layout.style(~height=1., ~alignSelf=AlignStretch, ())
+            }
+          />
+          {str(emoji.name)}
+          {str(emoji.keywords |> Belt.List.fromArray |> String.concat(", "))}
+        </view>
+    }}
   </view>
 };
 
