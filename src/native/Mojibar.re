@@ -39,7 +39,7 @@ let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
 let has = (text, rx) => Str.string_match(rx, text, 0);
 
-let main = hooks => {
+let main = (~onDone, hooks) => {
   let%hook (text, setText) = useState("");
 
   let rx = Str.regexp(".*" ++ Str.quote(text) ++ ".*");
@@ -74,6 +74,13 @@ let main = hooks => {
     ()
   )}
   >
+    <button title="Ok" onPress={() => {
+      /* onDone(text) */
+      switch (filtered) {
+        | [] => ()
+        | [{char}, ..._] => onDone(Some(char))
+      }
+    }} />
     /* <view backgroundColor={r: 1., g: 0., b: 0., a: 1.} layout={Layout.style(~height=20., ~width=50., ())} /> */
     <text
       contents=text
@@ -83,6 +90,12 @@ let main = hooks => {
         ~marginBottom=15.,
         ~marginTop=5.,
         ())}
+      onEnter={text => {
+        switch (filtered) {
+          | [] => onDone(None)
+          | [{char}, ..._] => onDone(Some(char))
+        }
+      }}
       onChange={text => {
         print_endline("Onchange text " ++ text);
         setText(text)
@@ -125,16 +138,29 @@ Fluid.App.launch(
     ~title="Mojibar",
     ~onClick=pos => {
       print_endline("Launching");
-      Fluid.launchWindow(
+      let win = ref(None);
+      win := Some(Fluid.launchWindow(
         ~title="Hello Fluid",
         ~floating=true,
         ~pos,
         ~onBlur=win => {
-          print_endline("Blurred! Ok cleaning now");
           Fluid.Window.close(win);
         },
-        <Main />
-      );
+        <Main onDone={text => {
+          switch (win.contents, text) {
+            | (Some(win), Some(text)) =>
+              Fluid.Window.close(win);
+              Fluid.App.hide();
+              Fluid.App.setTimeout(() => {
+                Fluid.App.triggerString(text)
+              }, 1000 * 1000 * 100)
+            | (Some(win), _) =>
+              Fluid.Window.close(win);
+              Fluid.App.hide();
+            | _ => ()
+          }
+        }}/>
+      ));
     }
   )
 });

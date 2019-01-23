@@ -61,7 +61,7 @@
   float d = Double_field(source, 3)
 
 // #define Unpack_record4_double(source, a, b, c, d) float a = Double_field(source, 0); float b = Double_field(source, 1); float c = Double_field(source, 2); float d = Double_field(source, 3)
-#define Check_optional(source) Is_block(source) && Tag_val(source) == 0
+#define Check_optional(source) (Is_block(source) && Tag_val(source) == 0)
 #define Unpack_optional(source) Field(source, 0)
 
 @interface FlippedView : NSView

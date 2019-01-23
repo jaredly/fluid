@@ -13,16 +13,25 @@ type dims = {left: float, top: float, width: float, height: float};
   let untrack = fn => Belt.HashSet.remove(fns, fn);
 }; */
 
+module type Tracker = {
+  type callbackId;
+  type arg;
+  let track: (arg => unit) => callbackId;
+  let untrack: callbackId => unit;
+};
+
 module Tracker = (C: {type arg;let name: string}) => {
+  type callbackId = int;
+  type arg = C.arg;
   let fns: Hashtbl.t(int, C.arg => unit) = Hashtbl.create(100);
   let cur = ref(0);
   let next = () => {cur := cur^ + 1; cur^};
-  let track = fn => {
+  let track: (C.arg => unit) => callbackId = fn => {
     let id = next();
     Hashtbl.replace(fns, id, fn); id
   };
   let untrack = id => Hashtbl.remove(fns, id);
-  let call = (id, arg) => switch (Hashtbl.find(fns, id)) {
+  let call = (id: callbackId, arg: C.arg): unit => switch (Hashtbl.find(fns, id)) {
     | exception Not_found =>
       print_endline("Failed to find callback! " ++ string_of_int(id))
     | fn => fn(arg)
@@ -30,9 +39,16 @@ module Tracker = (C: {type arg;let name: string}) => {
   Callback.register(C.name, call);
 };
 
+module type OptTracker = {
+  type callbackId;
+  type arg;
+  let track: option(arg => unit) => option(callbackId);
+  let untrack: callbackId => unit;
+};
+
 module OptTracker = (C: {type arg;let name: string}) => {
   include Tracker(C);
-  let track = fn => {
+  let track: (option(C.arg => unit)) => option(callbackId) = fn => {
     switch fn {
       | None => None
       | Some(fn) =>
@@ -42,6 +58,10 @@ module OptTracker = (C: {type arg;let name: string}) => {
     }
   };
 };
+
+module DrawTracker: Tracker with type arg = dims = Tracker({type arg = dims; let name = "fluid_draw"});
+module MaybeStringTracker: OptTracker with type arg = string = OptTracker({type arg = string; let name = "fluid_string_change"});
+
 
   /* let fns: ref(list(C.arg)) = ref([]);
   let track = fn => {fns := [fn, ...fns^]; fn};
@@ -65,10 +85,10 @@ module NativeInterface = {
 
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
-  external createCustom: (~dims: dims, ~drawFn: int) => nativeInternal = "fluid_create_CustomView";
-  external updateCustom: (nativeInternal, int) => unit = "fluid_update_CustomView";
-  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(int)) => nativeInternal = "fluid_create_NSTextView";
-  external updateTextView: (nativeInternal, string, dims, font, option(int)) => unit = "fluid_set_NSTextView_textContent";
+  external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId) => nativeInternal = "fluid_create_CustomView";
+  external updateCustom: (nativeInternal, DrawTracker.callbackId) => unit = "fluid_update_CustomView";
+  external createTextNode: (string, ~dims: dims, ~font: font, ~onChange: option(MaybeStringTracker.callbackId), ~onEnter: option(MaybeStringTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
+  external updateTextView: (nativeInternal, string, dims, font, (option(MaybeStringTracker.callbackId), option(MaybeStringTracker.callbackId))) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
   type image;
@@ -178,7 +198,7 @@ module NativeInterface = {
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
-    | String(string, option(font), option(string => unit))
+    | String(string, option(font), option(string => unit), option(string => unit))
     | Image(imageSrc);
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
@@ -187,7 +207,7 @@ module NativeInterface = {
       | (Custom(adrawFn), Custom(drawFn)) => true
       | (View(aPress, aStyle), View(onPress, style)) => true
       | (Button(atitle, apress), Button(btitle, bpress)) => true
-      | (String(atext, afont, _), String(btext, bfont, _)) => true
+      | (String(atext, afont, _, _), String(btext, bfont, _, _)) => true
       | _ => false
     }
   };
@@ -201,12 +221,10 @@ module NativeInterface = {
       | Image(_)
       | Custom(_) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
-      | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
+      | String(_, _, _, _) => updateTextLoc(mountPoint, dims(layout))
     }
   };
 
-  module DrawTracker = Tracker({type arg = dims; let name = "fluid_draw"});
-  module MaybeStringTracker = OptTracker({type arg = string; let name = "fluid_string_change"});
 
   let update = (mounted, (mountPoint, id), newElement, layout) => {
     switch (mounted, newElement) {
@@ -228,10 +246,13 @@ module NativeInterface = {
           updateCustom(mountPoint, DrawTracker.track(draw))
         }
 
-      | (String(atext, afont, aonChange), String(btext, bfont, bonChange)) => 
+      | (String(atext, afont, aonChange, aonEnter), String(btext, bfont, bonChange, bonEnter)) => 
         if (atext != btext || afont != bfont || aonChange !== bonChange) {
           /* MaybeStringTracker.untrack(aonChange); */
-          updateTextView(mountPoint, btext, dims(layout), bfont, MaybeStringTracker.track(bonChange))
+          updateTextView(mountPoint, btext, dims(layout), bfont, (
+            MaybeStringTracker.track(bonChange),
+            MaybeStringTracker.track(bonEnter)
+          ))
         };
 
       | _ => ()
@@ -253,9 +274,9 @@ module NativeInterface = {
       setButtonPress(id, onPress);
       (native, id)
 
-    | String(contents, font, onChange) =>
+    | String(contents, font, onChange, onEnter) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange=MaybeStringTracker.track(onChange));
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~onChange=MaybeStringTracker.track(onChange), ~onEnter=MaybeStringTracker.track(onEnter));
       (native, getNativeId())
 
     | Image(src) =>
@@ -294,9 +315,9 @@ module Fluid = {
       })
     );
 
-    let text = (~layout=?, ~font=?, ~onChange=?, ~contents, ()) => {
+    let text = (~layout=?, ~font=?, ~onChange=?, ~onEnter=?, ~contents, ()) => {
       Builtin(
-        String(contents, font, onChange),
+        String(contents, font, onChange, onEnter),
         [],
         layout,
         Some(NativeInterface.measureText(contents, font))
@@ -311,8 +332,13 @@ module Fluid = {
 
   module App = {
     external launch: (~isAccessory: bool, unit => unit) => unit = "fluid_App_launch";
+    external deactivate: unit => unit = "fluid_App_deactivate";
+    external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     external statusBarItem: (~title: string, ~onClick: (((float, float)) => unit)) => unit = "fluid_App_statusBarItem";
+
+    external triggerString: (string) => unit = "fluid_App_triggerString";
+    external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
 
     type menuItem;
     type menuAction =
@@ -348,14 +374,14 @@ module Fluid = {
 
   module Window = {
     type window;
-    external make: (~title: string, ~onBlur: (int), ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
+    module Tracker: Tracker with type arg = window = Tracker({type arg = window; let name = "fluid_window"});
+    external make: (~title: string, ~onBlur: Tracker.callbackId, ~dims: dims, ~isFloating: bool) => window = "fluid_Window_make";
     external center: (window) => unit = "fluid_Window_center";
     external close: (window) => unit = "fluid_Window_close";
     external activate: (window) => unit = "fluid_Window_activate";
     external contentView: (window) => NativeInterface.nativeInternal = "fluid_Window_contentView";
   }
 
-  module WindowTracker = Tracker({type arg = Window.window; let name = "fluid_window"});
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
@@ -369,7 +395,7 @@ module Fluid = {
       let window =
         Window.make(
           ~title,
-          ~onBlur=WindowTracker.track(onBlur),
+          ~onBlur=Window.Tracker.track(onBlur),
           ~dims={left, top, width, height},
           ~isFloating=floating,
         );
@@ -383,6 +409,7 @@ module Fluid = {
         Window.center(window);
       };
       Window.activate(window);
+      window
     })
   };
 }

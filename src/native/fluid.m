@@ -1,4 +1,7 @@
 #include "./fluid_shared.h"
+#import <Carbon/Carbon.h>
+
+
 
 @interface MenuDelegate : NSObject
 - (void)dummySelect;
@@ -36,6 +39,8 @@
   [NSApp activateIgnoringOtherApps:true];
   caml_remove_global_root(&onLaunch);
 }
+
+// - (void)
 
 @end
 
@@ -137,6 +142,54 @@ void fluid_App_setupAppMenu(value title_v, value appItems_v, value menus_v) {
 
   [NSApp setMainMenu:menubar];
 
+  CAMLreturn0;
+}
+
+void fluid_App_deactivate() {
+  [NSApp deactivate];
+}
+
+void fluid_App_hide() {
+  [NSApp hide:nil];
+}
+
+void fluid_App_setTimeout(value callback, value time) {
+  CAMLparam2(callback, time);
+  log("Set timeout\n");
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int_val(time)), dispatch_get_main_queue(), ^(void){
+    caml_callback(callback, Val_unit);
+  });
+  CAMLreturn0;
+}
+
+void fluid_App_triggerString(value string_v) {
+  CAMLparam1(string_v);
+
+  NSString* string = NSString_val(string_v);
+
+  // From https://stackoverflow.com/questions/9318690/generate-keyboard-events-for-the-frontmost-application
+
+  // First, get the PSN of the currently front app
+  ProcessSerialNumber psn;
+  GetFrontProcess( &psn );
+
+  // make some key events
+  CGEventRef keyup, keydown;
+  // int count = Wosize_val(keys);
+  // for (int i=0; i<count; i++) {
+  //   int key = Int_val(Field(keys, i));
+    keydown = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)0, true);
+    CGEventKeyboardSetUnicodeString(keydown, [string length], (const unichar*)[string cStringUsingEncoding:NSUnicodeStringEncoding]);
+    keyup = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)0, false);
+
+    // forward them to the frontmost app
+    CGEventPostToPSN (&psn, keydown);
+    CGEventPostToPSN (&psn, keyup);
+
+    // and finally behave friendly
+    CFRelease(keydown);
+    CFRelease(keyup);
+  // }
   CAMLreturn0;
 }
 

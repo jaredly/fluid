@@ -148,7 +148,7 @@ Fluid.App.launch(
     ~title="Hello Fluid",
     /* ~floating=true, */
     <First />
-  );
+  )->ignore;
 })
 
 /* Fluid.launchWindow(~title="Hello Fluid", ~root=<Calculator.Calculator />); */

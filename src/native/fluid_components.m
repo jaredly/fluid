@@ -378,18 +378,40 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 @implementation TextFieldDelegate {
   int onChange;
+  int onEnter;
 }
 
-- (void)setOnChange:(int)onChangev {
+- (void)setOnChange:(int)onChangev onEnter:(int)onEnterv {
   onChange = onChangev;
+  onEnter = onEnterv;
 }
 
-- (instancetype)initWithOnChange:(int)onChangev {
+- (instancetype)initWithOnChange:(int)onChangev onEnter:(int)onEnterv {
   if (self = [super init]) {
     onChange = onChangev;
+    onEnter = onEnterv;
     // caml_register_global_root(&onChangev);
   }
   return self;
+}
+
+- (void)controlTextDidEndEditing:(NSNotification *)notification {
+  CAMLparam0();
+  log("Text finished\n");
+
+  if (onEnter != -1) {
+    id textField = [notification object];
+
+    static value * closure_f = NULL;
+    if (closure_f == NULL) {
+        /* First time around, look up by name */
+        closure_f = caml_named_value("fluid_string_change");
+    }
+
+    caml_callback2(*closure_f, Val_int(onEnter), caml_copy_string([[textField stringValue] UTF8String]));
+  }
+
+  CAMLreturn0;
 }
 
 - (void)controlTextDidChange:(NSNotification *) notification {
@@ -416,8 +438,8 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
 
 
-CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value onChange_v) {
-  CAMLparam4(contents_v, dims_v, font_v, onChange_v);
+CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value onChange_v, value onEnter_v) {
+  CAMLparam5(contents_v, dims_v, font_v, onChange_v, onEnter_v);
   CAMLlocal1(text_v);
   // caml_register_global_root(&onChange_v);
   log("Create text view\n");
@@ -439,15 +461,21 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
   }
 
   int onChange_i = -1;
-  if (Check_optional(onChange_v)) {
+  int onEnter_i = -1;
+  if (Check_optional(onChange_v) || Check_optional(onEnter_v)) {
     text.editable = true;
     text.wantsLayer = true;
     text.layer.backgroundColor = CGColorCreateGenericRGB(1, 1, 1, 1);
+  }
+  if (Check_optional(onChange_v)) {
     onChange_i = Int_val(Unpack_optional(onChange_v));
+  }
+  if (Check_optional(onEnter_v)) {
+    onEnter_i = Int_val(Unpack_optional(onEnter_v));
   }
   // text.wantsLayer = true;
   // text.layer.backgroundColor = CGColorCreateGenericRGB(0, 1, 0, 1);
-  text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_i];
+  text.delegate = [[TextFieldDelegate alloc] initWithOnChange:onChange_i onEnter:onEnter_i];
 
   Unpack_record4_double(dims_v, left, top, width, height);
 
@@ -459,8 +487,8 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
   CAMLreturn(text_v);
 }
 
-void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v, value onChange_v) {
-  CAMLparam5(text_v, contents_v, dims, font_v, onChange_v);
+void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims, value font_v, value handlers_v) {
+  CAMLparam5(text_v, contents_v, dims, font_v, handlers_v);
   // caml_register_global_root(&onChange_v);
   // log("Update text view\n");
 
@@ -480,12 +508,19 @@ void fluid_set_NSTextView_textContent(value text_v, value contents_v, value dims
     text.stringValue = contents;
   }
 
-  text.editable = Check_optional(onChange_v);
+  value onChange_v = Field(handlers_v, 0);
+  value onEnter_v = Field(handlers_v, 1);
+
+  text.editable = Check_optional(onChange_v) || Check_optional(onEnter_v);
   int onChange_i = -1;
   if (Check_optional(onChange_v)) {
     onChange_i = Int_val(Unpack_optional(onChange_v));
   }
-  [(TextFieldDelegate*)text.delegate setOnChange:onChange_i];
+  int onEnter_i = -1;
+  if (Check_optional(onEnter_v)) {
+    onEnter_i = Int_val(Unpack_optional(onEnter_v));
+  }
+  [(TextFieldDelegate*)text.delegate setOnChange:onChange_i onEnter:onEnter_i];
 
   Unpack_record4_double(dims, left, top, width, height);
 
