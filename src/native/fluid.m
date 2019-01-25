@@ -212,6 +212,11 @@ void fluid_App_launch (value isAccessory, value callback)
   CAMLreturn0;
 }
 
+// @interface StatusBarButton : NSButton
+//   @property (nonatomic) int onClick; 
+//   @property (nonatomic) int onRightClick; 
+// @end
+
 @interface StatusClickTarget : NSObject
 - (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)item;
 @end
@@ -229,7 +234,6 @@ void fluid_App_launch (value isAccessory, value callback)
   return self;
 }
 
-// TODO this needs to use the int-fn-tracker thing too
 - (void)onClick {
   callPos(
     onClick,
@@ -286,4 +290,9 @@ BOOL isEmojiSupported(NSString* text) {
 CAMLprim value fluid_App_isEmojiSupported(value text) {
   CAMLparam1(text);
   CAMLreturn(isEmojiSupported(NSString_val(text)) ? Val_true : Val_false);
+}
+
+CAMLprim value fluid_App_homeDirectory() {
+  CAMLparam0();
+  CAMLreturn(caml_copy_string([NSHomeDirectory() UTF8String]));
 }

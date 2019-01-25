@@ -166,26 +166,25 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 // MARK - Plain View
 
 @interface CustomView: NSView
-- (void)setDraw:(int)draw;
+  @property (nonatomic) int onDraw;
+// - (void)setDraw:(int)draw;
 @end
 
-@implementation CustomView {
-  int drawFn;
-}
+@implementation CustomView {}
 
-- (instancetype)initWithDraw:(int)drawFnv andFrame:(NSRect)frame {
-  if (self = [super initWithFrame:frame]) {
-    drawFn = drawFnv;
-    // caml_register_global_root(&drawFnv);
-  }
-  return self;
-}
+// - (instancetype)initWithDraw:(int)drawFnv andFrame:(NSRect)frame {
+//   if (self = [super initWithFrame:frame]) {
+//     drawFn = drawFnv;
+//     // caml_register_global_root(&drawFnv);
+//   }
+//   return self;
+// }
 
-- (void)setDraw:(int)draw {
-  // caml_remove_global_root(&drawFn);
-  // caml_register_global_root(&draw);
-  drawFn = draw;
-}
+// - (void)setDraw:(int)draw {
+//   // caml_remove_global_root(&drawFn);
+//   // caml_register_global_root(&draw);
+//   drawFn = draw;
+// }
 
 - (BOOL)isFlipped {
   return YES;
@@ -196,7 +195,7 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   // NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
 
   callRect(
-    drawFn,
+    self.onDraw,
     dirtyRect.origin.x,
     dirtyRect.origin.y,
     dirtyRect.size.width,
@@ -282,7 +281,8 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
   Unpack_record4_double(dims_v, left, top, width, height);
 
   NSRect frame = NSMakeRect(left, top, width, height);
-  NSView* view = [[CustomView alloc] initWithDraw:Int_val(draw_v) andFrame:frame];
+  CustomView* view = [[CustomView alloc] initWithFrame:frame];
+  view.onDraw = Int_val(draw_v);
   view.wantsLayer = true;
 
   Wrap(view_v, view);
@@ -295,7 +295,7 @@ void fluid_update_CustomView(value view_v, value draw_v) {
   // caml_register_global_root(&draw_v);
 
   CustomView* view = (CustomView*)Unwrap(view_v);
-  [view setDraw:Int_val(draw_v)];
+  view.onDraw = Int_val(draw_v);
   [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
 
   CAMLreturn0;
@@ -396,8 +396,6 @@ CAMLprim value fluid_measureText(value text_v, value font_v, value fontSize_v, v
 
   CAMLreturn(result);
 }
-
-
 
 
 

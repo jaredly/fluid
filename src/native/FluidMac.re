@@ -384,6 +384,7 @@ module Fluid = {
     let statusBarItem = (~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick));
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
+    external homeDirectory: unit => string = "fluid_App_homeDirectory";
     external isEmojiSupported: string => bool = "fluid_App_isEmojiSupported";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";

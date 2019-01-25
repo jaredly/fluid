@@ -103,7 +103,7 @@ function button(text, style, onClick, hooks) {
                 str(undefined, undefined, text),
                 /* [] */0
               ],
-              Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 4, 8, undefined, undefined, undefined, undefined, /* () */0),
+              Layout.style(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 4, 8, undefined, undefined, undefined, undefined, /* () */0),
               undefined,
               undefined,
               undefined,
@@ -139,7 +139,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
                       ]),
                   /* [] */0
                 ],
-                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                 undefined,
                 undefined,
                 undefined,
@@ -150,7 +150,7 @@ var simple = Curry.app(FluidDom.Fluid[/* Native */29][/* div */0], [
           /* [] */0
         ]
       ],
-      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+      Layout.style(500, 500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
       undefined,
       undefined,
       undefined,
@@ -173,7 +173,7 @@ var ImageCache = Curry._1(FluidDom.Fluid[/* Cache */27], /* module */[
 
 function imageLoader(src, hooks) {
   Curry._1(ImageCache[/* fetch */1], src);
-  return Curry._3(FluidDom.Fluid[/* Native */29][/* img */2], src, Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0);
+  return Curry._3(FluidDom.Fluid[/* Native */29][/* img */2], src, Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0);
 }
 
 function loading($staropt$star, hooks) {
@@ -226,7 +226,7 @@ function loadExample(hooks) {
               /* [] */0
             ]
           ],
-          Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* CssWrap */1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+          Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* CssWrap */1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
           undefined,
           undefined,
           undefined,
@@ -250,7 +250,7 @@ function loadExample(hooks) {
                   /* [] */0
                 ]
               ],
-              Layout.style(600, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 20, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+              Layout.style(600, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 20, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
               undefined,
               undefined,
               undefined,
@@ -429,7 +429,7 @@ function first(hooks) {
               ]
             ]
           ],
-          Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* CssWrap */1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+          Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* CssWrap */1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
           undefined,
           undefined,
           undefined,
@@ -463,7 +463,7 @@ function first(hooks) {
                               ]),
                           /* [] */0
                         ],
-                        Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                        Layout.style(100, 50, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                         undefined,
                         undefined,
                         undefined,
@@ -476,7 +476,7 @@ function first(hooks) {
                                 return loading(partial_arg, param);
                               }))]),
                     /* :: */[
-                      Curry._3(FluidDom.Fluid[/* Native */29][/* img */2], "./fluid-macos.png", Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
+                      Curry._3(FluidDom.Fluid[/* Native */29][/* img */2], "./fluid-macos.png", Layout.style(200, 200, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0), /* () */0),
                       /* :: */[
                         /* Custom */Block.__(1, [Curry._2(FluidDom.Fluid[/* Maker */7][/* makeComponent */0], toggle, (function (param) {
                                     return toggle((function (onClick) {
@@ -491,7 +491,7 @@ function first(hooks) {
                                                                   /* [] */0
                                                                 ]
                                                               ],
-                                                              Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                                              Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                                               undefined,
                                                               undefined,
                                                               undefined,
@@ -511,7 +511,7 @@ function first(hooks) {
                                                                   /* [] */0
                                                                 ]
                                                               ],
-                                                              Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+                                                              Layout.style(undefined, undefined, undefined, /* Row */2, undefined, undefined, /* AlignCenter */2, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
                                                               undefined,
                                                               undefined,
                                                               undefined,
@@ -557,7 +557,7 @@ function first(hooks) {
                   ]
                 ]
               ],
-              Layout.style(500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
+              Layout.style(500, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, /* () */0),
               undefined,
               undefined,
               undefined,

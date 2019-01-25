@@ -4,9 +4,46 @@ let str = Fluid.string;
 
 open Fluid.Hooks;
 
-let text = Files.readFileExn("./emojis.json");
-let emojis = Json.parse(text);
-let force = x => switch x { |None => failwith("Force unwrapped nil") | Some(x) => x};
+let fuzzysearch = (needle, haystack) => {
+  let hlen = String.length(haystack);
+  let nlen = String.length(needle);
+  if (nlen > hlen) {
+    false;
+  } else if (nlen == hlen) {
+    needle == haystack;
+  } else if (nlen == 0) {
+    true
+  } else {
+    let rec loop = (nch, ni, hi) => String.get(haystack, hi) == nch
+    ? (
+      ni == nlen - 1 ? true : (
+        hi == hlen - 1 ? false : loop(String.get(needle, ni + 1), ni + 1, hi + 1)
+      )
+    ) : (
+      hi == hlen - 1 ? false : loop(nch, ni, hi + 1)
+    );
+    loop(String.get(needle, 0), 0, 0)
+
+    /* let rec loop = (ni, hi) => {
+      let nch = String.get(needle, ni);
+      let rec inner = hi => {
+        if (hi >= hlen) {
+          false
+        } else {
+          if (String.get(haystack, hi) == nch) {
+            nch >= nlen - 1 ? true : loop(ni + 1, hi + 1)
+          } else {
+            inner(hi + 1)
+          }
+        }
+      };
+      inner(hi)
+    };
+    loop(0, 0) */
+  }
+};
+
+
 type emoji = {
   name: string,
   keywords: array(string),
@@ -14,33 +51,33 @@ type emoji = {
   fitz: bool,
   category: string,
 };
-let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
-  let keywords = Json.array(emoji |> Json.get("keywords") |> force)->force->Belt.List.map(item => force(Json.string(item)))->Belt.List.toArray;
-  let char = Json.string(emoji |> Json.get("char") |> force) |> force;
-  let category = Json.string(emoji |> Json.get("category") |> force) |> force;
-  {
-    name,
-    keywords,
-    char,
-    fitz: false,
-    category,
-  }
-});
-let emojis = emojis->Belt.List.keep(emoji => Fluid.App.isEmojiSupported(emoji.char));
-/* let emojis = emojis->Belt.List.take(10)->force; */
+
+
+let loadEmojis = fileName => {
+  let text = Files.readFileExn(fileName);
+  let emojis = Json.parse(text);
+  let force = x => switch x { |None => failwith("Force unwrapped nil") | Some(x) => x};
+  let emojis = force(Json.obj(emojis))->Belt.List.map(((name, emoji)) => {
+    let keywords = Json.array(emoji |> Json.get("keywords") |> force)->force->Belt.List.map(item => force(Json.string(item)))->Belt.List.toArray;
+    let char = Json.string(emoji |> Json.get("char") |> force) |> force;
+    let category = Json.string(emoji |> Json.get("category") |> force) |> force;
+    {
+      name,
+      keywords,
+      char,
+      fitz: false,
+      category,
+    }
+  });
+  emojis->Belt.List.keep(emoji => Fluid.App.isEmojiSupported(emoji.char));
+}
+
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
-
-/** Count: 1570 */
-
-/* let has = (text, rx) => switch (Str.search_forward(rx, text, 0)) {
-  | exception Not_found => false
-  | n => true
-}; */
 
 
 let has = (text, rx) => Str.string_match(rx, text, 0);
 
-let main = (~onDone, hooks) => {
+let main = (~emojis, ~onDone, hooks) => {
   let%hook (text, setText) = useState("");
   let%hook (selection, setSelection) = useState(0);
 
@@ -166,55 +203,57 @@ let main = (~onDone, hooks) => {
   </view>
 };
 
+let run = assetDir => {
+  let (/+) = Filename.concat;
+  let emojis = loadEmojis(assetDir /+ "emojis.json");
 
-Fluid.App.launch(
-  ~isAccessory=true,
-  () => {
-  Fluid.App.setupAppMenu(
-    ~title="Mojibar",
-    ~appItems=[||],
-    ~menus=[| Fluid.App.defaultEditMenu() |]
-  );
-  Fluid.Hotkeys.init();
+  Fluid.App.launch(
+    ~isAccessory=true,
+    () => {
+    Fluid.App.setupAppMenu(
+      ~title="🙃",
+      ~appItems=[||],
+      ~menus=[| Fluid.App.defaultEditMenu() |]
+    );
+    Fluid.Hotkeys.init();
 
-  let closeWindow = ref(() => ());
+    let closeWindow = ref(() => ());
 
-  let win = Fluid.launchWindow(
-    ~title="Hello Fluid",
-    ~floating=true,
-    ~hidden=true,
-    /* ~pos, */
-    ~onBlur=win => {
-      Fluid.Window.hide(win);
-    },
-    <Main onDone={text => {
-      switch (text) {
-        | Some(text) =>
-          closeWindow^();
-          Fluid.App.hide();
-          Fluid.App.setTimeout(() => {
-            Fluid.App.triggerString(text)
-          }, 1000 * 1000 * 100)
-        | None =>
-          closeWindow^();
-          Fluid.App.hide();
+    let win = Fluid.launchWindow(
+      ~title="Hello Fluid",
+      ~floating=true,
+      ~hidden=true,
+      ~onBlur=win => {
+        Fluid.Window.hide(win);
+      },
+      <Main emojis onDone={text => {
+        switch (text) {
+          | Some(text) =>
+            closeWindow^();
+            Fluid.App.hide();
+            Fluid.App.setTimeout(() => {
+              Fluid.App.triggerString(text)
+            }, 1000 * 1000 * 100)
+          | None =>
+            closeWindow^();
+            Fluid.App.hide();
+        }
+      }}/>
+    );
+
+    closeWindow := () => Fluid.Window.hide(win);
+
+    let statusBarItem = Fluid.App.statusBarItem(
+      ~title="🙃",
+      ~onClick=pos => {
+        Fluid.Window.showAtPos(win, pos)
       }
-    }}/>
-  );
+    );
 
-  closeWindow := () => Fluid.Window.hide(win);
+    Fluid.Hotkeys.register(~key=0x31, () => {
+      print_endline("Got it!");
+      Fluid.Window.showAtPos(win, Fluid.App.statusBarPos(statusBarItem));
+    })->ignore;
+  });
 
-  let statusBarItem = Fluid.App.statusBarItem(
-    ~title="Mojibar",
-    ~onClick=pos => {
-      Fluid.Window.showAtPos(win, pos)
-    }
-  );
-
-  Fluid.Hotkeys.register(~key=0x31, () => {
-    print_endline("Got it!");
-    Fluid.Window.showAtPos(win, Fluid.App.statusBarPos(statusBarItem));
-  })->ignore;
-
-  Fluid.Window.showAtPos(win, Fluid.App.statusBarPos(statusBarItem));
-});
+};
