@@ -34,7 +34,7 @@
   caml_callback(onLaunch, Val_unit);
   [NSApp unhide:nil];
   [NSApp activateIgnoringOtherApps:true];
-  caml_remove_global_root(&onLaunch);
+  // caml_remove_global_root(&onLaunch);
 }
 
 @end
@@ -53,8 +53,8 @@ CAMLprim value fluid_App_menuItem(value title_v, value action_v, value shortcut_
                                               action:action
                                               keyEquivalent:NSString_val(shortcut_v)];
   if (Tag_val(action_v) == 0) {
-    value onClick = Field(action_v, 0);
-    caml_register_global_root(&onClick);
+    int onClick = Int_val(Field(action_v, 0));
+    // caml_register_global_root(&onClick);
     ClickTarget* delegate = [[ClickTarget alloc] initWithOnClick:onClick];
     item.target = delegate;
   }
@@ -212,35 +212,34 @@ void fluid_App_launch (value isAccessory, value callback)
   CAMLreturn0;
 }
 
+// @interface StatusBarButton : NSButton
+//   @property (nonatomic) int onClick; 
+//   @property (nonatomic) int onRightClick; 
+// @end
+
 @interface StatusClickTarget : NSObject
-- (instancetype)initWithOnClick:(value)onClickv andItem:(NSStatusItem*)item;
+- (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)item;
 @end
 
 @implementation StatusClickTarget {
-  value onClick;
+  int onClick;
   NSStatusItem* item;
 }
 
-- (instancetype)initWithOnClick:(value)onClickv andItem:(NSStatusItem*)itemv {
+- (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)itemv {
   if (self = [super init]) {
     onClick = onClickv;
-    caml_register_global_root(&onClickv);
     item = itemv;
   }
   return self;
 }
 
-// TODO this needs to use the int-fn-tracker thing too
 - (void)onClick {
-  CAMLparam0();
-  CAMLlocal1(pos_v);
-  Create_record2_double(pos_v,
+  callPos(
+    onClick,
     item.button.window.frame.origin.x,
     item.button.window.frame.origin.y
   );
-  
-  caml_callback(onClick, pos_v);
-  CAMLreturn0;
 }
 @end
 
@@ -262,10 +261,38 @@ CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
   NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
   [item retain];
   item.button.title = NSString_val(title_v);
-  StatusClickTarget* target = [[StatusClickTarget alloc] initWithOnClick:onClick_v andItem:item];
+  StatusClickTarget* target = [[StatusClickTarget alloc] initWithOnClick:Int_val(onClick_v) andItem:item];
   item.button.target = target;
   item.button.action = @selector(onClick);
   // NSLog(@"Made an item %f, %f", item.button.window.frame.origin.x, item.button.window.frame.origin.y);
   Wrap(statusBar_v, item);
   CAMLreturn(statusBar_v);
+}
+
+NSData* dataForText(NSString* text) {
+  NSFont* nsFont = [NSFont systemFontOfSize:8.0];
+  NSDictionary* attributes = @{NSFontAttributeName: nsFont};
+  NSImage *img = [[NSImage alloc] initWithSize:[text sizeWithAttributes:attributes]];
+  [img lockFocus];
+  [text drawAtPoint:NSMakePoint(10, 10) withAttributes:attributes];
+  [img unlockFocus];
+  return [img TIFFRepresentation];
+}
+
+BOOL isEmojiSupported(NSString* text) {
+  static NSData * UNAVAILABLE = NULL;
+  if (UNAVAILABLE == NULL) {
+    UNAVAILABLE = dataForText(@"\u1fff");
+  }
+  return ![dataForText(text) isEqualToData:UNAVAILABLE];
+}
+
+CAMLprim value fluid_App_isEmojiSupported(value text) {
+  CAMLparam1(text);
+  CAMLreturn(isEmojiSupported(NSString_val(text)) ? Val_true : Val_false);
+}
+
+CAMLprim value fluid_App_homeDirectory() {
+  CAMLparam0();
+  CAMLreturn(caml_copy_string([NSHomeDirectory() UTF8String]));
 }

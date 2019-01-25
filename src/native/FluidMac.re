@@ -7,22 +7,15 @@ type pos = {x: float, y: float};
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
-/* module Tracker = (C: {type arg;}) => {
-  let track = fn => {Belt.HashSet.add(fns, fn); fn};
-  let untrack = fn => Belt.HashSet.remove(fns, fn);
-}; */
-
-module type Tracker = {
+module Tracker = (C: {type arg;let name: string}): {
   type callbackId;
-  type arg;
+  type arg = C.arg;
   type fn = arg => unit;
   let track: (arg => unit) => callbackId;
   let maybeTrack: option(arg => unit) => option(callbackId);
   let untrack: fn => unit;
   let maybeUntrack: option(fn) => unit;
-};
-
-module Tracker = (C: {type arg;let name: string}) => {
+} => {
   type callbackId = int;
   type arg = C.arg;
   type fn = C.arg => unit;
@@ -34,10 +27,13 @@ module Tracker = (C: {type arg;let name: string}) => {
   let cur = ref(0);
   let next = () => {cur := cur^ + 1; cur^};
   let track: fn => callbackId = fn => {
+    /* print_endline("Track"); */
     switch (Belt.HashMap.get(ids, fn)) {
       | None =>
         let id = next();
-        Hashtbl.replace(fns, id, fn); id
+        Hashtbl.replace(fns, id, fn);
+        /* print_endline("Tracked"); */
+        id
       | Some(id) => id
     }
   };
@@ -45,11 +41,14 @@ module Tracker = (C: {type arg;let name: string}) => {
     | None => None
     | Some(fn) => Some(track(fn))
   };
-  let untrack = fn =>
+  let untrack = fn => {
+    /* print_endline("Untrack"); */
     switch (Belt.HashMap.get(ids, fn)) {
       | None => ()
       | Some(id) => Hashtbl.remove(fns, id)
     };
+    /* print_endline("Removed"); */
+  };
   let maybeUntrack: (option(C.arg => unit)) => unit = fn => switch fn {
     | None => ()
     | Some(fn) => untrack(fn)
@@ -63,42 +62,43 @@ module Tracker = (C: {type arg;let name: string}) => {
   Callback.register(C.name, call);
 };
 
-/* module type OptTracker = {
-  type callbackId;
-  type arg;
-  let track: option(arg => unit) => option(callbackId);
-  let untrack: callbackId => unit;
+
+let compareFns = (a, b) => switch (a, b) {
+  | (None, None) => true
+  | (Some(a), Some(b)) => a === b
+  | _ => false
 };
 
-module OptTracker = (C: {type arg;let name: string}) => {
-  include Tracker(C);
-  let track: (option(C.arg => unit)) => option(callbackId) = fn => {
-    switch fn {
-      | None => None
-      | Some(fn) =>
-        let id = next();
-        Hashtbl.replace(fns, id, fn);
-        Some(id)
-    }
-  };
-}; */
 
-module DrawTracker: Tracker with type arg = dims = Tracker({type arg = dims; let name = "fluid_draw"});
-module StringTracker: Tracker with type arg = string = Tracker({type arg = string; let name = "fluid_string_fn"});
-module UnitTracker: Tracker with type arg = unit = Tracker({type arg = unit; let name = "fluid_unit_fn"});
+module DrawTracker = Tracker({type arg = dims; let name = "fluid_rect_fn"});
+module StringTracker = Tracker({type arg = string; let name = "fluid_string_fn"});
+module UnitTracker = Tracker({type arg = unit; let name = "fluid_unit_fn"});
+module PosTracker = Tracker({type arg = pos; let name = "fluid_pos_fn"});
 
-
-  /* let fns: ref(list(C.arg)) = ref([]);
-  let track = fn => {fns := [fn, ...fns^]; fn};
-  let untrack = (_) => (); */
-  /* let untrack = fn => fns := (fns^)->Belt.List.keep((!==)(fn)); */
-/* let trackMaybeFn = fn => switch fn {
-  | None => None
-  | Some(f) => trackFn(f); fn
+type mouseHandlers = {
+  down: option(PosTracker.fn),
+  up: option(PosTracker.fn),
+  move: option(PosTracker.fn),
+  drag: option(PosTracker.fn),
 };
-let dimsFns = Hashtbl.create(1000);
-let trackDimsFn = fn => {Hashtbl.replace(dimsFns, fn, ()); fn};
-let untrackDimsFn = fn => Hashtbl.remove(dimsFns, fn); */
+type mouseTrackers = {
+  down_: option(PosTracker.callbackId),
+  up_: option(PosTracker.callbackId),
+  move_: option(PosTracker.callbackId),
+  drag_: option(PosTracker.callbackId),
+};
+let compareMouseHandlers = (a, b) =>
+  compareFns(a.down, b.down) &&
+  compareFns(a.up, b.up) &&
+  compareFns(a.move, b.move) &&
+  compareFns(a.drag, b.drag);
+let trackMouseHandlers = ({down, up, move, drag}) => ({
+  down_: PosTracker.maybeTrack(down),
+  up_: PosTracker.maybeTrack(up),
+  move_: PosTracker.maybeTrack(move),
+  drag_: PosTracker.maybeTrack(drag),
+});
+
 
 type keyHandlers = {
   enter: option(UnitTracker.fn),
@@ -107,13 +107,12 @@ type keyHandlers = {
   change: option(StringTracker.fn),
   escape: option(UnitTracker.fn),
 };
-let compareFns = (a, b) => switch (a, b) {
-  | (None, None) => true
-  | (Some(a), Some(b)) => a === b
-  | _ => false
-};
-let compareHandlers = (a, b) => compareFns(a.enter, b.enter) && compareFns(a.tab, b.tab) &&
-compareFns(a.shiftTab, b.shiftTab) && compareFns(a.change, b.change);
+
+let compareKeyHandlers = (a, b) =>
+  compareFns(a.enter, b.enter) &&
+  compareFns(a.tab, b.tab) &&
+  compareFns(a.shiftTab, b.shiftTab) &&
+  compareFns(a.change, b.change);
 
 type keyTrackers = {
   enter_: option(UnitTracker.callbackId),
@@ -122,7 +121,7 @@ type keyTrackers = {
   change_: option(StringTracker.callbackId),
   escape_: option(UnitTracker.callbackId),
 };
-let trackHandlers = ({enter, tab, shiftTab, change, escape}) => ({
+let trackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
   enter_: UnitTracker.maybeTrack(enter),
   tab_: UnitTracker.maybeTrack(tab),
   shiftTab_: UnitTracker.maybeTrack(shiftTab),
@@ -140,8 +139,8 @@ module NativeInterface = {
 
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
-  external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId) => nativeInternal = "fluid_create_CustomView";
-  external updateCustom: (nativeInternal, DrawTracker.callbackId) => unit = "fluid_update_CustomView";
+  external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId, ~mouseHandlers: mouseTrackers) => nativeInternal = "fluid_create_CustomView";
+  external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseTrackers) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyTrackers) => nativeInternal = "fluid_create_NSTextView";
   external updateTextView: (nativeInternal, string, dims, font, keyTrackers) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
@@ -249,7 +248,7 @@ module NativeInterface = {
   };
 
   type element =
-    | Custom(dims => unit)
+    | Custom(dims => unit, mouseHandlers)
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
@@ -259,7 +258,7 @@ module NativeInterface = {
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
       | (ScrollView, ScrollView) => true
-      | (Custom(adrawFn), Custom(drawFn)) => true
+      | (Custom(adrawFn, _), Custom(drawFn, _)) => true
       | (View(aPress, aStyle), View(onPress, style)) => true
       | (Button(atitle, apress), Button(btitle, bpress)) => true
       | (String(atext, afont, _), String(btext, bfont, _)) => true
@@ -274,7 +273,7 @@ module NativeInterface = {
       | ScrollView
       | View(_, _)
       | Image(_)
-      | Custom(_) => updateViewLoc(mountPoint, dims(layout))
+      | Custom(_, _) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
       | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
     }
@@ -295,17 +294,18 @@ module NativeInterface = {
           setButtonPress(id, bpress);
         };
 
-      | (Custom(a), Custom(draw)) =>
+      | (Custom(a, aMouse), Custom(draw, bMouse)) =>
         /* TODO DrawTracker.untrack(a); */
         if (a !== draw) {
-          updateCustom(mountPoint, DrawTracker.track(draw))
+          updateCustom(mountPoint, DrawTracker.track(draw), trackMouseHandlers(bMouse));
+          /* print_endline("updated\n"); */
         }
 
       | (String(atext, afont, ahandlers), String(btext, bfont, bhandlers)) => 
-        if (atext != btext || afont != bfont || !compareHandlers(ahandlers, bhandlers)) {
+        if (atext != btext || afont != bfont || !compareKeyHandlers(ahandlers, bhandlers)) {
           /* StringTracker.maybeUntrack(aonChange); */
           updateTextView(mountPoint, btext, dims(layout), bfont, 
-            trackHandlers(bhandlers)
+            trackKeyHandlers(bhandlers)
           )
         };
 
@@ -315,8 +315,11 @@ module NativeInterface = {
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
-    | Custom(drawFn) =>
-      let native = createCustom(~drawFn=DrawTracker.track(drawFn), ~dims={left, top, width, height});
+    | Custom(drawFn, mouseHandlers) =>
+      let native = createCustom(
+        ~drawFn=DrawTracker.track(drawFn),
+        ~mouseHandlers=trackMouseHandlers(mouseHandlers),
+        ~dims={left, top, width, height});
       (native, getNativeId())
     | View(onPress, style) => 
       Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
@@ -330,7 +333,7 @@ module NativeInterface = {
 
     | String(contents, font, handlers) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~handlers=trackHandlers(handlers));
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~handlers=trackKeyHandlers(handlers));
       (native, getNativeId())
 
     | Image(src) =>
@@ -378,10 +381,14 @@ module Fluid = {
       )
     };
 
-    let custom = (~layout=?, ~draw, ()) => Builtin(Custom(draw), [], layout, None);
+    let custom = (~layout=?, ~onMouseDown=?, ~onMouseUp=?, ~onMouseMove=?, ~onMouseDragged=?, ~draw, ()) => Builtin(Custom(draw, {
+      down: onMouseDown,
+      move: onMouseMove,
+      up: onMouseUp,
+      drag: onMouseDragged,
+    }), [], layout, None);
 
     let scrollView = (~layout=?, ~children, ()) => Builtin(ScrollView, children, layout, None);
-
   }
 
   module Hotkeys = {
@@ -410,8 +417,12 @@ module Fluid = {
     external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     type statusBarItem;
-    external statusBarItem: (~title: string, ~onClick: (pos => unit)) => statusBarItem = "fluid_App_statusBarItem";
+    external statusBarItem: (~title: string, ~onClick: PosTracker.callbackId) => statusBarItem = "fluid_App_statusBarItem";
+    let statusBarItem = (~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick));
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
+
+    external homeDirectory: unit => string = "fluid_App_homeDirectory";
+    external isEmojiSupported: string => bool = "fluid_App_isEmojiSupported";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
     external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
@@ -444,14 +455,17 @@ module Fluid = {
   };
 
   module Draw = {
-    external text: (string, pos) => unit = "fluid_Draw_text";
+    external text: (string, pos, ~fontName: string, ~fontSize: float) => unit = "fluid_Draw_text";
+    let text = (~fontName="", ~fontSize=10., string, pos) => {
+      text(string, pos, ~fontName, ~fontSize);
+    };
     external fillRect: (dims, color) => unit = "fluid_Draw_fillRect";
     external rect: (dims, color) => unit = "fluid_Draw_rect";
   }
 
   module Window = {
     type window;
-    module Tracker: Tracker with type arg = window = Tracker({type arg = window; let name = "fluid_window"});
+    module Tracker = Tracker({type arg = window; let name = "fluid_window"});
     external make: (
       ~title: string,
       ~onBlur: Tracker.callbackId,
@@ -482,7 +496,7 @@ module Fluid = {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
-      print_endline("making");
+      /* print_endline("making"); */
       let window =
         Window.make(
           ~title,
@@ -490,7 +504,7 @@ module Fluid = {
           ~dims={left, top, width, height},
           ~isFloating=floating,
         );
-      print_endline("made");
+      /* print_endline("made"); */
       let node = (Window.contentView(window), NativeInterface.getNativeId());
       onNode(node);
       /* if (!floating) {

@@ -6,6 +6,9 @@
       "dir": "native",
       "backend": ["native", "bytecode"]
     }, {
+      "dir": "qmoji",
+      "backend": ["native", "bytecode"]
+    }, {
       "dir": "js",
       "backend": ["js"]
     }]
@@ -16,7 +19,10 @@
     "main-module": "App"
   }, {
     "backend": "native",
-    "main-module": "Mojibar"
+    "main-module": "QmojiProd"
+  }, {
+    "backend": "native",
+    "main-module": "QmojiDev"
   }, {
     "backend": "native",
     "main-module": "AppNative"
