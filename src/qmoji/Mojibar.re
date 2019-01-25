@@ -4,6 +4,66 @@ let str = Fluid.string;
 
 open Fluid.Hooks;
 
+type fuzzyScore = {
+  loc: int,
+  score: int,
+  full: bool,
+  exact: bool,
+};
+
+let showScore = ({loc, score, full}) => Printf.sprintf("%d: %d %s", loc, score, full ? " [full]" : "");
+
+/* TODO should I care about (full)? */
+let compareScores = (a, b) =>
+  a.exact && b.exact ? b.score - a.score : (
+    a.exact ? -1 : (b.exact ? 1 :
+      switch (a.full, b.full) {
+        | (false, _) => 1
+        | (_, false) => -1
+        | (true, true) => a.score == b.score ? a.loc - b.loc : b.score - a.score;
+      }
+    )
+  );
+
+let maxScore = (a, b) => compareScores(a, b) > 0 ? b : a;
+
+let fuzzyScore =  (~exactWeight=500, query, term) => {
+  let qln = String.length(query);
+  let tln = String.length(term);
+  if (qln == 0) {
+    {loc: -1, score: 0, full: true, exact: false}
+  } else {
+    let query = query->String.lowercase;
+    let term = term->String.lowercase;
+    if (query == term) {
+      {loc: 0, score: exactWeight, full: true, exact: true}
+    } else {
+      let rec loop = (score, loc, matchedLast, qch, qi, ti) =>
+        ti >= tln ? {loc, score, full: false, exact: false} :
+        if (qch == String.get(term, ti)) {
+          let score = score + (matchedLast ? 3 : 1);
+          let loc = qi == 0 ? ti : loc;
+          qi == qln - 1
+          ? {loc, score, full: true, exact: false} : loop(score, loc, true, String.get(query, qi + 1), qi + 1, ti + 1)
+        } else {
+          loop(score, loc, false, qch, qi, ti + 1)
+        };
+      loop(0, -1, true, String.get(query, 0), 0, 0)
+    }
+  }
+};
+
+/* print_endline("Ok");
+print_endline(showScore(fuzzyScore("rain", "brain")));
+print_endline(showScore(fuzzyScore("rain", "rainbow")));
+print_endline(showScore(
+  maxScore(
+    fuzzyScore("rain", "rainbow"),
+    fuzzyScore("rain", "brain")
+  )
+)); */
+
+/* So this is probably faster b/c it's doing less, but maybe not that much faster? */
 let fuzzysearch = (needle, haystack) => {
   let hlen = String.length(haystack);
   let nlen = String.length(needle);
@@ -23,23 +83,6 @@ let fuzzysearch = (needle, haystack) => {
       hi == hlen - 1 ? false : loop(nch, ni, hi + 1)
     );
     loop(String.get(needle, 0), 0, 0)
-
-    /* let rec loop = (ni, hi) => {
-      let nch = String.get(needle, ni);
-      let rec inner = hi => {
-        if (hi >= hlen) {
-          false
-        } else {
-          if (String.get(haystack, hi) == nch) {
-            nch >= nlen - 1 ? true : loop(ni + 1, hi + 1)
-          } else {
-            inner(hi + 1)
-          }
-        }
-      };
-      inner(hi)
-    };
-    loop(0, 0) */
   }
 };
 
@@ -74,6 +117,17 @@ let loadEmojis = fileName => {
 
 let (|?>) = (x, fn) => switch x { |None => None| Some(x) => fn(x)};
 
+let fuzzyEmoji = (text, emoji) => {
+  let score = fuzzyScore(~exactWeight=1000, text, emoji.name);
+  let best = emoji.keywords->Belt.Array.reduce(score, (score, kwd) => {
+    maxScore(score, fuzzyScore(text, kwd))
+  });
+  if (best.full) {
+    Some((best, emoji))
+  } else {
+    None
+  }
+};
 
 let has = (text, rx) => Str.string_match(rx, text, 0);
 
@@ -81,11 +135,18 @@ let main = (~emojis, ~onDone, hooks) => {
   let%hook (text, setText) = useState("");
   let%hook (selection, setSelection) = useState(0);
 
-  let rx = Str.regexp(".*" ++ Str.quote(text) ++ ".*");
-  let filtered = text == "" ? emojis : emojis->Belt.List.keep(emoji =>
+  let filtered = text == "" ? emojis : {
+    emojis->Belt.List.keepMap(fuzzyEmoji(text))->Belt.List.sort(
+      ((ascore, amoji), (bscore, bmoji)) => compareScores(ascore, bscore)
+    )->Belt.List.map(snd);
+  };
+
+
+  /* let rx = Str.regexp(".*" ++ Str.quote(text) ++ ".*"); */
+  /* let filtered = text == "" ? emojis : emojis->Belt.List.keep(emoji =>
     emoji.name->has(rx) ||
     emoji.keywords->Belt.Array.some(has(_, rx))
-  );
+  ); */
   let fontSize = 17.;
   let size = fontSize *. 1.6;
 

@@ -280,11 +280,6 @@ CAMLprim value fluid_create_ScrollView(value dims_v) {
 
   NSRect frame = NSMakeRect(left, top, width, height);
   NSScrollView* view = [[NSScrollView alloc] initWithFrame:frame];
-  // view.wantsLayer = true;
-  // view.layer.backgroundColor = CGColorCreateGenericRGB(1, 0, 1, 0.2);
-
-  // view.documentView.wantsLayer = true;
-  // view.documentView.layer.backgroundColor = CGColorCreateGenericRGB(0, 0, 1, 0.2);
 
   [view setHasVerticalScroller:YES];
   [view setHasHorizontalScroller:NO];
