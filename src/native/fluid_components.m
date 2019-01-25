@@ -167,33 +167,58 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 
 @interface CustomView: NSView
   @property (nonatomic) int onDraw;
-// - (void)setDraw:(int)draw;
+  @property (nonatomic) int onMouseDown;
+  @property (nonatomic) int onMouseUp;
+  @property (nonatomic) int onMouseMove;
+  @property (nonatomic) int onMouseDragged;
 @end
 
-@implementation CustomView {}
+@implementation CustomView {
+  NSTrackingArea* trackingArea;
+}
 
-// - (instancetype)initWithDraw:(int)drawFnv andFrame:(NSRect)frame {
-//   if (self = [super initWithFrame:frame]) {
-//     drawFn = drawFnv;
-//     // caml_register_global_root(&drawFnv);
-//   }
-//   return self;
+// -(void)updateTrackingAreas { 
+//     [super updateTrackingAreas];
+//     if (trackingArea != nil) {
+//         [self removeTrackingArea:trackingArea];
+//         [trackingArea release];
+//     }
+
+//     int opts = (NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow);
+//     trackingArea = [ [NSTrackingArea alloc] initWithRect:[self bounds]
+//                                                  options:opts
+//                                                    owner:self
+//                                                 userInfo:nil];
+//     [self addTrackingArea:trackingArea];
 // }
 
-// - (void)setDraw:(int)draw {
-//   // caml_remove_global_root(&drawFn);
-//   // caml_register_global_root(&draw);
-//   drawFn = draw;
-// }
+- (void)mouseMoved:(NSEvent *)event {
+  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+  if (self.onMouseMove != -1) {
+    callPos(self.onMouseMove, local.x, local.y);
+  }
+}
+
+- (void)mouseDragged:(NSEvent *)event {
+  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+  if (self.onMouseDown != -1) { callPos(self.onMouseDragged, local.x, local.y); }
+}
+
+- (void)mouseDown:(NSEvent *)event {
+  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+  if (self.onMouseDown != -1) { callPos(self.onMouseDown, local.x, local.y); }
+}
+
+- (void)mouseUp:(NSEvent *)event {
+  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+  if (self.onMouseUp != -1) { callPos(self.onMouseUp, local.x, local.y); }
+}
 
 - (BOOL)isFlipped {
   return YES;
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-  // Wrap(rect_v, dirtyRect);
-  // NSLog(@"Redraw %f x %f", dirtyRect.size.width, dirtyRect.size.height);
-
   callRect(
     self.onDraw,
     dirtyRect.origin.x,
@@ -272,7 +297,7 @@ CAMLprim value fluid_create_ScrollView(value dims_v) {
 
 // MARK - Custom view
 
-CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
+CAMLprim value fluid_create_CustomView(value dims_v, value draw_v, value handlers) {
   CAMLparam2(dims_v, draw_v);
   CAMLlocal1(view_v);
   // caml_register_global_root(&draw_v);
@@ -283,19 +308,27 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v) {
   NSRect frame = NSMakeRect(left, top, width, height);
   CustomView* view = [[CustomView alloc] initWithFrame:frame];
   view.onDraw = Int_val(draw_v);
+  view.onMouseDown = Check_optional(Field(handlers, 0)) ? Int_val(Unpack_optional(Field(handlers, 0))) : -1;
+  view.onMouseUp = Check_optional(Field(handlers, 1)) ? Int_val(Unpack_optional(Field(handlers, 1))) : -1;
+  view.onMouseMove = Check_optional(Field(handlers, 2)) ? Int_val(Unpack_optional(Field(handlers, 2))) : -1;
+  view.onMouseDragged = Check_optional(Field(handlers, 3)) ? Int_val(Unpack_optional(Field(handlers, 3))) : -1;
   view.wantsLayer = true;
 
   Wrap(view_v, view);
   CAMLreturn(view_v);
 }
 
-void fluid_update_CustomView(value view_v, value draw_v) {
+void fluid_update_CustomView(value view_v, value draw_v, value handlers) {
   CAMLparam2(view_v, draw_v);
   log("Update custom view\n");
   // caml_register_global_root(&draw_v);
 
   CustomView* view = (CustomView*)Unwrap(view_v);
   view.onDraw = Int_val(draw_v);
+  view.onMouseDown = Check_optional(Field(handlers, 0)) ? Int_val(Unpack_optional(Field(handlers, 0))) : -1;
+  view.onMouseUp = Check_optional(Field(handlers, 1)) ? Int_val(Unpack_optional(Field(handlers, 1))) : -1;
+  view.onMouseMove = Check_optional(Field(handlers, 2)) ? Int_val(Unpack_optional(Field(handlers, 2))) : -1;
+  view.onMouseDragged = Check_optional(Field(handlers, 3)) ? Int_val(Unpack_optional(Field(handlers, 3))) : -1;
   [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
 
   CAMLreturn0;

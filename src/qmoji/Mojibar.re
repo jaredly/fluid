@@ -93,12 +93,22 @@ let main = (~emojis, ~onDone, hooks) => {
   let row = int_of_float(rowf);
   let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
-  /* print_endline("Render emojis: " ++ string_of_int(List.length(filtered))); */
+  let%hook mouseDown = useCallback(({x, y}) => {
+    let x = x /. size |> int_of_float;
+    let y = y /. size |> int_of_float;
+    let pos = y * row + x;
+    /* switch (filtered->Belt.List.get(pos)) {
+      | None => ()
+      | Some({name}) =>
+        setText(name)
+        setSelection(0);
+    } */
+    if (pos < List.length(filtered)) {
+      setSelection(pos);
+    }
+  }, filtered)
 
   let%hook draw = useCallback(({top, left, width, height}) => {
-    /* print_endline(
-      "Ok drawing " ++ string_of_float(top) ++ " " ++ string_of_float(height),
-    ); */
     filtered->Belt.List.forEachWithIndex((index, emoji) => {
       let x = index mod row |> float_of_int |> (*.)(size);
       let y = index / row |> float_of_int |> (*.)(size);
@@ -110,13 +120,13 @@ let main = (~emojis, ~onDone, hooks) => {
             width: size,
             height: size,
           }, {
-            r: 0.,
-            g: 0.,
-            b: 1.,
+            r: 0.4,
+            g: 0.4,
+            b: 0.4,
             a: 0.5,
           })
         };
-        Fluid.Draw.text(~fontSize, emoji.char, {x: x +. 2., y: y +. 2.});
+        Fluid.Draw.text(~fontSize, emoji.char, {x: x +. 2., y: y +. 4.});
       };
     });
   }, (text, selection));
@@ -126,7 +136,6 @@ let main = (~emojis, ~onDone, hooks) => {
   <view layout={Layout.style(
     ~width=300.,
     ~height=250.,
-    /* ~padding=10., */
     ()
   )}
   >
@@ -159,7 +168,6 @@ let main = (~emojis, ~onDone, hooks) => {
         setSelection(max(0, (selection == 0 ? List.length(filtered) : selection) - 1))
       }}
       onChange={text => {
-        /* print_endline("Onchange text " ++ text); */
         setText(text)
         setSelection(0)
       }}
@@ -178,6 +186,8 @@ let main = (~emojis, ~onDone, hooks) => {
         }>
       <custom
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
+        onMouseDown={mouseDown}
+        onMouseDragged={mouseDown}
         draw={draw}
       />
         </view>
