@@ -58,8 +58,8 @@ let main = (~emojis, ~onDone, hooks) => {
         `Full
       } else if (prevSelection != selection) {
         `Partial([
-          dimsForIndex(~padding=4., prevSelection),
-          dimsForIndex(~padding=4., selection)
+          dimsForIndex(~padding=1., prevSelection),
+          dimsForIndex(~padding=1., selection)
         ])
       } else {
         `None
@@ -153,8 +153,9 @@ let main = (~emojis, ~onDone, hooks) => {
       <custom
         invalidated
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
-        onMouseDown={mouseDown}
-        onMouseDragged={mouseDown}
+        /* onMouseDown={mouseDown} */
+        /* onMouseDragged={mouseDown} */
+        onMouseMove={mouseDown}
         draw={draw}
       />
         </view>

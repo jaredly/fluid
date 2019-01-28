@@ -177,20 +177,20 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   NSTrackingArea* trackingArea;
 }
 
-// -(void)updateTrackingAreas { 
-//     [super updateTrackingAreas];
-//     if (trackingArea != nil) {
-//         [self removeTrackingArea:trackingArea];
-//         [trackingArea release];
-//     }
+-(void)updateTrackingAreas { 
+    [super updateTrackingAreas];
+    if (trackingArea != nil) {
+        [self removeTrackingArea:trackingArea];
+        [trackingArea release];
+    }
 
-//     int opts = (NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow);
-//     trackingArea = [ [NSTrackingArea alloc] initWithRect:[self bounds]
-//                                                  options:opts
-//                                                    owner:self
-//                                                 userInfo:nil];
-//     [self addTrackingArea:trackingArea];
-// }
+    int opts = (NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow);
+    trackingArea = [ [NSTrackingArea alloc] initWithRect:[self bounds]
+                                                 options:opts
+                                                   owner:self
+                                                userInfo:nil];
+    [self addTrackingArea:trackingArea];
+}
 
 - (void)mouseMoved:(NSEvent *)event {
   NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
