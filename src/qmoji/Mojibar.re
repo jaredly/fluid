@@ -70,7 +70,7 @@ let main = (~emojis, ~onDone, hooks) => {
 
   let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
-  let%hook mouseDown = useCallback(({x, y}) => {
+  let%hook mouseMove = useCallback(({x, y}) => {
     let x = x /. size |> int_of_float;
     let y = y /. size |> int_of_float;
     let pos = y * row + x;
@@ -82,6 +82,19 @@ let main = (~emojis, ~onDone, hooks) => {
     } */
     if (pos < List.length(filtered)) {
       setSelection(pos);
+    }
+  }, filtered)
+
+  let%hook mouseDown = useCallback(({x, y}) => {
+    let x = x /. size |> int_of_float;
+    let y = y /. size |> int_of_float;
+    let pos = y * row + x;
+    switch (filtered->Belt.List.get(pos)) {
+      | None => ()
+      | Some({char}) =>
+        setText("")
+        setSelection(0);
+        onDone(Some(char));
     }
   }, filtered)
 
@@ -153,9 +166,8 @@ let main = (~emojis, ~onDone, hooks) => {
       <custom
         invalidated
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
-        /* onMouseDown={mouseDown} */
-        /* onMouseDragged={mouseDown} */
-        onMouseMove={mouseDown}
+        onMouseDown={mouseDown}
+        onMouseMove={mouseMove}
         draw={draw}
       />
         </view>
