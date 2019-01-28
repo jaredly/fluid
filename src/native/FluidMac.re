@@ -7,6 +7,8 @@ type pos = {x: float, y: float};
 type color = {r: float, g: float, b: float, a: float};
 type dims = {left: float, top: float, width: float, height: float};
 
+let showDims = ({left,  top, width, height}) => Printf.sprintf("%f, %f - %f x %f", left, top, width, height);
+
 module Tracker = (C: {type arg;let name: string}): {
   type callbackId;
   type arg = C.arg;
@@ -137,10 +139,11 @@ module NativeInterface = {
 
   external setImmediate: (unit => unit) => unit = "fluid_setImmediate";
 
+  type invalidated = Partial(array(dims)) | Full;
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
   external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId, ~mouseHandlers: mouseTrackers) => nativeInternal = "fluid_create_CustomView";
-  external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseTrackers) => unit = "fluid_update_CustomView";
+  external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseTrackers, option(invalidated)) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyTrackers) => nativeInternal = "fluid_create_NSTextView";
   external updateTextView: (nativeInternal, string, dims, font, keyTrackers) => unit = "fluid_set_NSTextView_textContent";
   /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
@@ -247,8 +250,10 @@ module NativeInterface = {
     }
   };
 
+  type invalidated_ = [`Full | `CompareFn | `Partial(list(dims)) | `None];
+
   type element =
-    | Custom(dims => unit, mouseHandlers)
+    | Custom(dims => unit, mouseHandlers, invalidated_)
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
@@ -258,7 +263,7 @@ module NativeInterface = {
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
       | (ScrollView, ScrollView) => true
-      | (Custom(adrawFn, _), Custom(drawFn, _)) => true
+      | (Custom(adrawFn, _, _), Custom(drawFn, _, _)) => true
       | (View(aPress, aStyle), View(onPress, style)) => true
       | (Button(atitle, apress), Button(btitle, bpress)) => true
       | (String(atext, afont, _), String(btext, bfont, _)) => true
@@ -273,7 +278,7 @@ module NativeInterface = {
       | ScrollView
       | View(_, _)
       | Image(_)
-      | Custom(_, _) => updateViewLoc(mountPoint, dims(layout))
+      | Custom(_, _, _) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
       | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
     }
@@ -294,10 +299,15 @@ module NativeInterface = {
           setButtonPress(id, bpress);
         };
 
-      | (Custom(a, aMouse), Custom(draw, bMouse)) =>
+      | (Custom(a, aMouse, inv), Custom(draw, bMouse, binv)) =>
         /* TODO DrawTracker.untrack(a); */
-        if (a !== draw) {
-          updateCustom(mountPoint, DrawTracker.track(draw), trackMouseHandlers(bMouse));
+        if (a !== draw || inv != binv) {
+          updateCustom(mountPoint, DrawTracker.track(draw), trackMouseHandlers(bMouse), switch binv {
+            | `None => None
+            | `Partial(dims) => Some(Partial(Belt.List.toArray(dims)))
+            | `Full => Some(Full)
+            | `CompareFn => a !== draw ? Some(Full) : None
+          });
           /* print_endline("updated\n"); */
         }
 
@@ -315,7 +325,7 @@ module NativeInterface = {
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
-    | Custom(drawFn, mouseHandlers) =>
+    | Custom(drawFn, mouseHandlers, _) =>
       let native = createCustom(
         ~drawFn=DrawTracker.track(drawFn),
         ~mouseHandlers=trackMouseHandlers(mouseHandlers),
@@ -381,12 +391,15 @@ module Fluid = {
       )
     };
 
-    let custom = (~layout=?, ~onMouseDown=?, ~onMouseUp=?, ~onMouseMove=?, ~onMouseDragged=?, ~draw, ()) => Builtin(Custom(draw, {
-      down: onMouseDown,
-      move: onMouseMove,
-      up: onMouseUp,
-      drag: onMouseDragged,
-    }), [], layout, None);
+    let custom = (
+      ~invalidated=`CompareFn,
+      ~layout=?, ~onMouseDown=?, ~onMouseUp=?, ~onMouseMove=?, ~onMouseDragged=?, ~draw, ()) => Builtin(Custom(
+        draw, {
+          down: onMouseDown,
+          move: onMouseMove,
+          up: onMouseUp,
+          drag: onMouseDragged,
+        }, invalidated), [], layout, None);
 
     let scrollView = (~layout=?, ~children, ()) => Builtin(ScrollView, children, layout, None);
   }

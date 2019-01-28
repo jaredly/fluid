@@ -22,6 +22,12 @@ let fuzzyEmoji = (text, emoji) => {
 
 let has = (text, rx) => Str.string_match(rx, text, 0);
 
+let fontSize = 17.;
+let size = fontSize *. 1.6;
+
+let rowf = 280. /. size;
+let row = int_of_float(rowf);
+
 let main = (~emojis, ~onDone, hooks) => {
   let%hook (text, setText) = useState("");
   let%hook (selection, setSelection) = useState(0);
@@ -32,11 +38,36 @@ let main = (~emojis, ~onDone, hooks) => {
     )->Belt.List.map(snd);
   };
 
-  let fontSize = 17.;
-  let size = fontSize *. 1.6;
+  let%hook prev = useRef(None);
 
-  let rowf = 280. /. size;
-  let row = int_of_float(rowf);
+  let dimsForIndex = (~padding=0., index) => {
+    let x = index mod row |> float_of_int |> (*.)(size);
+    let y = index / row |> float_of_int |> (*.)(size);
+    {
+      left: x -. padding,
+      top: y -. padding,
+      width: size +. padding *. 2.,
+      height: size +. padding *. 2.,
+    }
+  };
+
+  let invalidated = switch (prev.contents) {
+    | None => `Full
+    | Some((prevText, prevSelection)) =>
+      if (prevText != text) {
+        `Full
+      } else if (prevSelection != selection) {
+        `Partial([
+          dimsForIndex(~padding=4., prevSelection),
+          dimsForIndex(~padding=4., selection)
+        ])
+      } else {
+        `None
+      }
+  };
+
+  prev.contents = Some((text, selection));
+
   let rows = ceil(float_of_int(List.length(filtered)) /. rowf)->int_of_float;
 
   let%hook mouseDown = useCallback(({x, y}) => {
@@ -56,23 +87,17 @@ let main = (~emojis, ~onDone, hooks) => {
 
   let%hook draw = useCallback(({top, left, width, height}) => {
     filtered->Belt.List.forEachWithIndex((index, emoji) => {
-      let x = index mod row |> float_of_int |> (*.)(size);
-      let y = index / row |> float_of_int |> (*.)(size);
-      if (y +. size >= top && y <= top +. height) {
+      let dims = dimsForIndex(index);
+      if (dims.top +. size >= top && dims.top <= top +. height) {
         if (index == selection) {
-          Fluid.Draw.rect({
-            left: x,
-            top: y,
-            width: size,
-            height: size,
-          }, {
+          Fluid.Draw.rect(dims, {
             r: 0.4,
             g: 0.4,
             b: 0.4,
             a: 0.5,
           })
         };
-        Fluid.Draw.text(~fontSize, emoji.char, {x: x +. 2., y: y +. 4.});
+        Fluid.Draw.text(~fontSize, emoji.char, {x: dims.left +. 2., y: dims.top +. 4.});
       };
     });
   }, (text, selection));
@@ -126,6 +151,7 @@ let main = (~emojis, ~onDone, hooks) => {
           Layout.style(~paddingHorizontal=10., ~alignSelf=AlignStretch, ())
         }>
       <custom
+        invalidated
         layout={Layout.style(~alignSelf=AlignStretch, ~height=(float_of_int(rows) *. size), ())}
         onMouseDown={mouseDown}
         onMouseDragged={mouseDown}

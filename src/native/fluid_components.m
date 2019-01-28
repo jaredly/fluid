@@ -313,8 +313,9 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v, value handler
   CAMLreturn(view_v);
 }
 
-void fluid_update_CustomView(value view_v, value draw_v, value handlers) {
+void fluid_update_CustomView(value view_v, value draw_v, value handlers, value invalidated) {
   CAMLparam2(view_v, draw_v);
+  CAMLlocal2(contents, c2);
   log("Update custom view\n");
   // caml_register_global_root(&draw_v);
 
@@ -324,7 +325,21 @@ void fluid_update_CustomView(value view_v, value draw_v, value handlers) {
   view.onMouseUp = Check_optional(Field(handlers, 1)) ? Int_val(Unpack_optional(Field(handlers, 1))) : -1;
   view.onMouseMove = Check_optional(Field(handlers, 2)) ? Int_val(Unpack_optional(Field(handlers, 2))) : -1;
   view.onMouseDragged = Check_optional(Field(handlers, 3)) ? Int_val(Unpack_optional(Field(handlers, 3))) : -1;
-  [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
+
+  if (Check_optional(invalidated)) {
+    contents = Unpack_optional(invalidated);
+    if (Check_optional(contents)) {
+      c2 = Unpack_optional(contents);
+      int dims = Wosize_val(c2);
+      for (int i=0; i<dims; i++) {
+        // printf("Drawing %d\n", i);
+        Unpack_record4_double(Field(c2, i), left, top, width, height);
+        [view setNeedsDisplayInRect:CGRectMake(left, top, width, height)];
+      }
+    } else {
+      [view setNeedsDisplayInRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height)];
+    }
+  }
 
   CAMLreturn0;
 }
