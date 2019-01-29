@@ -1,3 +1,5 @@
+open Migrate_parsetree;
+open OCaml_402.Ast;
 
 /***
  * https://ocsigen.org/lwt/dev/api/Ppx_lwt
@@ -50,7 +52,7 @@ let unCapitalize = text => {
 
 open Parsetree;
 
-let mapper = _argv =>
+let mapper = 
   Parsetree.{
     ...Ast_mapper.default_mapper,
     expr: (mapper, expr) => {
@@ -126,4 +128,5 @@ let mapper = _argv =>
     }
   };
 
-let () = Ast_mapper.run_main(mapper);
+/* let () = Ast_mapper.run_main(mapper); */
+let () = Driver.register(~name="ppx_fluid",~args=[], Versions.ocaml_402, (_config, _cookies) => mapper);

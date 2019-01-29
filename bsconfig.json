@@ -9,6 +9,12 @@
       "dir": "qmoji",
       "backend": ["native", "bytecode"]
     }, {
+      "dir": "layout"
+    }, {
+      "dir": "files"
+    }, {
+      "dir": "core"
+    }, {
       "dir": "js",
       "backend": ["js"]
     }]
@@ -23,9 +29,6 @@
   }, {
     "backend": "native",
     "main-module": "QmojiDev"
-  }, {
-    "backend": "native",
-    "main-module": "AppNative"
   }],
   "ocaml-flags": ["-bin-annot", "-g"],
   "build-script": "build-script.re",

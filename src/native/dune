@@ -1,0 +1,20 @@
+
+(library
+  (public_name fluid.MacOS)
+  (name FluidMac)
+  (libraries flex belt FluidMaker Layout Files)
+  (c_flags -framework Cocoa -framework Carbon -framework CoreImage)
+  (self_build_stubs_archive (fluid))
+  (no_dynlink)
+  (preprocess (pps belt.ppx)))
+
+
+(rule
+  (deps (source_tree objc))
+  (targets libfluid_stubs.a)
+  (action
+    (progn
+      (chdir objc (run make))
+      (copy objc/libfluid.a libfluid_stubs.a)
+      )
+  ))

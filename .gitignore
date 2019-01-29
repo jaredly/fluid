@@ -5,3 +5,8 @@ bundle
 .static_libraries
 .vscode
 *.bs.js
+_esy
+*.install
+*.o
+*.a
+*.so

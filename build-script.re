@@ -12,7 +12,7 @@ let sources = [
 ];
 
 sources |> List.iter(name =>
-gcc(~flags=["-g"], "lib" +/ name ++ ".o", ["src" +/ "native" +/ name ++ ".m"]) |> ignore
+gcc(~flags=["-g"], "lib" +/ name ++ ".o", ["src" +/ "native" +/ "objc" +/ name ++ ".m"]) |> ignore
 )
 
 /* gcc("lib" +/ "fluid.o", [

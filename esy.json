@@ -1,0 +1,16 @@
+{
+  "name": "fluid",
+  "esy": {
+    "build": "dune build -p #{self.name}"
+  },
+  "dependencies": {
+    "ocaml": ">=4.7.0",
+    "@opam/dune": "*",
+    "@opam/reason": "*",
+    "@opam/ocaml-migrate-parsetree": "*",
+    "@opam/ppx_tools_versioned": "*",
+    "belt": "jaredly/belt",
+    "flex": "jaredly/flex#esy",
+    "RexJson": "jaredly/rex-json#esy"
+  }
+}
