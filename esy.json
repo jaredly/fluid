@@ -1,0 +1,12 @@
+{
+  "name": "fluid",
+  "esy": {
+    "build": "dune build -p #{self.name}"
+  },
+  "dependencies": {
+    "ocaml": ">=4.7.0",
+    "@opam/dune": "*",
+    "@opam/reason": "*",
+    "RexJson": "jaredly/rex-json#esy"
+  }
+}
