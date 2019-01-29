@@ -1,7 +1,8 @@
 {
   "name": "fluid",
   "esy": {
-    "build": "dune build -p #{self.name}"
+    "build": "dune build -p #{self.name}",
+    "buildsInSource": true
   },
   "dependencies": {
     "ocaml": ">=4.7.0",
