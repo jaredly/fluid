@@ -7,3 +7,6 @@ bundle
 *.bs.js
 _esy
 *.install
+*.o
+*.a
+*.so

@@ -1,5 +1,6 @@
 (executable
-  (public_name QmojiDev)
+  (public_name qmojiDev)
   (libraries str flex belt FluidMac Layout RexJson)
+  (link_flags -cclib -framework -cclib Cocoa -cclib -framework -cclib Carbon -cclib -framework -cclib CoreImage)
   (flags :standard -open RexJson -w -9-3)
   (preprocess (pps belt.ppx Fluid_ppx)))
