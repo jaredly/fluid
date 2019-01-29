@@ -4,3 +4,4 @@ bundle
 .merlin
 .static_libraries
 .vscode
+*.bs.js
