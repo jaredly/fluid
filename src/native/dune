@@ -3,18 +3,8 @@
   (public_name fluid.MacOS)
   (name FluidMac)
   (libraries flex belt FluidMaker Layout Files)
-  (c_flags -framework Cocoa -framework Carbon -framework CoreImage)
-  (self_build_stubs_archive (fluid))
+  (c_names fluid fluid_components fluid_window fluid_shared fluid_hotkeys)
+  (install_c_headers fluid_shared)
+  (c_flags -x objective-c)
   (no_dynlink)
   (preprocess (pps belt.ppx)))
-
-
-(rule
-  (deps (source_tree objc))
-  (targets libfluid_stubs.a)
-  (action
-    (progn
-      (chdir objc (run make))
-      (copy objc/libfluid.a libfluid_stubs.a)
-      )
-  ))
