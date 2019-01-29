@@ -1,0 +1,5 @@
+(library
+  (public_name fluid.MacOS)
+  (name FluidMac)
+  (libraries flex belt FluidMaker Layout Files)
+  (preprocess (pps belt.ppx)))

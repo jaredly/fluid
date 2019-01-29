@@ -1,0 +1,5 @@
+(executable
+  (public_name QmojiDev)
+  (libraries str flex belt FluidMac Layout RexJson)
+  (flags :standard -open RexJson -w -9-3)
+  (preprocess (pps belt.ppx Fluid_ppx)))
