@@ -74,12 +74,6 @@ let main = (~emojis, ~onDone, hooks) => {
     let x = x /. size |> int_of_float;
     let y = y /. size |> int_of_float;
     let pos = y * row + x;
-    /* switch (filtered->Belt.List.get(pos)) {
-      | None => ()
-      | Some({name}) =>
-        setText(name)
-        setSelection(0);
-    } */
     if (pos < List.length(filtered)) {
       setSelection(pos);
     }
@@ -233,8 +227,11 @@ let run = assetDir => {
 
     closeWindow := () => Fluid.Window.hide(win);
 
+    let imageTitle = Fluid.App.grayscaleEmoji("🙃");
+
     let statusBarItem = Fluid.App.statusBarItem(
-      ~title="🙃",
+      ~title=Image(imageTitle),
+      /* ~title=String("🙃"), */
       ~onClick=pos => {
         Fluid.Window.showAtPos(win, pos)
       }

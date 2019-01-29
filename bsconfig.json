@@ -39,7 +39,7 @@
     "in-source": true
   },
   "suffix": ".bs.js",
-  "c-linker-flags": ["-framework", "Cocoa", "-framework", "Carbon"],
+  "c-linker-flags": ["-framework", "Cocoa", "-framework", "Carbon", "-framework", "CoreImage"],
   "static-libraries": ["lib/fluid_shared.o", "lib/fluid_components.o", "lib/fluid_hotkeys.o", "lib/fluid_window.o", "lib/fluid.o"],
   "refmt": 3,
   "ppx-flags": ["./fluid-ppx/lib/bs/native/fluid_ppx.native"]
