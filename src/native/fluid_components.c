@@ -193,25 +193,31 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 }
 
 - (void)mouseMoved:(NSEvent *)event {
-  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
   if (self.onMouseMove != -1) {
+    NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
     callPos(self.onMouseMove, local.x, local.y);
   }
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
-  if (self.onMouseDown != -1) { callPos(self.onMouseDragged, local.x, local.y); }
+  if (self.onMouseDown != -1) {
+    NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+    callPos(self.onMouseDragged, local.x, local.y);
+  }
 }
 
 - (void)mouseDown:(NSEvent *)event {
-  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
-  if (self.onMouseDown != -1) { callPos(self.onMouseDown, local.x, local.y); }
+  if (self.onMouseDown != -1) {
+    NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+    callPos(self.onMouseDown, local.x, local.y);
+  }
 }
 
 - (void)mouseUp:(NSEvent *)event {
-  NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
-  if (self.onMouseUp != -1) { callPos(self.onMouseUp, local.x, local.y); }
+  if (self.onMouseUp != -1) {
+    NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+    callPos(self.onMouseUp, local.x, local.y);
+  }
 }
 
 - (BOOL)isFlipped {

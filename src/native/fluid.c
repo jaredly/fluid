@@ -72,6 +72,20 @@ CAMLprim value fluid_App_separatorItem() {
   CAMLreturn(item_v);
 }
 
+CAMLprim value fluid_App_menu_item(value title_v, value menu_v) {
+  CAMLparam2(title_v, menu_v);
+  CAMLlocal1(item_v);
+  NSMenu* menu = (NSMenu*)Unwrap(menu_v);
+
+  NSMenuItem* wrapper = [[NSMenuItem alloc] initWithTitle:NSString_val(title_v) action:@selector(dummySelect) keyEquivalent:@""];
+  MenuDelegate* delegate = [MenuDelegate alloc];
+  wrapper.target = delegate;
+  [wrapper setSubmenu:menu];
+
+  Wrap(item_v, wrapper);
+  CAMLreturn(item_v);
+}
+
 CAMLprim value fluid_App_menu(value title_v, value items_v) {
   CAMLparam2(title_v, items_v);
   CAMLlocal1(menu_v);
@@ -82,12 +96,7 @@ CAMLprim value fluid_App_menu(value title_v, value items_v) {
     [menu addItem:(NSMenuItem*)Unwrap(Field(items_v, i))];
   }
 
-  NSMenuItem* wrapper = [[NSMenuItem alloc] initWithTitle:NSString_val(title_v) action:@selector(dummySelect) keyEquivalent:@""];
-  MenuDelegate* delegate = [MenuDelegate alloc];
-  wrapper.target = delegate;
-  [wrapper setSubmenu:menu];
-
-  Wrap(menu_v, wrapper);
+  Wrap(menu_v, menu);
   CAMLreturn(menu_v);
 }
 
@@ -218,6 +227,24 @@ void fluid_App_launch (value isAccessory, value callback)
 //   @property (nonatomic) int onRightClick; 
 // @end
 
+// @implementation StatusBarButton {}
+
+// - (void)onClickHandler {
+//   callPos(
+//     self.onClick,
+//     self.window.frame.origin.x,
+//     self.window.frame.origin.y
+//   );
+// }
+
+// -(void) rightMouseDown:(NSEvent*)event {
+//   if (self.onRightClick != -1) {
+//     callUnit(self.onRightClick);
+//   }
+// }
+
+// @end
+
 @interface StatusClickTarget : NSObject
 - (instancetype)initWithOnClick:(int)onClickv andItem:(NSStatusItem*)item;
 @end
@@ -236,6 +263,7 @@ void fluid_App_launch (value isAccessory, value callback)
 }
 
 - (void)onClick {
+  printf("Click!\n");
   callPos(
     onClick,
     item.button.window.frame.origin.x,
@@ -261,13 +289,21 @@ CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
   CAMLlocal1(statusBar_v);
   NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
   [item retain];
+  // StatusBarButton* button;
   if (Tag_val(title_v) == 0) {
     // text
     item.button.title = NSString_val(Field(title_v, 0));
+    // button = [StatusBarButton buttonWithTitle:NSString_val(Field(title_v, 0)) target:nil action:@selector(onClickHandler)];
   } else {
     item.button.image = (NSImage*)Unwrap(Field(title_v, 0));
+    // button = [StatusBarButton buttonWithImage:(NSImage*)Unwrap(Field(title_v, 0)) target:nil action:@selector(onClickHandler)];
     // item.button.alternateImage = (NSImage*)Unwrap(Field(title_v, 0));
   }
+  // button.onClick = Int_val(onClick_v);
+  // button.onRightClick = -1;
+  // button.target = button;
+  // item.button = button;
+
   StatusClickTarget* target = [[StatusClickTarget alloc] initWithOnClick:Int_val(onClick_v) andItem:item];
   item.button.target = target;
   item.button.action = @selector(onClick);

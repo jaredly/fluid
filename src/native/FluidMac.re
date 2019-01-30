@@ -440,23 +440,35 @@ module Fluid = {
     external triggerString: (string) => unit = "fluid_App_triggerString";
     external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
 
+    type menu;
     type menuItem;
     type menuAction =
     | Call(unit => unit)
     | Selector(string);
+    module B = {
+      type boundMenuAction =
+      | Call(UnitTracker.callbackId)
+      | Selector(string);
+    };
+    let bindMenuAction = fun
+    | Call(fn) => B.Call(UnitTracker.track(fn))
+    | Selector(s) => B.Selector(s);
     external menuItem:
-      (~title: string, ~action: menuAction, ~shortcut: string) => menuItem =
+      (~title: string, ~action: B.boundMenuAction, ~shortcut: string) => menuItem =
       "fluid_App_menuItem";
+    let menuItem = (~title, ~action, ~shortcut) => menuItem(~title, ~shortcut, ~action=bindMenuAction(action));
     external separatorItem: unit => menuItem = "fluid_App_separatorItem";
-    external menu: (~title: string, ~items: array(menuItem)) => menuItem =
+    external menu: (~title: string, ~items: array(menuItem)) => menu =
       "fluid_App_menu";
+    external submenu: (~title: string, ~menu: menu) => menuItem = "fluid_App_menu_item";
+    let submenu = (~title, ~items) => submenu(~title, ~menu=menu(~title, ~items));
     external setupAppMenu:
       (~title: string, ~appItems: array(menuItem), ~menus: array(menuItem)) =>
       unit =
       "fluid_App_setupAppMenu";
 
     let defaultEditMenu = () =>
-      menu(
+      submenu(
         ~title="Edit",
         ~items=[|
           menuItem(~title="Copy", ~action=Selector("copy:"), ~shortcut="c"),
