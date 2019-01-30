@@ -276,68 +276,7 @@ CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
   CAMLreturn(statusBar_v);
 }
 
-NSData* dataForText(NSString* text) {
-  NSFont* nsFont = [NSFont systemFontOfSize:8.0];
-  NSDictionary* attributes = @{NSFontAttributeName: nsFont};
-  NSImage *img = [[NSImage alloc] initWithSize:[text sizeWithAttributes:attributes]];
-  [img lockFocus];
-  [text drawAtPoint:NSMakePoint(10, 10) withAttributes:attributes];
-  [img unlockFocus];
-  return [img TIFFRepresentation];
-}
-
-BOOL isEmojiSupported(NSString* text) {
-  static NSData * UNAVAILABLE = NULL;
-  if (UNAVAILABLE == NULL) {
-    UNAVAILABLE = dataForText(@"\u1fff");
-  }
-  return ![dataForText(text) isEqualToData:UNAVAILABLE];
-}
-
-CAMLprim value fluid_App_isEmojiSupported(value text) {
-  CAMLparam1(text);
-  CAMLreturn(isEmojiSupported(NSString_val(text)) ? Val_true : Val_false);
-}
-
 CAMLprim value fluid_App_homeDirectory() {
   CAMLparam0();
   CAMLreturn(caml_copy_string([NSHomeDirectory() UTF8String]));
-}
-
-CAMLprim value fluid_App_grayscaleEmoji(value text_v) {
-  CAMLparam1(text_v);
-  CAMLlocal1(image_v);
-  NSString* text = NSString_val(text_v);
-
-  // Draw the emoji
-  NSDictionary* attributes = @{NSFontAttributeName: [NSFont systemFontOfSize:14.0]};
-  NSImage *image = [[NSImage alloc] initWithSize:[text sizeWithAttributes:attributes]];
-  [image lockFocus];
-  // draw the text
-  [text drawAtPoint:NSMakePoint(0, 0) withAttributes:attributes];
-  [image unlockFocus];
-
-  // Turn grayscale
-  CIFilter *filterImage = [CIFilter filterWithName: @"CIPhotoEffectMono"];
-  [filterImage setValue:[[CIImage alloc] initWithData:[image TIFFRepresentation]]
-                 forKey:kCIInputImageKey];
-  CIImage* outputImage;
-
-  BOOL isDarkMode = [[[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"]
-                     isEqualToString:@"Dark"];
-  if (isDarkMode) {
-    CIFilter *filterImage2 = [CIFilter filterWithName: @"CIColorInvert"];
-    [filterImage2 setValue:filterImage.outputImage forKey:kCIInputImageKey];
-    outputImage = filterImage2.outputImage;
-  } else {
-    outputImage = filterImage.outputImage;
-  }
-
-  CGRect rect = CGRectMake(0, 0, image.size.width, image.size.height);
-  NSCIImageRep *rep = [NSCIImageRep imageRepWithCIImage:outputImage];
-  NSImage* newImage = [[NSImage alloc] initWithSize:rect.size];
-  [newImage addRepresentation:rep];
-
-  Wrap(image_v, newImage);
-  CAMLreturn(image_v); 
 }

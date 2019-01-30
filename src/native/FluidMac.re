@@ -430,14 +430,12 @@ module Fluid = {
     external hide: unit => unit = "fluid_App_hide";
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     type statusBarItem;
-    external grayscaleEmoji: string => NativeInterface.image = "fluid_App_grayscaleEmoji";
     type statusTitle = String(string) | Image(NativeInterface.image);
     external statusBarItem: (~title: statusTitle, ~onClick: PosTracker.callbackId) => statusBarItem = "fluid_App_statusBarItem";
     let statusBarItem = (~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick));
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
 
     external homeDirectory: unit => string = "fluid_App_homeDirectory";
-    external isEmojiSupported: string => bool = "fluid_App_isEmojiSupported";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
     external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
