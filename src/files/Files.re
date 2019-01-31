@@ -31,3 +31,19 @@ let readFileExn = path => switch (readFile(path)) {
 | Some(text) => text
 };
 
+let writeFile = (path, contents) => {
+  try {
+    let out = open_out(path);
+    output_string(out, contents);
+    close_out(out);
+    true
+  } {
+    | _ => false
+  }
+};
+
+let writeFileExn = (path, contents) => {
+  if (!writeFile(path, contents)) {
+    failwith("Unable to write to file " ++ path)
+  }
+};
