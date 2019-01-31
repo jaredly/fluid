@@ -17,24 +17,38 @@ module Tracker = (C: {type arg;let name: string}): {
   let maybeTrack: option(arg => unit) => option(callbackId);
   let untrack: fn => unit;
   let maybeUntrack: option(fn) => unit;
+  let size: unit => int;
 } => {
   type callbackId = int;
   type arg = C.arg;
   type fn = C.arg => unit;
 
   let fns: Hashtbl.t(callbackId, C.arg => unit) = Hashtbl.create(100);
-  module Id = Belt.Id.MakeHashable({type t=fn; let hash=Hashtbl.hash; let eq=(===)});
-  let ids: Belt.HashMap.t(fn, callbackId, Id.identity) = Belt.HashMap.make(~hintSize=1000, ~id=(module Id:Belt.Id.Hashable with type t = fn and type identity = Id.identity));
+  let ids = ref([]);
+
+  /* module Id = Belt.Id.MakeHashable({
+    type t = fn;
+    let hash = Hashtbl.hash;
+    let eq = (===);
+  });
+  let ids: Belt.HashMap.t(fn, callbackId, Id.identity) = Belt.HashMap.make(~hintSize=1000, ~id=(
+    module Id:Belt.Id.Hashable
+    with type t = fn
+    and type identity = Id.identity
+  )); */
+
 
   let cur = ref(0);
   let next = () => {cur := cur^ + 1; cur^};
+
   let track: fn => callbackId = fn => {
     /* print_endline("Track"); */
-    switch (Belt.HashMap.get(ids, fn)) {
+    switch (Belt.List.getAssoc(ids^, (fn), (===))) {
       | None =>
         let id = next();
         Hashtbl.replace(fns, id, fn);
-        /* print_endline("Tracked"); */
+        ids := [(fn, id), ...ids^];
+        /* Belt.HashMap.set(ids, fn, id); */
         id
       | Some(id) => id
     }
@@ -43,18 +57,23 @@ module Tracker = (C: {type arg;let name: string}): {
     | None => None
     | Some(fn) => Some(track(fn))
   };
+
   let untrack = fn => {
     /* print_endline("Untrack"); */
-    switch (Belt.HashMap.get(ids, fn)) {
-      | None => ()
-      | Some(id) => Hashtbl.remove(fns, id)
+    switch (Belt.List.getAssoc(ids^, (fn), (===))) {
+      | None => print_endline("> but not there")
+      | Some(id) =>
+        ids := ids^ ->Belt.List.keep(a => fst(a) !== fn);
+        /* Belt.HashMap.remove(ids, fn); */
+        Hashtbl.remove(fns, id)
     };
-    /* print_endline("Removed"); */
   };
   let maybeUntrack: (option(C.arg => unit)) => unit = fn => switch fn {
     | None => ()
     | Some(fn) => untrack(fn)
   };
+
+  let size = () => Hashtbl.length(fns);
 
   let call = (id: callbackId, arg: C.arg): unit => switch (Hashtbl.find(fns, id)) {
     | exception Not_found =>
@@ -82,24 +101,34 @@ type mouseHandlers = {
   up: option(PosTracker.fn),
   move: option(PosTracker.fn),
   drag: option(PosTracker.fn),
+  rightDown: option(PosTracker.fn),
 };
 type mouseTrackers = {
   down_: option(PosTracker.callbackId),
   up_: option(PosTracker.callbackId),
   move_: option(PosTracker.callbackId),
   drag_: option(PosTracker.callbackId),
+  rightDown_: option(PosTracker.callbackId),
 };
 let compareMouseHandlers = (a, b) =>
   compareFns(a.down, b.down) &&
   compareFns(a.up, b.up) &&
   compareFns(a.move, b.move) &&
   compareFns(a.drag, b.drag);
-let trackMouseHandlers = ({down, up, move, drag}) => ({
+let trackMouseHandlers = ({down, up, move, drag, rightDown}) => ({
   down_: PosTracker.maybeTrack(down),
   up_: PosTracker.maybeTrack(up),
   move_: PosTracker.maybeTrack(move),
   drag_: PosTracker.maybeTrack(drag),
+  rightDown_: PosTracker.maybeTrack(rightDown),
 });
+let untrackMouseHandlers = ({down, up, move, drag, rightDown}) => {
+  PosTracker.maybeUntrack(down);
+  PosTracker.maybeUntrack(up);
+  PosTracker.maybeUntrack(move);
+  PosTracker.maybeUntrack(drag);
+  PosTracker.maybeUntrack(rightDown);
+};
 
 
 type keyHandlers = {
@@ -130,6 +159,13 @@ let trackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
   change_: StringTracker.maybeTrack(change),
   escape_: UnitTracker.maybeTrack(escape),
 });
+let untrackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
+  UnitTracker.maybeUntrack(enter);
+  UnitTracker.maybeUntrack(tab);
+  UnitTracker.maybeUntrack(shiftTab);
+  StringTracker.maybeUntrack(change);
+  UnitTracker.maybeUntrack(escape);
+});
 
 module NativeInterface = {
   type nativeInternal;
@@ -146,7 +182,6 @@ module NativeInterface = {
   external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseTrackers, option(invalidated)) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyTrackers) => nativeInternal = "fluid_create_NSTextView";
   external updateTextView: (nativeInternal, string, dims, font, keyTrackers) => unit = "fluid_set_NSTextView_textContent";
-  /* [@bs.get] external parentNode: nativeNode => nativeNode = "fluid_"; */
 
   type image;
   type imageSrc = | Preloaded(image) | Plain(string);
@@ -155,7 +190,6 @@ module NativeInterface = {
 
   external appendChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_appendChild";
   let appendChild = (a, b) => appendChild(fst(a), fst(b));
-  /* external insertBefore: (nativeNode, nativeNode, ~reference: nativeNode) => unit = "fluid_NSView_insertBefore"; */
   external removeChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_removeChild";
   let removeChild = (a, b) => removeChild(fst(a), fst(b));
 
@@ -185,7 +219,6 @@ module NativeInterface = {
   external createButton: (
     ~title: string,
     ~id: int,
-    /* ~onPress: unit => unit, */
     ~pos: (float, float),
     ~size: (float, float)
   ) => nativeInternal = "fluid_create_NSButton";
@@ -203,9 +236,6 @@ module NativeInterface = {
 
   Callback.register("fluid_button_press", onPress);
 
-  /* let registerButtonPress = (fn) => {
-    callbacks -> Hashtbl.replace(lastId^, fn);
-  }; */
   let setButtonPress = (id, fn) => {
     callbacks -> Hashtbl.replace(id, fn)
   };
@@ -300,8 +330,9 @@ module NativeInterface = {
         };
 
       | (Custom(a, aMouse, inv), Custom(draw, bMouse, binv)) =>
-        /* TODO DrawTracker.untrack(a); */
         if (a !== draw || inv != binv) {
+          untrackMouseHandlers(aMouse);
+          DrawTracker.untrack(a);
           updateCustom(mountPoint, DrawTracker.track(draw), trackMouseHandlers(bMouse), switch binv {
             | `None => None
             | `Partial(dims) => Some(Partial(Belt.List.toArray(dims)))
@@ -313,7 +344,7 @@ module NativeInterface = {
 
       | (String(atext, afont, ahandlers), String(btext, bfont, bhandlers)) => 
         if (atext != btext || afont != bfont || !compareKeyHandlers(ahandlers, bhandlers)) {
-          /* StringTracker.maybeUntrack(aonChange); */
+          untrackKeyHandlers(ahandlers);
           updateTextView(mountPoint, btext, dims(layout), bfont, 
             trackKeyHandlers(bhandlers)
           )
@@ -393,12 +424,13 @@ module Fluid = {
 
     let custom = (
       ~invalidated=`CompareFn,
-      ~layout=?, ~onMouseDown=?, ~onMouseUp=?, ~onMouseMove=?, ~onMouseDragged=?, ~draw, ()) => Builtin(Custom(
+      ~layout=?, ~onMouseDown=?, ~onRightMouseDown=?, ~onMouseUp=?, ~onMouseMove=?, ~onMouseDragged=?, ~draw, ()) => Builtin(Custom(
         draw, {
           down: onMouseDown,
           move: onMouseMove,
           up: onMouseUp,
           drag: onMouseDragged,
+          rightDown: onRightMouseDown,
         }, invalidated), [], layout, None);
 
     let scrollView = (~layout=?, ~children, ()) => Builtin(ScrollView, children, layout, None);

@@ -171,6 +171,7 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   @property (nonatomic) int onMouseUp;
   @property (nonatomic) int onMouseMove;
   @property (nonatomic) int onMouseDragged;
+  @property (nonatomic) int onRightMouseDown;
 @end
 
 @implementation CustomView {
@@ -200,7 +201,7 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-  if (self.onMouseDown != -1) {
+  if (self.onMouseDragged != -1) {
     NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
     callPos(self.onMouseDragged, local.x, local.y);
   }
@@ -210,6 +211,13 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   if (self.onMouseDown != -1) {
     NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
     callPos(self.onMouseDown, local.x, local.y);
+  }
+}
+
+- (void)rightMouseDown:(NSEvent *)event {
+  if (self.onRightMouseDown != -1) {
+    NSPoint local = [self convertPoint:event.locationInWindow fromView:nil];
+    callPos(self.onRightMouseDown, local.x, local.y);
   }
 }
 
@@ -313,6 +321,7 @@ CAMLprim value fluid_create_CustomView(value dims_v, value draw_v, value handler
   view.onMouseUp = Check_optional(Field(handlers, 1)) ? Int_val(Unpack_optional(Field(handlers, 1))) : -1;
   view.onMouseMove = Check_optional(Field(handlers, 2)) ? Int_val(Unpack_optional(Field(handlers, 2))) : -1;
   view.onMouseDragged = Check_optional(Field(handlers, 3)) ? Int_val(Unpack_optional(Field(handlers, 3))) : -1;
+  view.onRightMouseDown = Check_optional(Field(handlers, 4)) ? Int_val(Unpack_optional(Field(handlers, 4))) : -1;
   view.wantsLayer = true;
 
   Wrap(view_v, view);
@@ -331,6 +340,7 @@ void fluid_update_CustomView(value view_v, value draw_v, value handlers, value i
   view.onMouseUp = Check_optional(Field(handlers, 1)) ? Int_val(Unpack_optional(Field(handlers, 1))) : -1;
   view.onMouseMove = Check_optional(Field(handlers, 2)) ? Int_val(Unpack_optional(Field(handlers, 2))) : -1;
   view.onMouseDragged = Check_optional(Field(handlers, 3)) ? Int_val(Unpack_optional(Field(handlers, 3))) : -1;
+  view.onRightMouseDown = Check_optional(Field(handlers, 4)) ? Int_val(Unpack_optional(Field(handlers, 4))) : -1;
 
   if (Check_optional(invalidated)) {
     contents = Unpack_optional(invalidated);
