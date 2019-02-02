@@ -1,5 +1,6 @@
 open Migrate_parsetree;
 open OCaml_402.Ast;
+open Location;
 
 /***
  * https://ocsigen.org/lwt/dev/api/Ppx_lwt
@@ -39,13 +40,13 @@ let parseLongident = txt => {
   loop(None, parts)
 };
 
-let isLowerCase = str => String.lowercase(str) == str;
+let isLowerCase = str => String.lowercase_ascii(str) == str;
 
 open Ast_helper;
 open Longident;
 
 let unCapitalize = text => {
-  let f = String.lowercase(String.sub(text, 0, 1));
+  let f = String.lowercase_ascii(String.sub(text, 0, 1));
   let rest = String.sub(text, 1, String.length(text) - 1);
   f ++ rest
 };
@@ -55,6 +56,62 @@ open Parsetree;
 let mapper = 
   Parsetree.{
     ...Ast_mapper.default_mapper,
+    structure_item: (mapper, str) => {
+      switch str {
+        | {pstr_loc, pstr_desc: Pstr_extension((
+          {txt: "component", loc},
+          PStr([{pstr_desc: Pstr_value(Nonrecursive, [{pvb_pat, pvb_loc, pvb_expr: {
+            pexp_desc: Pexp_fun(label, defaultv, pattern, body)
+          } as expr}])}])
+        ), _)} =>
+          let (kwds, hookarg) = {
+            let rec loop = body => switch (body.pexp_desc) {
+              | Pexp_fun(label, defaultv, pattern, body) => 
+                switch (loop(body)) {
+                  | None =>
+                    if (label != "") {
+                      fail(body.pexp_loc, "The last argument (the hooks) in a component definition cannot have a label")
+                    };
+                    switch pattern {
+                      | {ppat_desc: Ppat_var({txt: "hooks"})} => Some(([], pattern))
+                      | _ => fail(pattern.ppat_loc, "The last argument in a component definition must be named 'hooks'")
+                    }
+                  | Some((args, hook)) => 
+                    if (label == "") {
+                      fail(pattern.ppat_loc, "All arguments but the last must be labeled")
+                    } else {
+                      Some(([(label, defaultv, pattern, body.pexp_loc), ...args], hook))
+                    }
+                }
+              | _ => None
+            };
+            switch (loop(expr)) {
+              /* This is impossible because of the above destructuring */
+              | None => assert(false)
+              | Some((args, hook)) => (args, hook)
+            }
+          };
+          let inner = [%expr () => {
+            Fluid.Custom(
+              Fluid.Maker.makeComponent(
+                _component__,
+                [%e Exp.apply([%expr _component__], kwds->Belt.List.map(((label, _, p, _)) => (label, Exp.ident(Location.mkloc(Lident(label), p.ppat_loc)))))]
+              )
+            )
+          }];
+          let outer = kwds->Belt.List.reduce(inner, (inner, (label, dv, pattern, loc)) => {
+            Exp.fun_(~loc, label, dv, pattern, inner)
+          });
+          Str.value(~loc=pstr_loc, Nonrecursive, [Vb.mk(~loc=pvb_loc, 
+            pvb_pat,
+            [%expr {
+              let _component__ = [%e mapper.expr(mapper, expr)];
+              [%e outer]
+            }]
+          )])
+        | _ => Ast_mapper.default_mapper.structure_item(mapper, str)
+      }
+    },
     expr: (mapper, expr) => {
       switch expr {
         | {pexp_desc: Pexp_extension((
@@ -89,7 +146,7 @@ let mapper =
               let props = loop(args);
 
               Exp.apply(~loc,
-                Exp.ident(~loc, Location.mkloc(Ldot(Ldot(Lident("Fluid"), "Native"), name), loc)),
+                Exp.ident(~loc, Location.mkloc(Lident(name), loc)),
                 props
               )
             | Pexp_ident({txt: Ldot(contents, "createElement"), loc}) =>

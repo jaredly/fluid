@@ -1,0 +1,3 @@
+(executable 
+(public_name Tests)
+(preprocess (pps fluid.ppx)))

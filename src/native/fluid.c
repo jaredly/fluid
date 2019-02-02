@@ -284,10 +284,25 @@ CAMLprim value fluid_App_statusBarPos(value item_v) {
   CAMLreturn(pos_v);
 }
 
-CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v) {
-  CAMLparam2(title_v, onClick_v);
+void fluid_App_setStatusBarItemTitle(value item_v, value title_v) {
+  CAMLparam2(item_v, title_v);
+  NSStatusItem* item = (NSStatusItem*)Unwrap(item_v);
+
+  if (Tag_val(title_v) == 0) {
+    item.button.title = NSString_val(Field(title_v, 0));
+  } else {
+    item.button.image = (NSImage*)Unwrap(Field(title_v, 0));
+  }
+}
+
+CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v, value isVariableLength) {
+  CAMLparam3(title_v, onClick_v, isVariableLength);
   CAMLlocal1(statusBar_v);
-  NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
+  NSStatusItem* item = [NSStatusBar.systemStatusBar statusItemWithLength:
+    isVariableLength == Val_true
+    ? NSVariableStatusItemLength
+    : NSSquareStatusItemLength
+  ];
   [item retain];
   // StatusBarButton* button;
   if (Tag_val(title_v) == 0) {

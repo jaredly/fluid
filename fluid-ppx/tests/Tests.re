@@ -30,11 +30,13 @@ module Fluid = {
   let finish = x => ();
 };
 
-let awesome = (~name, ~age, hooks) => ();
+let%component awesome = (~name, ~age, hooks) => ();
+
+open Fluid.Native;
 
 let x = <div id=10>
   {Fluid.String("Hello")}
-  <Awesome name="hello" age=45 />
+  <awesome name="hello" age=45 />
   {Fluid.String("Here")}
   <span id="Hello">{Fluid.String("Things")}</span>
 </div>;
@@ -50,18 +52,18 @@ let awesome = (awesome, hooks) => {
 };
 
 let myComponent = (~some, ~prop, hooks) => {
-  Js.log("Here");
+  /* Js.log("Here"); */
   /* let%hook (state, dispatch) = useReducer(None, action => switch action {
     | `Awesome => Some(10)
     | `Nope => None
   }); */
   let%hook (count, setCount) = useState(10);
   let%hook (name, setName) = useState("name");
-  Js.log("Hi");
+  /* Js.log("Hi"); */
   /* let%hook () = useEffect(() => {
     () => ()
   }, ()); */
-  Js.log("Ho");
+  /* Js.log("Ho"); */
   "contents"
 };
 

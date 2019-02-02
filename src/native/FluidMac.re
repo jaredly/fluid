@@ -9,7 +9,7 @@ type dims = {left: float, top: float, width: float, height: float};
 
 let showDims = ({left,  top, width, height}) => Printf.sprintf("%f, %f - %f x %f", left, top, width, height);
 
-module Tracker = (C: {type arg;let name: string}): {
+module Tracker = (C: {type arg;let name: string;let once: bool}): {
   type callbackId;
   type arg = C.arg;
   type fn = arg => unit;
@@ -26,29 +26,15 @@ module Tracker = (C: {type arg;let name: string}): {
   let fns: Hashtbl.t(callbackId, C.arg => unit) = Hashtbl.create(100);
   let ids = ref([]);
 
-  /* module Id = Belt.Id.MakeHashable({
-    type t = fn;
-    let hash = Hashtbl.hash;
-    let eq = (===);
-  });
-  let ids: Belt.HashMap.t(fn, callbackId, Id.identity) = Belt.HashMap.make(~hintSize=1000, ~id=(
-    module Id:Belt.Id.Hashable
-    with type t = fn
-    and type identity = Id.identity
-  )); */
-
-
   let cur = ref(0);
   let next = () => {cur := cur^ + 1; cur^};
 
   let track: fn => callbackId = fn => {
-    /* print_endline("Track"); */
     switch (Belt.List.getAssoc(ids^, (fn), (===))) {
       | None =>
         let id = next();
         Hashtbl.replace(fns, id, fn);
         ids := [(fn, id), ...ids^];
-        /* Belt.HashMap.set(ids, fn, id); */
         id
       | Some(id) => id
     }
@@ -59,12 +45,10 @@ module Tracker = (C: {type arg;let name: string}): {
   };
 
   let untrack = fn => {
-    /* print_endline("Untrack"); */
     switch (Belt.List.getAssoc(ids^, (fn), (===))) {
       | None => print_endline("> but not there")
       | Some(id) =>
         ids := ids^ ->Belt.List.keep(a => fst(a) !== fn);
-        /* Belt.HashMap.remove(ids, fn); */
         Hashtbl.remove(fns, id)
     };
   };
@@ -78,7 +62,11 @@ module Tracker = (C: {type arg;let name: string}): {
   let call = (id: callbackId, arg: C.arg): unit => switch (Hashtbl.find(fns, id)) {
     | exception Not_found =>
       print_endline("Failed to find callback! " ++ string_of_int(id))
-    | fn => fn(arg)
+    | fn => 
+      if (C.once) {
+        untrack(fn)
+      };
+      fn(arg)
   };
   Callback.register(C.name, call);
 };
@@ -91,10 +79,10 @@ let compareFns = (a, b) => switch (a, b) {
 };
 
 
-module DrawTracker = Tracker({type arg = dims; let name = "fluid_rect_fn"});
-module StringTracker = Tracker({type arg = string; let name = "fluid_string_fn"});
-module UnitTracker = Tracker({type arg = unit; let name = "fluid_unit_fn"});
-module PosTracker = Tracker({type arg = pos; let name = "fluid_pos_fn"});
+module DrawTracker = Tracker({type arg = dims; let name = "fluid_rect_fn"; let once = false});
+module StringTracker = Tracker({type arg = string; let name = "fluid_string_fn"; let once = false});
+module UnitTracker = Tracker({type arg = unit; let name = "fluid_unit_fn"; let once = false});
+module PosTracker = Tracker({type arg = pos; let name = "fluid_pos_fn"; let once = false});
 
 type mouseHandlers = {
   down: option(PosTracker.fn),
@@ -463,9 +451,10 @@ module Fluid = {
     let launch = (~isAccessory=false, cb) => launch(~isAccessory, cb);
     type statusBarItem;
     type statusTitle = String(string) | Image(NativeInterface.image);
-    external statusBarItem: (~title: statusTitle, ~onClick: PosTracker.callbackId) => statusBarItem = "fluid_App_statusBarItem";
-    let statusBarItem = (~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick));
+    external statusBarItem: (~title: statusTitle, ~onClick: PosTracker.callbackId, ~isVariableLength: bool) => statusBarItem = "fluid_App_statusBarItem";
+    let statusBarItem = (~isVariableLength=false, ~title, ~onClick) => statusBarItem(~title, ~onClick=PosTracker.track(onClick), ~isVariableLength);
     external statusBarPos: statusBarItem => pos = "fluid_App_statusBarPos";
+    external statusBarSetTitle: (statusBarItem, statusTitle) => unit = "fluid_App_setStatusBarItemTitle";
 
     external homeDirectory: unit => string = "fluid_App_homeDirectory";
 
@@ -522,7 +511,7 @@ module Fluid = {
 
   module Window = {
     type window;
-    module Tracker = Tracker({type arg = window; let name = "fluid_window"});
+    module Tracker = Tracker({type arg = window; let name = "fluid_window"; let once = false});
     external make: (
       ~title: string,
       ~onBlur: Tracker.callbackId,

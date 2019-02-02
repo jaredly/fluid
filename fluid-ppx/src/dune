@@ -2,6 +2,6 @@
   (name Fluid_ppx)
   (public_name fluid.ppx)
   (flags :standard -w -9)
-  (libraries str compiler-libs ocaml-migrate-parsetree ppx_tools_versioned)
-  (preprocess (pps ppx_tools_versioned.metaquot_402))
+  (libraries str belt compiler-libs ocaml-migrate-parsetree ppx_tools_versioned)
+  (preprocess (pps belt.ppx ppx_tools_versioned.metaquot_402))
   (kind ppx_rewriter))

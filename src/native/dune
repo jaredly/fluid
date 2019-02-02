@@ -5,6 +5,7 @@
   (libraries flex belt FluidMaker Layout Files)
   (c_names fluid fluid_components fluid_window fluid_shared fluid_hotkeys)
   (install_c_headers fluid_shared)
-  (c_flags -x objective-c)
+  ; NOTE(jared): whenever making changes, remove this `-w` arg, which suppresses all warnings
+  (c_flags -x objective-c -w)
   (no_dynlink)
   (preprocess (pps belt.ppx)))
