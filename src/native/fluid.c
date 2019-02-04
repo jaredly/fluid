@@ -263,7 +263,7 @@ void fluid_App_launch (value isAccessory, value callback)
 }
 
 - (void)onClick {
-  printf("Click!\n");
+  // printf("Click!\n");
   callPos(
     onClick,
     item.button.window.frame.origin.x,

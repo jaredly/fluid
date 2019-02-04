@@ -149,7 +149,12 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   if (Tag_val(src_v) == 0) {
     image = (NSImage*)Unwrap(Field(src_v, 0));
   } else {
-    image = [[NSImage alloc] initWithContentsOfFile:NSString_val(Field(src_v, 0))];
+    NSString* src = NSString_val(Field(src_v, 0));
+    if ([src hasPrefix:@"http://"] || [src hasPrefix:@"https://"]) {
+      image = [[NSImage alloc] initWithContentsOfURL:[NSURL URLWithString:src]];
+    } else {
+      image = [[NSImage alloc] initWithContentsOfFile:src];
+    }
   }
   view.wantsLayer = true;
   if (image != nil) {

@@ -59,14 +59,17 @@ module Tracker = (C: {type arg;let name: string;let once: bool}): {
 
   let size = () => Hashtbl.length(fns);
 
-  let call = (id: callbackId, arg: C.arg): unit => switch (Hashtbl.find(fns, id)) {
-    | exception Not_found =>
-      print_endline("Failed to find callback! " ++ string_of_int(id))
-    | fn => 
-      if (C.once) {
-        untrack(fn)
-      };
-      fn(arg)
+  let call = (id: callbackId, arg: C.arg): unit => {
+    /* print_endline("Got a call " ++ C.name ++ " " ++ string_of_int(id)); */
+    switch (Hashtbl.find(fns, id)) {
+      | exception Not_found =>
+        print_endline("Failed to find callback! " ++ string_of_int(id))
+      | fn => 
+        if (C.once) {
+          untrack(fn)
+        };
+        fn(arg)
+    };
   };
   Callback.register(C.name, call);
 };
