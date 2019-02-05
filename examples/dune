@@ -1,0 +1,7 @@
+
+(executable
+  (public_name KitchenSink)
+  (libraries str flex belt RexJson Files FluidMac )
+  (flags :standard -w -A)
+  (link_flags -cclib -framework -cclib Cocoa -cclib -framework -cclib Carbon -cclib -framework -cclib CoreImage)
+  (preprocess (pps belt.ppx fluid.ppx)))

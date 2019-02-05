@@ -91,11 +91,12 @@ let mapper =
               | Some((args, hook)) => (args, hook)
             }
           };
+          let applied = kwds == [] ? [%expr _component__] : Exp.apply([%expr _component__], kwds->Belt.List.map(((label, _, p, _)) => (label, Exp.ident(Location.mkloc(Lident(label), p.ppat_loc)))));
           let inner = [%expr () => {
             Fluid.Custom(
               Fluid.Maker.makeComponent(
                 _component__,
-                [%e Exp.apply([%expr _component__], kwds->Belt.List.map(((label, _, p, _)) => (label, Exp.ident(Location.mkloc(Lident(label), p.ppat_loc)))))]
+                [%e applied]
               )
             )
           }];

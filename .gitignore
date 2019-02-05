@@ -10,3 +10,4 @@ _esy
 *.o
 *.a
 *.so
+_build
