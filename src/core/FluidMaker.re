@@ -308,7 +308,9 @@ let runRender = (WithState(component)) => {
     Good((tree, effects^));
   } {
     | SuspendException(evt) => Suspense([evt])
-    | exn => Bad(exn)
+    | exn =>
+      print_endline("Error rending component: " ++ Printexc.to_string(exn));
+      Bad(exn)
   }
 };
 

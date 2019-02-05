@@ -1,4 +1,10 @@
+(* -*- tuareg -*- *)
 
+let flags = match (Sys.getenv "FLUID_DEBUG") with
+| exception Not_found -> ""
+| _ -> " -DDEBUG"
+
+let () = Jbuild_plugin.V1.send (Printf.sprintf {|
 (library
   (public_name fluid.MacOS)
   (name FluidMac)
@@ -6,6 +12,7 @@
   (c_names fluid fluid_components fluid_window fluid_shared fluid_hotkeys)
   (install_c_headers fluid_shared)
   ; NOTE(jared): whenever making changes, remove this `-w` arg, which suppresses all warnings
-  (c_flags -x objective-c -w)
+  (c_flags -x objective-c -w%s)
   (no_dynlink)
   (preprocess (pps belt.ppx)))
+|} flags)

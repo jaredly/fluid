@@ -354,7 +354,7 @@ module NativeInterface = {
         ~dims={left, top, width, height});
       (native, getNativeId())
     | View(onPress, style) => 
-      Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height);
+      /* Printf.printf("OCaml side %f,%f %f x %f\n", top, left, width, height); */
       let native = createView(~onPress, ~pos=(top, left), ~size=(width, height), ~style);
       (native, getNativeId())
     | Button(title, onPress) =>

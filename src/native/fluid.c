@@ -13,6 +13,7 @@
 @end
 
 @interface MLApplicationDelegate : NSObject <NSApplicationDelegate>
+@property BOOL shouldLiveOn;
 @end
 
 @implementation MLApplicationDelegate {
@@ -27,7 +28,7 @@
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSNotification *)notification {
-  return NO;
+  return !self.shouldLiveOn;
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)__unused not {
@@ -207,6 +208,7 @@ void fluid_App_launch (value isAccessory, value callback)
     [NSApplication sharedApplication];
     
     MLApplicationDelegate* delegate = [[MLApplicationDelegate alloc] initWithOnLaunch:callback];
+    delegate.shouldLiveOn = isAccessory == Val_true;
 
     if (isAccessory == Val_true) {
       [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
@@ -293,6 +295,7 @@ void fluid_App_setStatusBarItemTitle(value item_v, value title_v) {
   } else {
     item.button.image = (NSImage*)Unwrap(Field(title_v, 0));
   }
+  CAMLreturn0;
 }
 
 CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v, value isVariableLength) {
