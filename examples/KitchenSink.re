@@ -16,6 +16,27 @@ let%component drawing = (hooks) => {
   <custom layout={Layout.style(~width=60., ~height=30., ())} draw />
 };
 
+let%component scrolling = hooks => {
+  <scrollView
+  layout={Layout.style(
+    ~height=40.,
+    ~alignItems=AlignStretch,
+    ~alignSelf=AlignStretch,
+    ~overflow=Scroll,
+    (),
+  )}>
+    <view layout={Layout.style(~alignItems=AlignStretch, ())}>
+      {str("One")}
+      {str("Two")}
+      {str("Three")}
+      {str("Four")}
+      {str("Five")}
+      {str("Six")}
+      {str("Seven")}
+    </view>
+  </scrollView>
+};
+
 let%component main = (hooks) => {
   let%hook (on, setOn) = useState(false);
   <view>
@@ -26,15 +47,18 @@ let%component main = (hooks) => {
         backgroundColor={r: 1., g: 0., b: 1., a: 0.4}
         layout={Layout.style(~padding=10., ())}
       >
-        <image src=Plain("http://google.com/favicon.ico")
+        <image
+          src={ Plain("http://google.com/favicon.ico")}
           layout={Layout.style(~width=32., ~height=32., ())}
         />
       </view>
       <drawing />
     </view>
     <button onPress={() => setOn(!on)} title="Do things I guess" />
-    {on ? str("It's on!")
-    : Fluid.Null}
+    {on
+      ? str("It's on!")
+      : Fluid.Null}
+    <scrolling />
   </view>
 };
 
