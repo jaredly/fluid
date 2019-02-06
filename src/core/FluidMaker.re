@@ -658,7 +658,7 @@ so enqueueRenders(()) (or gatherRenders or something)
   }
  */
 
-let rec enqueue = (root, custom) => {
+let rec enqueue = (~onUpdate, root, custom) => {
   root.invalidatedElements = [custom, ...root.invalidatedElements];
   if (!root.waiting) {
     root.waiting = true;
@@ -668,40 +668,40 @@ let rec enqueue = (root, custom) => {
       root.invalidatedElements = [];
       let toUpdate = elements->List.keepMap(({custom: WithState(contents) as component} as container) => {
         if (contents.invalidated)  {
-              switch (container.mountedTree) {
-                | Pending(_) =>
-                  print_endline("Updating a pending tree...")
-                  None
-                | Mounted(mountedTree) => 
-          Some((container, component->runRender->bindResult(((newElement, effects)) => {
-                  let pending = switch (contents.reconciler) {
-                    | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
-                    | _ => reconcileTrees(enqueue(root), mountedTree, newElement)
-                  };
-                  let pending = switch pending {
-                    | Suspense(s) => switch (contents.suspense) {
-                      | None => failwith("Top of the line")
-                      | Some({contents: []} as holder) =>
-                        holder.contents = s;
-                        /* TODO dedup this logic with the instantiate stuff */
-                        component->runRender->bindResult(((newElement, newEffects)) => {
-                          let pending = switch (contents.reconciler) {
-                            | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
-                            | _ => reconcileTrees(enqueue(root), mountedTree, newElement)
-                          };
-                          pending->mapResult(pending => (pending, newEffects))
-                        })
-                      | Some(_) =>
-                        print_endline("Suspended component rendering things that suspended again");
-                        Suspense(s)
-                    }
-                    | Good(pending) => Good((pending, []))
-                    | Bad(exn) => Bad(exn)
-                  };
-                  /* Although, should I really be persisting the original effects? idk */
-                  pending->mapResult(((pending, moreEffects)) => (pending, effects @ moreEffects))
-          })))
-              }
+          switch (container.mountedTree) {
+            | Pending(_) =>
+              print_endline("Updating a pending tree...")
+              None
+            | Mounted(mountedTree) => 
+              Some((container, component->runRender->bindResult(((newElement, effects)) => {
+                let pending = switch (contents.reconciler) {
+                  | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
+                  | _ => reconcileTrees(enqueue(~onUpdate, root), mountedTree, newElement)
+                };
+                let pending = switch pending {
+                  | Suspense(s) => switch (contents.suspense) {
+                    | None => failwith("Top of the line")
+                    | Some({contents: []} as holder) =>
+                      holder.contents = s;
+                      /* TODO dedup this logic with the instantiate stuff */
+                      component->runRender->bindResult(((newElement, newEffects)) => {
+                        let pending = switch (contents.reconciler) {
+                          | Some((oldData, newData, reconcile)) => reconcile(oldData, newData, mountedTree, newElement)
+                          | _ => reconcileTrees(enqueue(~onUpdate, root), mountedTree, newElement)
+                        };
+                        pending->mapResult(pending => (pending, newEffects))
+                      })
+                    | Some(_) =>
+                      print_endline("Suspended component rendering things that suspended again");
+                      Suspense(s)
+                  }
+                  | Good(pending) => Good((pending, []))
+                  | Bad(exn) => Bad(exn)
+                };
+                /* Although, should I really be persisting the original effects? idk */
+                pending->mapResult(((pending, moreEffects)) => (pending, effects @ moreEffects))
+              })))
+          }
         } else {
           None
         }
@@ -721,7 +721,7 @@ let rec enqueue = (root, custom) => {
               | Some(mounted) => mounted
               | None => failwith("Current is already pending")
             };
-            let newTree = mountPending(enqueue(root), AppendChild(current), pending);
+            let newTree = mountPending(enqueue(~onUpdate, root), AppendChild(current), pending);
             container.mountedTree = Mounted(newTree);
             let rec crawl = el => switch el {
               | MNull(_) => ()
@@ -741,7 +741,8 @@ let rec enqueue = (root, custom) => {
             /* TODO have a `onSuspense` on the container or component object to call here */
             failwith("Top of the line")
         }
-      })
+      });
+      onUpdate(root.layout.layout)
       /* STOPSHIP go down through the tree & update any nodes that have had their layout updated,
          that didn't just get rerendered. yknow. */
     })
@@ -769,7 +770,7 @@ let mount = (el, node) => {
   };
 
 
-  let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
+  let tree = mountPending(enqueue(~onUpdate=(_) => (), root), AppendChild(node), makePending(instances));
   switch (getNativeNode(tree)) {
     | None => failwith("Still pending?")
     | Some(childNode) =>
@@ -778,8 +779,7 @@ let mount = (el, node) => {
   }
 };
 
-let preMount = (el, makeNative) => {
-  /* Native.view(~children=[el], ()) */
+let preMount = (el, onUpdate, makeNative) => {
   let instances = switch (instantiateTree(el)) {
     | Bad(exn) => raise(exn)
     | Suspense(s) => failwith("useSuspense called, no handler found")
@@ -797,7 +797,7 @@ let preMount = (el, makeNative) => {
   let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
   makeNative(~size=(width, height), node => {
     print_endline("Mounting now I guess");
-    let tree = mountPending(enqueue(root), AppendChild(node), makePending(instances));
+    let tree = mountPending(enqueue(~onUpdate, root), AppendChild(node), makePending(instances));
     print_endline("Mounted");
     switch (getNativeNode(tree)) {
       | None => failwith("Still pending?")
@@ -805,7 +805,7 @@ let preMount = (el, makeNative) => {
         root.node = Some((tree, childNode));
         print_endline("Add to the mwindow");
         node->NativeInterface.appendChild(childNode)
-    }
+    };
   })
 };
 

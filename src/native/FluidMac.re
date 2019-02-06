@@ -526,6 +526,7 @@ module Fluid = {
     external hide: (window) => unit = "fluid_Window_hide";
 
     external position: (window, pos) => unit = "fluid_Window_position";
+    external resize: (window, pos) => unit = "fluid_Window_resize";
     /* external show: (window) => unit = "fluid_Window_show"; */
 
     external activate: (window) => unit = "fluid_Window_activate";
@@ -539,13 +540,28 @@ module Fluid = {
 
   let string = (~layout=?, ~font=?, contents) => Native.text(~layout?, ~font?, ~contents, ());
 
-  let launchWindow = (~title: string, ~pos=?, ~hidden=false, ~onBlur=(_) => (), ~floating=false, root: element) => {
-    preMount(root, (~size as (width, height), onNode) => {
+  let launchWindow = (
+    ~title: string,
+    ~pos=?,
+    ~hidden=false,
+    ~onBlur=(_) => (),
+    ~onResize=(_newSize, _window) => (),
+    ~floating=false,
+    root: element
+  ) => {
+    let win = ref(None);
+    win := Some(preMount(root, layout => {
+      switch (win^) {
+        | None => ()
+        | Some(win) =>
+          let {Layout.LayoutTypes.left, top, width, height} = layout;
+          onResize({left: 0., top: 0., width, height}, win)
+      }
+    }, (~size as (width, height), onNode) => {
       let (left, top) = switch pos {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
-      /* print_endline("making"); */
       let window =
         Window.make(
           ~title,
@@ -566,6 +582,6 @@ module Fluid = {
         Window.activate(window);
       };
       window
-    })
+    }))
   };
 }

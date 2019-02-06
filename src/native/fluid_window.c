@@ -59,7 +59,24 @@ void fluid_Window_position(value window_v, value pos_v) {
   CAMLreturn0;
 }
 
+void fluid_Window_resize(value window_v, value size_v) {
+  CAMLparam1(window_v);
+  Unpack_record2_double(size_v, width, height);
 
+  log("resize window\n");
+  FluidWindow* window = (FluidWindow*)Unwrap(window_v);
+  // printf("Resize %f\n", heightChange);
+  NSRect frameRect = [NSWindow frameRectForContentRect:NSMakeRect(
+    window.frame.origin.x,
+    window.frame.origin.y,
+    width,
+    height
+  ) styleMask:window.styleMask];
+  float heightChange = frameRect.size.height - window.frame.size.height;
+  frameRect.origin.y -= heightChange;
+  [window setFrame:frameRect display:YES];
+  CAMLreturn0;
+}
 
 void fluid_Window_close(value window_v) {
   CAMLparam1(window_v);

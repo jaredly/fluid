@@ -70,6 +70,9 @@ Fluid.App.launch(() => {
   );
   let win = Fluid.launchWindow(
     ~title="KitchenSink",
+    ~onResize=({width, height}, window) => {
+      window->Fluid.Window.resize({x: width, y: height})
+    },
     <main />
   )
 });
