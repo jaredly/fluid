@@ -550,18 +550,24 @@ module Fluid = {
     root: element
   ) => {
     let win = ref(None);
+    let prevSize = ref({x: 0., y: 0.});
     win := Some(preMount(root, layout => {
       switch (win^) {
         | None => ()
         | Some(win) =>
           let {Layout.LayoutTypes.left, top, width, height} = layout;
-          onResize({left: 0., top: 0., width, height}, win)
+          let {x, y} = prevSize^;
+          if (x != width || y != height) {
+            prevSize := {x: width, y: height};
+            onResize({left: 0., top: 0., width, height}, win)
+          }
       }
     }, (~size as (width, height), onNode) => {
       let (left, top) = switch pos {
         | None => (0., 0.)
         | Some((x, y)) => (x, y -. height)
       };
+      prevSize := {x: width, y: height};
       let window =
         Window.make(
           ~title,
