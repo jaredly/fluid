@@ -545,13 +545,15 @@ module Fluid = {
     ~pos=?,
     ~hidden=false,
     ~onBlur=(_) => (),
-    ~onResize=(_newSize, _window) => (),
+    ~onResize=({width, height}, window) => {
+      window->Window.resize({x: width, y: height})
+    },
     ~floating=false,
     root: element
   ) => {
     let win = ref(None);
     let prevSize = ref({x: 0., y: 0.});
-    win := Some(preMount(root, layout => {
+    let window = preMount(root, layout => {
       switch (win^) {
         | None => ()
         | Some(win) =>
@@ -588,6 +590,8 @@ module Fluid = {
         Window.activate(window);
       };
       window
-    }))
+    });
+    win := Some(window);
+    window
   };
 }
