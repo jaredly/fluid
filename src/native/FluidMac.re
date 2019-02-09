@@ -9,82 +9,19 @@ type dims = {left: float, top: float, width: float, height: float};
 
 let showDims = ({left,  top, width, height}) => Printf.sprintf("%f, %f - %f x %f", left, top, width, height);
 
-module Tracker = (C: {type arg;let name: string;let once: bool}): {
-  type callbackId;
-  type arg = C.arg;
-  type fn = arg => unit;
-  let track: (arg => unit) => callbackId;
-  let maybeTrack: option(arg => unit) => option(callbackId);
-  let untrack: fn => unit;
-  let maybeUntrack: option(fn) => unit;
-  let size: unit => int;
-} => {
-  type callbackId = int;
-  type arg = C.arg;
-  type fn = C.arg => unit;
-
-  let fns: Hashtbl.t(callbackId, C.arg => unit) = Hashtbl.create(100);
-  let ids = ref([]);
-
-  let cur = ref(0);
-  let next = () => {cur := cur^ + 1; cur^};
-
-  let track: fn => callbackId = fn => {
-    switch (Belt.List.getAssoc(ids^, (fn), (===))) {
-      | None =>
-        let id = next();
-        Hashtbl.replace(fns, id, fn);
-        ids := [(fn, id), ...ids^];
-        id
-      | Some(id) => id
-    }
-  };
-  let maybeTrack: (option(C.arg => unit)) => option(callbackId) = fn => switch fn {
-    | None => None
-    | Some(fn) => Some(track(fn))
-  };
-
-  let untrack = fn => {
-    switch (Belt.List.getAssoc(ids^, (fn), (===))) {
-      | None => print_endline("> but not there")
-      | Some(id) =>
-        ids := ids^ ->Belt.List.keep(a => fst(a) !== fn);
-        Hashtbl.remove(fns, id)
-    };
-  };
-  let maybeUntrack: (option(C.arg => unit)) => unit = fn => switch fn {
-    | None => ()
-    | Some(fn) => untrack(fn)
-  };
-
-  let size = () => Hashtbl.length(fns);
-
-  let call = (id: callbackId, arg: C.arg): unit => {
-    /* print_endline("Got a call " ++ C.name ++ " " ++ string_of_int(id)); */
-    switch (Hashtbl.find(fns, id)) {
-      | exception Not_found =>
-        print_endline("Failed to find callback! " ++ string_of_int(id))
-      | fn => 
-        if (C.once) {
-          untrack(fn)
-        };
-        fn(arg)
-    };
-  };
-  Callback.register(C.name, call);
-};
-
-
 let compareFns = (a, b) => switch (a, b) {
   | (None, None) => true
   | (Some(a), Some(b)) => a === b
   | _ => false
 };
 
-module DrawTracker = Tracker({type arg = dims; let name = "fluid_rect_fn"; let once = false});
-module StringTracker = Tracker({type arg = string; let name = "fluid_string_fn"; let once = false});
-module UnitTracker = Tracker({type arg = unit; let name = "fluid_unit_fn"; let once = false});
-module PosTracker = Tracker({type arg = pos; let name = "fluid_pos_fn"; let once = false});
+module C = Tracker.C;
+module Tracker = Tracker.F;
+
+module DrawTracker = Tracker(C({type arg = dims; let name = "fluid_rect_fn"}));
+module StringTracker = Tracker(C({type arg = string; let name = "fluid_string_fn"}));
+module UnitTracker = Tracker(C({type arg = unit; let name = "fluid_unit_fn"}));
+module PosTracker = Tracker(C({type arg = pos; let name = "fluid_pos_fn"}));
 
 type mouseHandlers('a) = {
   down: option('a),
@@ -142,9 +79,45 @@ let untrackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
   UnitTracker.maybeUntrack(escape);
 });
 
-/* type columnBrowserHandlers('unit) => {
-  childrenCount: 
-}; */
+module ColumnBrowser = {
+  module ChildrenCountTracker =
+    Tracker({
+      type arg = int;
+      type res = int;
+      let name = "fluid_column_browser_children_count";
+      let once = false;
+    });
+  module ChildOfItemTracker =
+    Tracker({
+      type arg = int;
+      type res = int;
+      let name = "fluid_column_browser_child_of_item";
+      let once = false;
+    });
+  module IsLeafItemTracker =
+    Tracker({
+      type arg = int;
+      type res = bool;
+      let name = "fluid_column_browser_is_leaf_item";
+      let once = false;
+    });
+  module DisplayForItemTracker =
+    Tracker({
+      type arg = int;
+      type res = string;
+      let name = "fluid_column_browser_display_for_item";
+      let once = false;
+    });
+  type handlers('unit) = {
+    childrenCount: int => int,
+    childOfItem: (int, int) => int,
+    isLeafItem: int => bool,
+    displayForItem: int => string,
+  };
+
+
+};
+
 
 
 module NativeInterface = {
@@ -513,7 +486,7 @@ module Fluid = {
 
   module Window = {
     type window;
-    module Tracker = Tracker({type arg = window; let name = "fluid_window"; let once = false});
+    module Tracker = Tracker(C({type arg = window; let name = "fluid_window"}));
     external make: (
       ~title: string,
       ~onBlur: Tracker.callbackId,
