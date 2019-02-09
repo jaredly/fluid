@@ -81,37 +81,30 @@ let compareFns = (a, b) => switch (a, b) {
   | _ => false
 };
 
-
 module DrawTracker = Tracker({type arg = dims; let name = "fluid_rect_fn"; let once = false});
 module StringTracker = Tracker({type arg = string; let name = "fluid_string_fn"; let once = false});
 module UnitTracker = Tracker({type arg = unit; let name = "fluid_unit_fn"; let once = false});
 module PosTracker = Tracker({type arg = pos; let name = "fluid_pos_fn"; let once = false});
 
-type mouseHandlers = {
-  down: option(PosTracker.fn),
-  up: option(PosTracker.fn),
-  move: option(PosTracker.fn),
-  drag: option(PosTracker.fn),
-  rightDown: option(PosTracker.fn),
+type mouseHandlers('a) = {
+  down: option('a),
+  up: option('a),
+  move: option('a),
+  drag: option('a),
+  rightDown: option('a),
 };
-type mouseTrackers = {
-  down_: option(PosTracker.callbackId),
-  up_: option(PosTracker.callbackId),
-  move_: option(PosTracker.callbackId),
-  drag_: option(PosTracker.callbackId),
-  rightDown_: option(PosTracker.callbackId),
-};
+
 let compareMouseHandlers = (a, b) =>
   compareFns(a.down, b.down) &&
   compareFns(a.up, b.up) &&
   compareFns(a.move, b.move) &&
   compareFns(a.drag, b.drag);
 let trackMouseHandlers = ({down, up, move, drag, rightDown}) => ({
-  down_: PosTracker.maybeTrack(down),
-  up_: PosTracker.maybeTrack(up),
-  move_: PosTracker.maybeTrack(move),
-  drag_: PosTracker.maybeTrack(drag),
-  rightDown_: PosTracker.maybeTrack(rightDown),
+  down: PosTracker.maybeTrack(down),
+  up: PosTracker.maybeTrack(up),
+  move: PosTracker.maybeTrack(move),
+  drag: PosTracker.maybeTrack(drag),
+  rightDown: PosTracker.maybeTrack(rightDown),
 });
 let untrackMouseHandlers = ({down, up, move, drag, rightDown}) => {
   PosTracker.maybeUntrack(down);
@@ -122,33 +115,24 @@ let untrackMouseHandlers = ({down, up, move, drag, rightDown}) => {
 };
 
 
-type keyHandlers = {
-  enter: option(UnitTracker.fn),
-  tab: option(UnitTracker.fn),
-  shiftTab: option(UnitTracker.fn),
-  change: option(StringTracker.fn),
-  escape: option(UnitTracker.fn),
+type keyHandlers('unit, 'change) = {
+  enter: option('unit),
+  tab: option('unit),
+  shiftTab: option('unit),
+  change: option('change),
+  escape: option('unit),
 };
-
 let compareKeyHandlers = (a, b) =>
   compareFns(a.enter, b.enter) &&
   compareFns(a.tab, b.tab) &&
   compareFns(a.shiftTab, b.shiftTab) &&
   compareFns(a.change, b.change);
-
-type keyTrackers = {
-  enter_: option(UnitTracker.callbackId),
-  tab_: option(UnitTracker.callbackId),
-  shiftTab_: option(UnitTracker.callbackId),
-  change_: option(StringTracker.callbackId),
-  escape_: option(UnitTracker.callbackId),
-};
 let trackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
-  enter_: UnitTracker.maybeTrack(enter),
-  tab_: UnitTracker.maybeTrack(tab),
-  shiftTab_: UnitTracker.maybeTrack(shiftTab),
-  change_: StringTracker.maybeTrack(change),
-  escape_: UnitTracker.maybeTrack(escape),
+  enter: UnitTracker.maybeTrack(enter),
+  tab: UnitTracker.maybeTrack(tab),
+  shiftTab: UnitTracker.maybeTrack(shiftTab),
+  change: StringTracker.maybeTrack(change),
+  escape: UnitTracker.maybeTrack(escape),
 });
 let untrackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
   UnitTracker.maybeUntrack(enter);
@@ -157,6 +141,11 @@ let untrackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
   StringTracker.maybeUntrack(change);
   UnitTracker.maybeUntrack(escape);
 });
+
+/* type columnBrowserHandlers('unit) => {
+  childrenCount: 
+}; */
+
 
 module NativeInterface = {
   type nativeInternal;
@@ -169,10 +158,11 @@ module NativeInterface = {
   type invalidated = Partial(array(dims)) | Full;
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
-  external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId, ~mouseHandlers: mouseTrackers) => nativeInternal = "fluid_create_CustomView";
-  external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseTrackers, option(invalidated)) => unit = "fluid_update_CustomView";
-  external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyTrackers) => nativeInternal = "fluid_create_NSTextView";
-  external updateTextView: (nativeInternal, string, dims, font, keyTrackers) => unit = "fluid_set_NSTextView_textContent";
+  external createColumnBrowser: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
+  external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId, ~mouseHandlers: mouseHandlers(PosTracker.callbackId)) => nativeInternal = "fluid_create_CustomView";
+  external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseHandlers(PosTracker.callbackId), option(invalidated)) => unit = "fluid_update_CustomView";
+  external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyHandlers(UnitTracker.callbackId, StringTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
+  external updateTextView: (nativeInternal, string, dims, font, keyHandlers(UnitTracker.callbackId, StringTracker.callbackId)) => unit = "fluid_set_NSTextView_textContent";
 
   type image;
   type imageSrc = | Preloaded(image) | Plain(string);
@@ -274,12 +264,13 @@ module NativeInterface = {
   type invalidated_ = [`Full | `CompareFn | `Partial(list(dims)) | `None];
 
   type element =
-    | Custom(dims => unit, mouseHandlers, invalidated_)
+    | Custom(dims => unit, mouseHandlers(PosTracker.fn), invalidated_)
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
-    | String(string, option(font), keyHandlers)
-    | Image(imageSrc);
+    | String(string, option(font), keyHandlers(UnitTracker.fn, StringTracker.fn))
+    | Image(imageSrc)
+    | ColumnBrowser(option(ref(option(nativeInternal))));
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
@@ -299,6 +290,7 @@ module NativeInterface = {
       | ScrollView
       | View(_, _)
       | Image(_)
+      | ColumnBrowser(_)
       | Custom(_, _, _) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
       | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
@@ -347,6 +339,13 @@ module NativeInterface = {
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
+    | ColumnBrowser(ref) =>
+      let node = createScrollView(~dims={left, top, width, height});
+      switch ref {
+        | None => ()
+        | Some(r) => r := Some(node)
+      };
+      (node, getNativeId())
     | Custom(drawFn, mouseHandlers, _) =>
       let native = createCustom(
         ~drawFn=DrawTracker.track(drawFn),
