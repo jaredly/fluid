@@ -47,7 +47,6 @@
 - (void)onPress {
   static value * closure_f = NULL;
   if (closure_f == NULL) {
-    /* First time around, look up by name */
     closure_f = caml_named_value("fluid_button_press");
   }
   logf("> Button press %d\n", id_v);
@@ -61,8 +60,7 @@ void callUnit(int fnId) {
   CAMLparam0();
   static value * closure_f = NULL;
   if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_unit_fn");
+    closure_f = caml_named_value("fluid_unit_fn");
   }
 
   logf("Call unit %d\n", fnId);
@@ -75,8 +73,7 @@ void callPos(int fnId, float x, float y) {
   CAMLlocal1(pos_v);
   static value * closure_f = NULL;
   if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_pos_fn");
+    closure_f = caml_named_value("fluid_pos_fn");
   }
 
   logf("Call pos %d %f,%f\n", fnId, x, y);
@@ -89,8 +86,7 @@ void callString(int fnId, const char* text) {
   CAMLparam0();
   static value * closure_f = NULL;
   if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_string_fn");
+    closure_f = caml_named_value("fluid_string_fn");
   }
 
   logf("Call string %d %s\n", fnId, text);
@@ -103,8 +99,7 @@ void callRect(int fnId, float x, float y, float w, float h) {
   CAMLlocal1(rect_v);
   static value * closure_f = NULL;
   if (closure_f == NULL) {
-      /* First time around, look up by name */
-      closure_f = caml_named_value("fluid_rect_fn");
+    closure_f = caml_named_value("fluid_rect_fn");
   }
 
   logf("Call rect %d\n", fnId);

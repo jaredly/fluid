@@ -79,6 +79,8 @@ let untrackKeyHandlers = ({enter, tab, shiftTab, change, escape}) => ({
   UnitTracker.maybeUntrack(escape);
 });
 
+type _nativeInternal;
+
 module ColumnBrowser = {
   module ChildrenCountTracker =
     Tracker({
@@ -89,7 +91,7 @@ module ColumnBrowser = {
     });
   module ChildOfItemTracker =
     Tracker({
-      type arg = int;
+      type arg = (int, int);
       type res = int;
       let name = "fluid_column_browser_child_of_item";
       let once = false;
@@ -108,20 +110,49 @@ module ColumnBrowser = {
       let name = "fluid_column_browser_display_for_item";
       let once = false;
     });
-  type handlers('unit) = {
-    childrenCount: int => int,
-    childOfItem: (int, int) => int,
-    isLeafItem: int => bool,
-    displayForItem: int => string,
+
+  type trackers = {
+    childrenCount: ChildrenCountTracker.callbackId,
+    childOfItem: ChildOfItemTracker.callbackId,
+    isLeafItem: IsLeafItemTracker.callbackId,
+    displayForItem: DisplayForItemTracker.callbackId,
   };
 
+  type handlers = {
+    childrenCount: ChildrenCountTracker.fn,
+    childOfItem: ChildOfItemTracker.fn,
+    isLeafItem: IsLeafItemTracker.fn,
+    displayForItem: DisplayForItemTracker.fn,
+  };
+
+  let compare = (a, b) =>
+    a.childrenCount === b.childrenCount &&
+    a.childOfItem === b.childOfItem &&
+    a.isLeafItem === b.isLeafItem &&
+    a.displayForItem === b.displayForItem;
+
+  let track = ({childrenCount, childOfItem, isLeafItem, displayForItem}): trackers => ({
+    childrenCount: ChildrenCountTracker.track(childrenCount),
+    childOfItem: ChildOfItemTracker.track(childOfItem),
+    isLeafItem: IsLeafItemTracker.track(isLeafItem),
+    displayForItem: DisplayForItemTracker.track(displayForItem),
+  });
+  let untrack = ({childrenCount, childOfItem, isLeafItem, displayForItem}) => ({
+    ChildrenCountTracker.untrack(childrenCount);
+    ChildOfItemTracker.untrack(childOfItem);
+    IsLeafItemTracker.untrack(isLeafItem);
+    DisplayForItemTracker.untrack(displayForItem);
+  });
+  external create: (~dims: dims, ~handlers: trackers) => _nativeInternal = "fluid_column_browser_create";
+  let create = (~dims, ~handlers) => create(~dims, ~handlers=track(handlers));
+  external update: (_nativeInternal, trackers) => unit = "fluid_column_browser_update";
+  let update = (mountPoint, handlers) => update(mountPoint, track(handlers));
 
 };
 
 
-
 module NativeInterface = {
-  type nativeInternal;
+  type nativeInternal = _nativeInternal;
   type nativeNode = (nativeInternal, int);
 
   type font = {fontName: string, fontSize: float};
@@ -131,7 +162,7 @@ module NativeInterface = {
   type invalidated = Partial(array(dims)) | Full;
 
   external createScrollView: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
-  external createColumnBrowser: (~dims: dims) => nativeInternal = "fluid_create_ScrollView";
+  /* external createColumnBrowser: (~dims: dims) => nativeInternal = "fluid_create_ScrollView"; */
   external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId, ~mouseHandlers: mouseHandlers(PosTracker.callbackId)) => nativeInternal = "fluid_create_CustomView";
   external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseHandlers(PosTracker.callbackId), option(invalidated)) => unit = "fluid_update_CustomView";
   external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyHandlers(UnitTracker.callbackId, StringTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
@@ -243,7 +274,7 @@ module NativeInterface = {
     | Button(string, unit => unit)
     | String(string, option(font), keyHandlers(UnitTracker.fn, StringTracker.fn))
     | Image(imageSrc)
-    | ColumnBrowser(option(ref(option(nativeInternal))));
+    | ColumnBrowser(option(ref(option(nativeInternal))), ColumnBrowser.handlers);
 
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
@@ -263,7 +294,7 @@ module NativeInterface = {
       | ScrollView
       | View(_, _)
       | Image(_)
-      | ColumnBrowser(_)
+      | ColumnBrowser(_, _)
       | Custom(_, _, _) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
       | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
@@ -298,6 +329,11 @@ module NativeInterface = {
           /* print_endline("updated\n"); */
         }
 
+      | (ColumnBrowser(aref, ahandlers), ColumnBrowser(bref, bhandlers)) =>
+        if (aref !== bref || !ColumnBrowser.compare(ahandlers, bhandlers)) {
+          ColumnBrowser.untrack(ahandlers);
+          ColumnBrowser.update(mountPoint, bhandlers);
+        }
       | (String(atext, afont, ahandlers), String(btext, bfont, bhandlers)) => 
         if (atext != btext || afont != bfont || !compareKeyHandlers(ahandlers, bhandlers)) {
           untrackKeyHandlers(ahandlers);
@@ -312,8 +348,8 @@ module NativeInterface = {
 
   let inflate = (element, {Layout.LayoutTypes.layout: {width, height, top, left}}) => switch element {
     | ScrollView => (createScrollView(~dims={left, top, width, height}), getNativeId())
-    | ColumnBrowser(ref) =>
-      let node = createScrollView(~dims={left, top, width, height});
+    | ColumnBrowser(ref, handlers) =>
+      let node = ColumnBrowser.create(~dims={left, top, width, height}, ~handlers);
       switch ref {
         | None => ()
         | Some(r) => r := Some(node)
@@ -397,6 +433,19 @@ module Fluid = {
         }, invalidated), [], layout, None);
 
     let scrollView = (~layout=?, ~children, ()) => Builtin(ScrollView, children, layout, None);
+    let columnBrowser = (
+      ~layout=?,
+      ~ref=?,
+      ~childrenCount,
+      ~isLeafItem,
+      ~childOfItem,
+      ~displayForItem,
+      ()) => Builtin(ColumnBrowser(ref, {
+        ColumnBrowser.childrenCount,
+        isLeafItem,
+        childOfItem,
+        displayForItem,
+      }), [], layout, None);
   }
 
   module Hotkeys = {

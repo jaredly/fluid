@@ -54,6 +54,13 @@ let%component main = (hooks) => {
       </view>
       <drawing />
     </view>
+    <columnBrowser
+      childrenCount={cno => cno < 100 ? 5 : 0}
+      isLeafItem={cno => cno >= 100}
+      childOfItem={((cno, index)) => cno * 10 + index + 1}
+      displayForItem={cno => string_of_int(cno)}
+      layout={Layout.style(~width=600., ~height=200., ())}
+    />
     <button onPress={() => setOn(!on)} title="Do things I guess" />
     {on
       ? str("It's on!")

@@ -1,7 +1,8 @@
 (* -*- tuareg -*- *)
 
 let flags = match (Sys.getenv "FLUID_DEBUG") with
-| exception Not_found -> ""
+(* NOTE(jared): whenever making changes, remove this `-w` arg, which suppresses all warnings *)
+| exception Not_found -> " "
 | _ -> " -DDEBUG"
 
 let () = Jbuild_plugin.V1.send (Printf.sprintf {|
@@ -9,10 +10,15 @@ let () = Jbuild_plugin.V1.send (Printf.sprintf {|
   (public_name fluid.MacOS)
   (name FluidMac)
   (libraries flex belt FluidMaker Layout Files)
-  (c_names fluid fluid_components fluid_window fluid_shared fluid_hotkeys)
+  (c_names
+    fluid
+    fluid_components
+    fluid_column_browser
+    fluid_window
+    fluid_shared
+    fluid_hotkeys)
   (install_c_headers fluid_shared)
-  ; NOTE(jared): whenever making changes, remove this `-w` arg, which suppresses all warnings
-  (c_flags -x objective-c -w%s)
+  (c_flags -x objective-c %s)
   (no_dynlink)
   (preprocess (pps belt.ppx)))
 |} flags)
