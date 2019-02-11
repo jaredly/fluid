@@ -279,6 +279,7 @@ module NativeInterface = {
   let canUpdate = (~mounted, ~mountPoint, ~newElement) => {
     switch (mounted, newElement) {
       | (ScrollView, ScrollView) => true
+      | (ColumnBrowser(_, _), ColumnBrowser(_, _)) => true
       | (Custom(adrawFn, _, _), Custom(drawFn, _, _)) => true
       | (View(aPress, aStyle), View(onPress, style)) => true
       | (Button(atitle, apress), Button(btitle, bpress)) => true

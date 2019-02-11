@@ -8,10 +8,30 @@
   @property (nonatomic) int displayForItem;
 @end
 
-@implementation BrowserDelegate
+@implementation BrowserDelegate {
+  NSMutableDictionary<NSNumber *, NSNumber *> *objects;
+}
+
+- (instancetype)init {
+  if (self = [super init]) {
+    objects = [[NSMutableDictionary alloc] init];
+    return self;
+  }
+  return nil;
+}
+
+- (id)objectForId:(int)id {
+  NSNumber *key = [NSNumber numberWithInt:id];
+  NSNumber *obj = [objects objectForKey:key];
+  if (obj == nil) {
+    obj = key;
+    [objects setObject:key forKey:key];
+  }
+  return obj;
+}
 
 - (id)rootItemForBrowser:(NSBrowser *)browser {
-  return [NSNumber numberWithInt:0];
+  return [self objectForId:0];
 }
 
 - (NSInteger)browser:(NSBrowser *)browser numberOfChildrenOfItem:(id)item {
@@ -41,7 +61,7 @@
   Store_field(tuple_v, 0, Val_int(item_i));
   Store_field(tuple_v, 1, Val_int(index));
   int result = Int_val(caml_callback2(*closure_f, Val_int(self.childOfItem), tuple_v));
-  NSNumber *child = [NSNumber numberWithInt:result];
+  NSNumber *child = [self objectForId:result];
   CAMLreturnT(id, child);
 }
 
