@@ -13,6 +13,7 @@
 #include <caml/alloc.h>
 
 #define NSString_val(v) [NSString stringWithUTF8String:String_val(v)]
+#define Val_NSString(v) caml_copy_string([v UTF8String])
 
 #define Wrap(res, v) \
   res = caml_alloc(1, Abstract_tag); \

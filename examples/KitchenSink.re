@@ -61,10 +61,10 @@ let%component main = (hooks) => {
       <drawing />
     </view>
     <columnBrowser
-      childrenCount={cno => cno < 100 ? 5 : 0}
-      isLeafItem={cno => cno >= 100}
-      childOfItem={((cno, index)) => cno * 10 + index + 1}
-      displayForItem={cno => string_of_int(cno) ++ ":" ++ string_of_int(Random.int(100))}
+      childrenCount={cno => 5}
+      isLeafItem={cno => false}
+      childOfItem={((cno, index)) => string_of_int(int_of_string(cno == "" ? "0" : cno) * 10 + index + 1)}
+      displayForItem={cno => cno ++ ":" ++ string_of_int(Random.int(100))}
       layout={Layout.style(~width=600., ~height=200., ())}
     />
     <button onPress={() => setOn(!on)} title="Do things I guess" />

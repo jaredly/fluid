@@ -84,28 +84,28 @@ type _nativeInternal;
 module ColumnBrowser = {
   module ChildrenCountTracker =
     Tracker({
-      type arg = int;
+      type arg = string;
       type res = int;
       let name = "fluid_column_browser_children_count";
       let once = false;
     });
   module ChildOfItemTracker =
     Tracker({
-      type arg = (int, int);
-      type res = int;
+      type arg = (string, int);
+      type res = string;
       let name = "fluid_column_browser_child_of_item";
       let once = false;
     });
   module IsLeafItemTracker =
     Tracker({
-      type arg = int;
+      type arg = string;
       type res = bool;
       let name = "fluid_column_browser_is_leaf_item";
       let once = false;
     });
   module DisplayForItemTracker =
     Tracker({
-      type arg = int;
+      type arg = string;
       type res = string;
       let name = "fluid_column_browser_display_for_item";
       let once = false;
@@ -143,6 +143,7 @@ module ColumnBrowser = {
     IsLeafItemTracker.untrack(isLeafItem);
     DisplayForItemTracker.untrack(displayForItem);
   });
+  external reloadColumn: (_nativeInternal, int) => unit = "fluid_column_browser_reload_column";
   external create: (~dims: dims, ~handlers: trackers) => _nativeInternal = "fluid_column_browser_create";
   let create = (~dims, ~handlers) => create(~dims, ~handlers=track(handlers));
   external update: (_nativeInternal, trackers) => unit = "fluid_column_browser_update";

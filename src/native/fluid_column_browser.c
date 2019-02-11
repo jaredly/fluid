@@ -9,7 +9,7 @@
 @end
 
 @implementation BrowserDelegate {
-  NSMutableDictionary<NSNumber *, NSNumber *> *objects;
+  NSMutableDictionary<NSString *, NSString *> *objects;
 }
 
 - (instancetype)init {
@@ -20,9 +20,8 @@
   return nil;
 }
 
-- (id)objectForId:(int)id {
-  NSNumber *key = [NSNumber numberWithInt:id];
-  NSNumber *obj = [objects objectForKey:key];
+- (id)objectForId:(NSString *)key {
+  NSString *obj = [objects objectForKey:key];
   if (obj == nil) {
     obj = key;
     [objects setObject:key forKey:key];
@@ -31,68 +30,63 @@
 }
 
 - (id)rootItemForBrowser:(NSBrowser *)browser {
-  return [self objectForId:0];
+  return [self objectForId:@""];
 }
 
 - (NSInteger)browser:(NSBrowser *)browser numberOfChildrenOfItem:(id)item {
-  NSNumber *item_n = (NSNumber *)item;
-  int item_i = [item_n integerValue];
+  NSString *item_s = (NSString *)item;
 
   static value * closure_f = NULL;
   if (closure_f == NULL) {
     closure_f = caml_named_value("fluid_column_browser_children_count");
   }
 
-  return Int_val(caml_callback2(*closure_f, Val_int(self.childrenCount), Val_int(item_i)));
+  return Int_val(caml_callback2(*closure_f, Val_int(self.childrenCount), Val_NSString(item_s)));
 }
 
 - (id)browser:(NSBrowser *)browser child:(NSInteger)index ofItem:(id)item {
   CAMLparam0();
   CAMLlocal1(tuple_v);
 
-  NSNumber *item_n = (NSNumber *)item;
-  int item_i = [item_n integerValue];
+  NSString *item_s = (NSString *)item;
 
   static value * closure_f = NULL;
   if (closure_f == NULL) {
     closure_f = caml_named_value("fluid_column_browser_child_of_item");
   }
   tuple_v = caml_alloc_tuple(2);
-  Store_field(tuple_v, 0, Val_int(item_i));
+  Store_field(tuple_v, 0, Val_NSString(item_s));
   Store_field(tuple_v, 1, Val_int(index));
-  int result = Int_val(caml_callback2(*closure_f, Val_int(self.childOfItem), tuple_v));
-  NSNumber *child = [self objectForId:result];
+  NSString *result = NSString_val(caml_callback2(*closure_f, Val_int(self.childOfItem), tuple_v));
+  NSString *child = [self objectForId:result];
   CAMLreturnT(id, child);
 }
 
 - (BOOL)browser:(NSBrowser *)browser 
      isLeafItem:(id)item {
-  NSNumber *item_n = (NSNumber *)item;
-  int item_i = [item_n integerValue];
+  NSString *item_s = (NSString *)item;
   
   static value * closure_f = NULL;
   if (closure_f == NULL) {
     closure_f = caml_named_value("fluid_column_browser_is_leaf_item");
   }
 
-  return Val_true == caml_callback2(*closure_f, Val_int(self.isLeafItem), Val_int(item_i));
+  return Val_true == caml_callback2(*closure_f, Val_int(self.isLeafItem), Val_NSString(item_s));
 }
 
 - (id)browser:(NSBrowser *)browser 
 objectValueForItem:(id)item {
-  NSNumber *item_n = (NSNumber *)item;
-  int item_i = [item_n integerValue];
+  NSString *item_s = (NSString *)item;
   
   static value * closure_f = NULL;
   if (closure_f == NULL) {
     closure_f = caml_named_value("fluid_column_browser_display_for_item");
   }
 
-  return NSString_val(caml_callback2(*closure_f, Val_int(self.displayForItem), Val_int(item_i)));
+  return NSString_val(caml_callback2(*closure_f, Val_int(self.displayForItem), Val_NSString(item_s)));
 }
 
 @end
-
 
 CAMLprim value fluid_column_browser_create(value dims, value trackers) {
   CAMLparam2(dims, trackers);
@@ -101,6 +95,8 @@ CAMLprim value fluid_column_browser_create(value dims, value trackers) {
   Unpack_record4_double(dims, left, top, width, height);
   NSRect frame = NSMakeRect(left, top, width, height);
   NSBrowser *browser = [[NSBrowser alloc] initWithFrame:frame];
+  browser.hasHorizontalScroller = YES;
+  browser.columnResizingType = NSBrowserUserColumnResizing;
 
   BrowserDelegate *delegate = [[BrowserDelegate alloc] init];
   delegate.childrenCount = Int_val(Field(trackers, 0));
@@ -124,6 +120,15 @@ void fluid_column_browser_update(value browser_v, value trackers) {
   delegate.childOfItem = Int_val(Field(trackers, 1));
   delegate.isLeafItem = Int_val(Field(trackers, 2));
   delegate.displayForItem = Int_val(Field(trackers, 3));
+
+  CAMLreturn0;
+}
+
+void fluid_column_browser_reload_column(value browser_v, value column_v) {
+  CAMLparam2(browser_v, column_v);
+
+  NSBrowser *browser = (NSBrowser *)Unwrap(browser_v);
+  [browser reloadColumn:Int_val(column_v)];
 
   CAMLreturn0;
 }
