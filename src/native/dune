@@ -14,6 +14,7 @@ let () = Jbuild_plugin.V1.send (Printf.sprintf {|
     fluid
     fluid_components
     fluid_column_browser
+    fluid_custom_view
     fluid_window
     fluid_shared
     fluid_hotkeys)

@@ -1,3 +1,4 @@
+#include "./fluid_shared.h"
 
 
 @interface CustomView: NSView

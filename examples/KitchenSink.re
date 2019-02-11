@@ -19,7 +19,7 @@ let%component drawing = (hooks) => {
 let%component scrolling = hooks => {
   <scrollView
   layout={Layout.style(
-    ~height=40.,
+    ~height=100.,
     ~alignItems=AlignStretch,
     ~alignSelf=AlignStretch,
     ~overflow=Scroll,
@@ -30,6 +30,12 @@ let%component scrolling = hooks => {
       {str("Two")}
       {str("Three")}
       {str("Four")}
+      {str("Five")}
+      {str("Six")}
+      {str("Seven")}
+      {str("Five")}
+      {str("Six")}
+      {str("Seven")}
       {str("Five")}
       {str("Six")}
       {str("Seven")}
@@ -58,7 +64,7 @@ let%component main = (hooks) => {
       childrenCount={cno => cno < 100 ? 5 : 0}
       isLeafItem={cno => cno >= 100}
       childOfItem={((cno, index)) => cno * 10 + index + 1}
-      displayForItem={cno => string_of_int(cno)}
+      displayForItem={cno => string_of_int(cno) ++ ":" ++ string_of_int(Random.int(100))}
       layout={Layout.style(~width=600., ~height=200., ())}
     />
     <button onPress={() => setOn(!on)} title="Do things I guess" />
