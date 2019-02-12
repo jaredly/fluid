@@ -144,6 +144,7 @@ module ColumnBrowser = {
     DisplayForItemTracker.untrack(displayForItem);
   });
   external reloadColumn: (_nativeInternal, int) => unit = "fluid_column_browser_reload_column";
+  external selectedCell: (_nativeInternal) => option(string) = "fluid_column_browser_selected_cell";
   external create: (~dims: dims, ~handlers: trackers) => _nativeInternal = "fluid_column_browser_create";
   let create = (~dims, ~handlers) => create(~dims, ~handlers=track(handlers));
   external update: (_nativeInternal, trackers) => unit = "fluid_column_browser_update";
@@ -166,7 +167,7 @@ module NativeInterface = {
   /* external createColumnBrowser: (~dims: dims) => nativeInternal = "fluid_create_ScrollView"; */
   external createCustom: (~dims: dims, ~drawFn: DrawTracker.callbackId, ~mouseHandlers: mouseHandlers(PosTracker.callbackId)) => nativeInternal = "fluid_create_CustomView";
   external updateCustom: (nativeInternal, DrawTracker.callbackId, mouseHandlers(PosTracker.callbackId), option(invalidated)) => unit = "fluid_update_CustomView";
-  external createTextNode: (string, ~dims: dims, ~font: font, ~handlers: keyHandlers(UnitTracker.callbackId, StringTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
+  external createTextNode: (string, ~dims: dims, ~font: font, ~selectable: bool, ~handlers: keyHandlers(UnitTracker.callbackId, StringTracker.callbackId)) => nativeInternal = "fluid_create_NSTextView";
   external updateTextView: (nativeInternal, string, dims, font, keyHandlers(UnitTracker.callbackId, StringTracker.callbackId)) => unit = "fluid_set_NSTextView_textContent";
 
   type image;
@@ -273,7 +274,7 @@ module NativeInterface = {
     | ScrollView
     | View(option(unit => unit), viewStyles)
     | Button(string, unit => unit)
-    | String(string, option(font), keyHandlers(UnitTracker.fn, StringTracker.fn))
+    | String(string, option(font), bool, keyHandlers(UnitTracker.fn, StringTracker.fn))
     | Image(imageSrc)
     | ColumnBrowser(option(ref(option(nativeInternal))), ColumnBrowser.handlers);
 
@@ -284,7 +285,7 @@ module NativeInterface = {
       | (Custom(adrawFn, _, _), Custom(drawFn, _, _)) => true
       | (View(aPress, aStyle), View(onPress, style)) => true
       | (Button(atitle, apress), Button(btitle, bpress)) => true
-      | (String(atext, afont, _), String(btext, bfont, _)) => true
+      | (String(atext, afont, _, _), String(btext, bfont, _, _)) => true
       | _ => false
     }
   };
@@ -299,7 +300,7 @@ module NativeInterface = {
       | ColumnBrowser(_, _)
       | Custom(_, _, _) => updateViewLoc(mountPoint, dims(layout))
       | Button(_, _) => updateButtonLoc(mountPoint, dims(layout))
-      | String(_, _, _) => updateTextLoc(mountPoint, dims(layout))
+      | String(_, _, _, _) => updateTextLoc(mountPoint, dims(layout))
     }
   };
 
@@ -336,9 +337,10 @@ module NativeInterface = {
           ColumnBrowser.untrack(ahandlers);
           ColumnBrowser.update(mountPoint, bhandlers);
         }
-      | (String(atext, afont, ahandlers), String(btext, bfont, bhandlers)) => 
-        if (atext != btext || afont != bfont || !compareKeyHandlers(ahandlers, bhandlers)) {
+      | (String(atext, afont, aselectable, ahandlers), String(btext, bfont, bselectable, bhandlers)) => 
+        if (atext != btext || aselectable != bselectable || afont != bfont || !compareKeyHandlers(ahandlers, bhandlers)) {
           untrackKeyHandlers(ahandlers);
+          /* TODO update selectable */
           updateTextView(mountPoint, btext, dims(layout), bfont, 
             trackKeyHandlers(bhandlers)
           )
@@ -373,9 +375,9 @@ module NativeInterface = {
       setButtonPress(id, onPress);
       (native, id)
 
-    | String(contents, font, handlers) =>
+    | String(contents, font, selectable, handlers) =>
       let font = switch font { | None => defaultFont | Some(f) => f};
-      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~handlers=trackKeyHandlers(handlers));
+      let native = createTextNode(contents, ~dims={left, top, width, height}, ~font, ~selectable, ~handlers=trackKeyHandlers(handlers));
       (native, getNativeId())
 
     | Image(src) =>
@@ -414,13 +416,36 @@ module Fluid = {
       })
     );
 
-    let text = (~layout=?, ~font=?, ~onChange=?, ~onEnter=?, ~onTab=?, ~onShiftTab=?, ~onEscape=?, ~contents, ()) => {
+    let text =
+        (
+          ~layout=?,
+          ~font=?,
+          ~selectable=false,
+          ~onChange=?,
+          ~onEnter=?,
+          ~onTab=?,
+          ~onShiftTab=?,
+          ~onEscape=?,
+          ~contents,
+          (),
+        ) => {
       Builtin(
-        String(contents, font, {change: onChange, enter: onEnter, tab: onTab, shiftTab: onShiftTab, escape: onEscape}),
+        String(
+          contents,
+          font,
+          selectable,
+          {
+            change: onChange,
+            enter: onEnter,
+            tab: onTab,
+            shiftTab: onShiftTab,
+            escape: onEscape,
+          },
+        ),
         [],
         layout,
-        Some(NativeInterface.measureText(contents, font))
-      )
+        Some(NativeInterface.measureText(contents, font)),
+      );
     };
 
     let custom = (

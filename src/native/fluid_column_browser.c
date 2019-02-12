@@ -97,6 +97,7 @@ CAMLprim value fluid_column_browser_create(value dims, value trackers) {
   NSBrowser *browser = [[NSBrowser alloc] initWithFrame:frame];
   browser.hasHorizontalScroller = YES;
   browser.columnResizingType = NSBrowserUserColumnResizing;
+  browser.minColumnWidth = 300.0;
 
   BrowserDelegate *delegate = [[BrowserDelegate alloc] init];
   delegate.childrenCount = Int_val(Field(trackers, 0));
@@ -131,4 +132,26 @@ void fluid_column_browser_reload_column(value browser_v, value column_v) {
   [browser reloadColumn:Int_val(column_v)];
 
   CAMLreturn0;
+}
+
+CAMLprim value fluid_column_browser_selected_cell(value browser_v) {
+  CAMLparam1(browser_v);
+  CAMLlocal1(result);
+
+  printf("Getting selected cell\n");
+  NSBrowser *browser = (NSBrowser *)Unwrap(browser_v);
+  printf("growser\n");
+  if (browser.selectedCell == nil) {
+    printf("none\n");
+    result = Atom(0);
+  } else {
+    printf("some\n");
+    NSIndexPath* selected = browser.selectionIndexPath;
+    NSString* item = (NSString *)[browser itemAtIndexPath:selected];
+    result = caml_alloc_tuple(1);
+    Store_field(result, 0, Val_NSString(item));
+  }
+    printf("ok\n");
+
+  CAMLreturn(result);
 }

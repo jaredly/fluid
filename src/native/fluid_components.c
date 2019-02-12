@@ -366,7 +366,7 @@ void set_handlers(TextFieldDelegate* delegate, value handlers) {
   CAMLreturn0;
 }
 
-CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value handlers) {
+CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value font_v, value selectable, value handlers) {
   CAMLparam4(contents_v, dims_v, font_v, handlers);
   CAMLlocal1(text_v);
   // caml_register_global_root(&onChange_v);
@@ -387,6 +387,8 @@ CAMLprim value fluid_create_NSTextView(value contents_v, value dims_v, value fon
   } else {
     text = [NSTextField labelWithString:contents];
   }
+
+  text.selectable = selectable == Val_true;
 
   if (Check_optional(Field(handlers, 3))) {
     text.editable = true;

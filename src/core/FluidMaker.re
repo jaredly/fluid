@@ -916,6 +916,32 @@ lifecycle methods or something
       )
     };
 
+    let useReducer = (initial, reducer, hooks) => {
+      let (state, next) =
+        switch (hooks.current^) {
+        | None =>
+          let next = ref(None);
+          hooks.current := Some((initial, next));
+          (initial, next);
+        | Some((state, next)) => 
+          (state, next)
+        };
+      (
+        (
+          state,
+          action => {
+            switch (hooks.current^) {
+              | None => ()
+              | Some((state, next)) =>
+                hooks.current := Some((reducer(state, action), next));
+            }
+            hooks.invalidate();
+          },
+        ),
+        {...hooks, current: next},
+      )
+    };
+
     /* let _runSuspense = (reason, value, args, next, hooks) => {
       hooks.current := Some((args, next))
       let suspendEvent = {
@@ -956,11 +982,6 @@ lifecycle methods or something
       let%hook (state, setState) = useState(initial);
       (state, action => setState(reducer(state, action)))
     }; */
-
-    let useReducer = (initial, reducer, hooks) => {
-      let ((state, setState), hooks) = useState(initial, hooks);
-      ((state, action => setState(reducer(state, action))), hooks)
-    };
 
     type effect('args) = {
       args: 'args,
