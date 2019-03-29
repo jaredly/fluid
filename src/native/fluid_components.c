@@ -2,6 +2,15 @@
 
 // MARK - View operations
 
+void fluid_NSView_clearChildren(value view_v) {
+  CAMLparam1(view_v);
+  NSView* view = (NSView*) Unwrap(view_v);
+  while (view.subviews.lastObject != nil) {
+    [view.subviews.lastObject removeFromSuperview];
+  }
+  CAMLreturn0;
+}
+
 void fluid_NSView_appendChild(value view_v, value child_v) {
   CAMLparam2(view_v, child_v);
   log("Append child view\n");

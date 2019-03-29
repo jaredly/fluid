@@ -175,6 +175,8 @@ module NativeInterface = {
   external createImage: (~src: imageSrc, ~dims: dims) => nativeInternal = "fluid_create_NSImageView";
   external preloadImage: (~src: string, ~onDone: image => unit) => unit = "fluid_Image_load";
 
+  external clearChildren: (nativeInternal) => unit = "fluid_NSView_clearChildren";
+  let clearChildren = (a) => clearChildren(fst(a));
   external appendChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_appendChild";
   let appendChild = (a, b) => appendChild(fst(a), fst(b));
   external removeChild: (nativeInternal, nativeInternal) => unit = "fluid_NSView_removeChild";
@@ -510,7 +512,10 @@ module Fluid = {
     external homeDirectory: unit => string = "fluid_App_homeDirectory";
 
     external triggerString: (string) => unit = "fluid_App_triggerString";
-    external setTimeout: (unit => unit, int) => unit = "fluid_App_setTimeout";
+
+    module TimeoutTracker = Tracker({type arg = unit; let name = "fluid_timeout_cb"; let once = true; type res = unit});
+    external setTimeout: (TimeoutTracker.callbackId, int) => unit = "fluid_App_setTimeout";
+    let setTimeout = (fn, time) => setTimeout(TimeoutTracker.track(fn), time);
 
     type menu;
     type menuItem;
@@ -590,6 +595,7 @@ module Fluid = {
 
   let launchWindow = (
     ~title: string,
+    ~id=NativeInterface.getNativeId(),
     ~pos=?,
     ~hidden=false,
     ~onBlur=(_) => (),
@@ -626,7 +632,7 @@ module Fluid = {
           ~isFloating=floating,
         );
       /* print_endline("made"); */
-      let node = (Window.contentView(window), NativeInterface.getNativeId());
+      let node = (Window.contentView(window), id);
       onNode(node);
       /* if (!floating) {
         App.setupMenu(~title);
@@ -641,5 +647,119 @@ module Fluid = {
     });
     win := Some(window);
     window
+  };
+
+  module Hot = {
+    let initialized = ref(false);
+    let ready = ref(false);
+
+    let pendingWindows = ref([]);
+
+    let init = (cma, fn) => {
+      let cmx = Dynlink.adapt_filename(cma);
+      print_endline("Hello " ++ cma);
+      if (!initialized^) {
+        print_endline("Init here");
+        initialized := true;
+        App.launch(() => {
+          fn();
+          ready := true;
+          // (pendingWindows^)->Belt.List.forEach(fn => fn());
+          // pendingWindows := [];
+          let lastTime = ref(Unix.stat(cmx).st_mtime);
+          // App.setTimeout(() => {
+          //   try {
+          //     Dynlink.loadfile_private(cmx);
+          //   } {
+          //     | Dynlink.Error(error) => print_endline(Dynlink.error_message(error))
+          //   };
+          // }, 1000);
+          let check = () => {
+            try {
+              let {Unix.st_mtime} = Unix.stat(cmx);
+              print_endline("Check");
+              if (st_mtime > lastTime^) {
+                print_endline("Reloading " ++ cmx);
+                lastTime := st_mtime;
+                Dynlink.loadfile_private(cmx);
+              }
+            } {
+              | _ => print_endline("Didn't exist")
+            }
+          };
+          let rec loop = () => {
+            App.setTimeout(() => {
+              check();
+              loop();
+            }, 1000)
+          };
+          loop()
+        });
+      } else {
+        print_endline("Called from reloaded");
+      }
+    };
+
+    type savedWindow = {
+      nativeId: int,
+      title: string,
+      onBlur: Window.window => unit,
+      onResize: (dims, Window.window) => unit,
+      window: Window.window,
+    };
+
+    let windows = Hashtbl.create(10);
+
+    let launchWindow = (
+      ~title: string,
+      ~id=title,
+      ~pos=?,
+      ~hidden=false,
+      ~onBlur=(_) => (),
+      ~onResize=({width, height}, window) => {
+        window->Window.resize({x: width, y: height})
+      },
+      ~floating=false,
+      root: element
+    ) => {
+      // if (!initialized^) {
+      //   failwith("Must call `Fluid.Hot.init()` before `Fluid.Hot.launchWindow()`");
+      // };
+      print_endline("Launching " ++ id);
+      let doit = () => {
+        if (windows->Hashtbl.mem(id)) {
+          print_endline(" > it's a reload");
+          let {nativeId, title, window} = windows->Hashtbl.find(id);
+          // Window.setWindowTitle
+          windows->Hashtbl.replace(id, {nativeId, title, onBlur, onResize, window})
+          // TOOD remove the old one
+          NativeInterface.clearChildren((window->Window.contentView, nativeId));
+          mount(root, (window->Window.contentView, nativeId))
+          // TODO remount the root here
+        } else {
+          let window = launchWindow(
+            ~title,
+            ~pos=?pos,
+            ~hidden,
+            ~onBlur=window => {
+              let {onBlur} = windows->Hashtbl.find(id);
+              onBlur(window)
+            },
+            ~onResize=(dims, window) => {
+              let {onResize} = windows->Hashtbl.find(id);
+              onResize(dims, window)
+            },
+            ~floating,
+            root
+          );
+          windows->Hashtbl.replace(id, {title, onBlur, onResize, window, nativeId: NativeInterface.getNativeId()});
+        }
+      };
+      if (ready^) {
+        doit();
+      } else {
+        pendingWindows := [doit, ...pendingWindows^];
+      }
+    };
   };
 }

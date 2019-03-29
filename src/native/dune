@@ -9,7 +9,7 @@ let () = Jbuild_plugin.V1.send (Printf.sprintf {|
 (library
   (public_name fluid.MacOS)
   (name FluidMac)
-  (libraries flex belt FluidMaker Layout Files)
+  (libraries flex belt FluidMaker Layout Files dynlink)
   (c_names
     fluid
     fluid_components

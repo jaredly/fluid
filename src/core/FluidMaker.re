@@ -776,7 +776,7 @@ let mount = (el, node) => {
     | Some(childNode) =>
       root.node = Some((tree, childNode));
       node->NativeInterface.appendChild(childNode)
-  }
+  };
 };
 
 let preMount = (el, onUpdate, makeNative) => {
@@ -796,7 +796,7 @@ let preMount = (el, onUpdate, makeNative) => {
 
   let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
   makeNative(~size=(width, height), node => {
-    print_endline("Mounting now I guess");
+    print_endline("Mounting now");
     let tree = mountPending(enqueue(~onUpdate, root), AppendChild(node), makePending(instances));
     print_endline("Mounted");
     switch (getNativeNode(tree)) {

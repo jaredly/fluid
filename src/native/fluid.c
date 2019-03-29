@@ -159,11 +159,23 @@ void fluid_App_hide() {
   [NSApp hide:nil];
 }
 
-void fluid_App_setTimeout(value callback, value time) {
-  CAMLparam2(callback, time);
-  log("Set timeout\n");
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int_val(time)), dispatch_get_main_queue(), ^(void){
-    caml_callback(callback, Val_unit);
+void fluid_App_setTimeout(value callback, value milis_v) {
+  CAMLparam2(callback, milis_v);
+  int64_t milis = Int_val(milis_v);
+  int cbid = Int_val(callback);
+  int64_t nanos = milis * 1000 * 1000;
+  // printf("Waiting for %d milis, %f nanos\n", milis, nanos);
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, nanos), dispatch_get_main_queue(), ^{
+    CAMLparam0();
+
+    static value * closure_f = NULL;
+    if (closure_f == NULL) {
+        /* First time around, look up by name */
+        closure_f = caml_named_value("fluid_timeout_cb");
+    }
+    caml_callback2(*closure_f, Val_int(cbid), Val_unit);
+
+    CAMLreturn0;
   });
   CAMLreturn0;
 }
