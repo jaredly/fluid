@@ -664,8 +664,8 @@ module Fluid = {
         App.launch(() => {
           fn();
           ready := true;
-          // (pendingWindows^)->Belt.List.forEach(fn => fn());
-          // pendingWindows := [];
+          (pendingWindows^)->Belt.List.forEach(fn => fn());
+          pendingWindows := [];
           let lastTime = ref(Unix.stat(cmx).st_mtime);
           // App.setTimeout(() => {
           //   try {
@@ -675,16 +675,25 @@ module Fluid = {
           //   };
           // }, 1000);
           let check = () => {
-            try {
+            // print_endline("Checking");
+              print_string(".");
+              flush(stdout);
+            switch {
               let {Unix.st_mtime} = Unix.stat(cmx);
-              print_endline("Check");
-              if (st_mtime > lastTime^) {
-                print_endline("Reloading " ++ cmx);
-                lastTime := st_mtime;
-                Dynlink.loadfile_private(cmx);
-              }
+              st_mtime;
             } {
-              | _ => print_endline("Didn't exist")
+              | exception exn => print_endline("Didn't exist" ++ Printexc.to_string(exn))
+              | st_mtime =>
+                if (st_mtime > lastTime^) {
+                  print_endline("Reloading " ++ cmx);
+                  lastTime := st_mtime;
+                  // To ensure that the cma has finished building... this is definitely a hack though
+                  App.setTimeout(() => {
+                    try (Dynlink.loadfile_private(cmx)) {
+                      | Dynlink.Error(error) => print_endline("Load fail " ++ Dynlink.error_message(error))
+                    };
+                  }, 100)
+                }
             }
           };
           let rec loop = () => {
@@ -737,6 +746,7 @@ module Fluid = {
           mount(root, (window->Window.contentView, nativeId))
           // TODO remount the root here
         } else {
+          print_endline("Creating");
           let window = launchWindow(
             ~title,
             ~pos=?pos,
