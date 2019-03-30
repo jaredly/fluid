@@ -775,7 +775,9 @@ let mount = (el, node) => {
     | None => failwith("Still pending?")
     | Some(childNode) =>
       root.node = Some((tree, childNode));
-      node->NativeInterface.appendChild(childNode)
+      node->NativeInterface.appendChild(childNode);
+      let {Layout.LayoutTypes.width, height} = instanceLayout.layout;
+      (width, height)
   };
 };
 

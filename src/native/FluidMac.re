@@ -743,7 +743,8 @@ module Fluid = {
           windows->Hashtbl.replace(id, {nativeId, title, onBlur, onResize, window})
           // TOOD remove the old one
           NativeInterface.clearChildren((window->Window.contentView, nativeId));
-          mount(root, (window->Window.contentView, nativeId))
+          let (width, height) = mount(root, (window->Window.contentView, nativeId));
+          window->Window.resize({x: width, y: height});
           // TODO remount the root here
         } else {
           print_endline("Creating");
