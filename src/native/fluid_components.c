@@ -6,7 +6,9 @@ void fluid_NSView_clearChildren(value view_v) {
   CAMLparam1(view_v);
   NSView* view = (NSView*) Unwrap(view_v);
   while (view.subviews.lastObject != nil) {
-    [view.subviews.lastObject removeFromSuperview];
+    NSView* child = view.subviews.lastObject;
+    [child removeFromSuperview];
+    [child release];
   }
   CAMLreturn0;
 }
@@ -18,6 +20,7 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
   NSView* child = (NSView*) Unwrap(child_v);
   // NSLog(@"- view %@\n", view);
   // NSLog(@"- child %@\n", child);
+  [child retain];
 
   if ([view isKindOfClass:[NSScrollView class]]) {
     // view = ((NSScrollView*)view).documentView;
@@ -51,6 +54,7 @@ void fluid_NSView_removeChild(value view_v, value child_v) {
 
   if (child.superview == view) {
     [child removeFromSuperview];
+    [child release];
   }
 
   CAMLreturn0;
@@ -64,6 +68,7 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
 
   if (view.superview != nil) {
     [view.superview replaceSubview:view with:replace];
+    [view release];
   }
 
   CAMLreturn0;
@@ -197,6 +202,14 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   }
   view.wantsLayer = true;
   if (image != nil) {
+    // [image retain];
+    // id currentContents = view.layer.contents;
+    // if (currentContents != nil) {
+    //   [currentContents release];
+    // }
+    // if (currentContents != nil && [currentContents isKindOfClass:[NSImage class]]) {
+    //   [currentContents release];
+    // }
     [view.layer setContents:image];
   } else {
     view.layer.backgroundColor = CGColorCreateGenericRGB(1.0, 0, 0, 1.0);
