@@ -8,6 +8,7 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <caml/callback.h>
+#include <caml/custom.h>
 
 // #include <string.h> // for memcpy
 #include <caml/alloc.h>
@@ -21,8 +22,8 @@
 #define Unwrap(value) \
   (void*)Field(value, 0)
 
-// #define Wrap(res, v) res = (value) v
-// #define Unwrap(value) value
+#define Unwrap_custom(value) \
+  *((void **)Data_custom_val(value))
 
 
 #define Double_pair(c, a, b) \
@@ -34,7 +35,7 @@
   Store_field(c, 0, caml_copy_double(a)); \
   Store_field(c, 1, caml_copy_double(b))
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define log(fmt) fprintf(stdout, fmt)

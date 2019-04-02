@@ -20,7 +20,7 @@ let () = Jbuild_plugin.V1.send (Printf.sprintf {|
     fluid_hotkeys)
   (install_c_headers fluid_shared)
   (c_library_flags -framework Cocoa -framework Carbon -framework CoreImage)
-  (c_flags -x objective-c %s)
+  (c_flags -x objective-c -g %s)
   ; (no_dynlink)
   (preprocess (pps belt.ppx)))
 |} flags)

@@ -122,6 +122,37 @@ void fluid_update_NSButton_loc(value view_v, value dims_v) {
 
 // MARK - Image View
 
+// image_custom_ops
+
+
+
+void finalize_image( value v )
+{
+    NSImage* my_image;
+    my_image = (NSImage*) Unwrap_custom(v);
+    [my_image release];
+    log("Freed image\n");
+}
+
+static struct custom_operations image_custom_ops = {
+    .identifier= "fluid.NSImage",
+    .finalize=    finalize_image,
+    .compare=     custom_compare_default,
+    .hash=        custom_hash_default,
+    .serialize=   custom_serialize_default,
+    .deserialize= custom_deserialize_default
+};
+
+CAMLprim value wrap_image(NSImage* image) {
+  CAMLparam0();
+  CAMLlocal1(image_v);
+  NSSize size = [image size];
+  logf("Allocated image %f\n", size.width * size.height);
+  image_v = caml_alloc_custom(&image_custom_ops, sizeof(NSImage *), size.width * size.height, 5 * 1000 * 1000);
+  Unwrap_custom(image_v) = image;
+  CAMLreturn(image_v);
+}
+
 void fluid_Image_load(value src_v, value onDone_v) {
   CAMLparam2(src_v, onDone_v);
   caml_register_global_root(&onDone_v);
@@ -137,13 +168,8 @@ void fluid_Image_load(value src_v, value onDone_v) {
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-      CAMLparam0();
-      CAMLlocal1(image_v);
-      Wrap(image_v, image);
-      // TODO fix this one
-      caml_callback(onDone_v, image_v);
+      caml_callback(onDone_v, wrap_image(image));
       caml_remove_global_root(&onDone_v);
-      CAMLreturn0;
     });
   });
 
@@ -160,7 +186,7 @@ CAMLprim value fluid_create_NSImageView(value src_v, value dims_v) {
   NSView* view = [[FlippedView alloc] initWithFrame:frame];
   NSImage* image;
   if (Tag_val(src_v) == 0) {
-    image = (NSImage*)Unwrap(Field(src_v, 0));
+    image = (NSImage*)Unwrap_custom(Field(src_v, 0));
   } else {
     NSString* src = NSString_val(Field(src_v, 0));
     if ([src hasPrefix:@"http://"] || [src hasPrefix:@"https://"]) {

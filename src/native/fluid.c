@@ -305,7 +305,7 @@ void fluid_App_setStatusBarItemTitle(value item_v, value title_v) {
   if (Tag_val(title_v) == 0) {
     item.button.title = NSString_val(Field(title_v, 0));
   } else {
-    item.button.image = (NSImage*)Unwrap(Field(title_v, 0));
+    item.button.image = (NSImage*)Unwrap_custom(Field(title_v, 0));
   }
   CAMLreturn0;
 }
@@ -325,9 +325,9 @@ CAMLprim value fluid_App_statusBarItem(value title_v, value onClick_v, value isV
     item.button.title = NSString_val(Field(title_v, 0));
     // button = [StatusBarButton buttonWithTitle:NSString_val(Field(title_v, 0)) target:nil action:@selector(onClickHandler)];
   } else {
-    item.button.image = (NSImage*)Unwrap(Field(title_v, 0));
-    // button = [StatusBarButton buttonWithImage:(NSImage*)Unwrap(Field(title_v, 0)) target:nil action:@selector(onClickHandler)];
-    // item.button.alternateImage = (NSImage*)Unwrap(Field(title_v, 0));
+    item.button.image = (NSImage*)Unwrap_custom(Field(title_v, 0));
+    // button = [StatusBarButton buttonWithImage:(NSImage*)Unwrap_custom(Field(title_v, 0)) target:nil action:@selector(onClickHandler)];
+    // item.button.alternateImage = (NSImage*)Unwrap_custom(Field(title_v, 0));
   }
   // button.onClick = Int_val(onClick_v);
   // button.onRightClick = -1;
