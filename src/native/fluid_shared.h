@@ -35,7 +35,7 @@
   Store_field(c, 0, caml_copy_double(a)); \
   Store_field(c, 1, caml_copy_double(b))
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #define log(fmt) fprintf(stdout, fmt)
