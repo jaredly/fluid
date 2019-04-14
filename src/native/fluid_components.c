@@ -23,9 +23,12 @@ void fluid_NSView_appendChild(value view_v, value child_v) {
   [child retain];
 
   if ([view isKindOfClass:[NSScrollView class]]) {
-    // view = ((NSScrollView*)view).documentView;
+    NSView* prev = ((NSScrollView*)view).documentView;
     NSScrollView* scroll = (NSScrollView*)view;
     [scroll setDocumentView:child];
+    if (prev != nil) {
+      [prev release];
+    }
     CAMLreturn0;
   }
 
@@ -70,6 +73,7 @@ void fluid_NSView_replaceWith(value view_v, value replace_v) {
     [view.superview replaceSubview:view with:replace];
     [view release];
   }
+  [replace retain];
 
   CAMLreturn0;
 }
@@ -133,6 +137,7 @@ void fluid_update_NSButton_loc(value view_v, value dims_v) {
 
 void finalize_image( value v )
 {
+
     NSImage* my_image;
     my_image = (NSImage*) Unwrap_custom(v);
     [my_image release];
@@ -160,7 +165,7 @@ CAMLprim value wrap_image(NSImage* image) {
 
 void fluid_Image_load(value src_v, value onDone_v) {
   CAMLparam2(src_v, onDone_v);
-  caml_register_global_root(&onDone_v);
+  // caml_register_global_root(&onDone_v);
 
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     // Your Background work
@@ -174,7 +179,7 @@ void fluid_Image_load(value src_v, value onDone_v) {
 
     dispatch_async(dispatch_get_main_queue(), ^{
       caml_callback(onDone_v, wrap_image(image));
-      caml_remove_global_root(&onDone_v);
+      // caml_remove_global_root(&onDone_v);
     });
   });
 
