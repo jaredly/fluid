@@ -688,6 +688,7 @@ module Fluid = {
                   print_endline("Reloading " ++ cmx);
                   lastTime := st_mtime;
                   let cmx = if (Dynlink.is_native) {
+                    // Native-mode dynlink caches based on file name, so we need to rename it something unique
                     let ncmx = "Tmp_" ++ (string_of_int(int_of_float(Unix.gettimeofday() *. 100.))) ++ ".cmxs";
                     Unix.system("cp " ++ cmx ++ " " ++ ncmx);
                     ncmx
@@ -695,15 +696,13 @@ module Fluid = {
                     cmx
                   };
                   // To ensure that the cma has finished building... this is definitely a hack though
-                  // App.setTimeout(() => {
-                    try (Dynlink.loadfile_private(cmx)) {
-                      | Dynlink.Error(error) => print_endline("Load fail " ++ Dynlink.error_message(error))
-                    };
-                    // Cleanup tmp file
-                    if (Dynlink.is_native) {
-                      Unix.unlink(cmx);
-                    };
-                  // }, 100)
+                  try (Dynlink.loadfile_private(cmx)) {
+                    | Dynlink.Error(error) => print_endline("Load fail " ++ Dynlink.error_message(error))
+                  };
+                  // Cleanup tmp file
+                  if (Dynlink.is_native) {
+                    Unix.unlink(cmx);
+                  };
                 }
             }
           };
